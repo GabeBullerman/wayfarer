@@ -185,17 +185,24 @@
 
                   <p class="plan-desc">{{ s.description }}</p>
 
-                  <button mat-stroked-button class="add-plan-btn"
-                          [disabled]="s.selected || s.adding"
-                          (click)="addSuggestion(i)">
-                    @if (s.adding) {
-                      <mat-spinner diameter="14"></mat-spinner>
-                    } @else if (s.selected) {
-                      <mat-icon>check</mat-icon> Added
-                    } @else {
-                      <mat-icon>add</mat-icon> Add to Day {{ day.dayNumber }}
+                  <div class="plan-card-footer">
+                    <button mat-stroked-button class="add-plan-btn"
+                            [disabled]="s.selected || s.adding"
+                            (click)="addSuggestion(i)">
+                      @if (s.adding) {
+                        <mat-spinner diameter="14"></mat-spinner>
+                      } @else if (s.selected) {
+                        <mat-icon>check</mat-icon> Added
+                      } @else {
+                        <mat-icon>add</mat-icon> Add to Day {{ day.dayNumber }}
+                      }
+                    </button>
+                    @if (s.sourceUrl) {
+                      <a class="source-link" [href]="s.sourceUrl" target="_blank" rel="noopener">
+                        <mat-icon>open_in_new</mat-icon> Source
+                      </a>
                     }
-                  </button>
+                  </div>
                 </div>
               }
             </div>

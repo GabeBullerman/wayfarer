@@ -34,6 +34,7 @@ export interface PlanSuggestion {
   description: string;
   location?: string | null;
   estimatedCost?: string | null;
+  sourceUrl?: string | null;
   selected: boolean;
   adding?: boolean;
 }
