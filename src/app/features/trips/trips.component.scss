@@ -1,0 +1,177 @@
+.trips-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a237e;
+  }
+
+  .subtitle {
+    margin: 4px 0 0;
+    color: #757575;
+  }
+
+  button {
+    gap: 8px;
+    height: 44px;
+  }
+}
+
+.trips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.trip-card {
+  border-radius: 16px !important;
+  overflow: hidden;
+  border: none !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+
+  .trip-cover {
+    height: 160px;
+    background: linear-gradient(135deg, #1a237e, #42a5f5);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+
+    .cover-gradient {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-start;
+      padding: 12px;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+  }
+}
+
+mat-card-content {
+  padding: 16px !important;
+}
+
+.shared-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0,0,0,0.45);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+}
+
+.trip-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+
+  .trip-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a237e;
+    line-height: 1.3;
+  }
+
+  .trip-destination {
+    margin: 4px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: #616161;
+    font-size: 0.875rem;
+  }
+}
+
+.trip-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #616161;
+    font-size: 0.85rem;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: #9e9e9e;
+    }
+  }
+}
+
+.inline-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  vertical-align: middle;
+}
+
+.trip-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.status-upcoming {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1565c0;
+  }
+
+  &.status-ongoing {
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+  }
+
+  &.status-past {
+    background: rgba(0, 0, 0, 0.45);
+    color: white;
+  }
+}
+
+.days-until {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #42a5f5;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 80px;
+}
+
+.delete-item {
+  color: #c62828;
+  mat-icon { color: #c62828; }
+}

@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run build:ci",
+  "outputDirectory": "dist/wayfarer/browser",
+  "framework": null,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

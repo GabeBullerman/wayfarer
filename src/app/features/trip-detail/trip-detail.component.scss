@@ -1,0 +1,134 @@
+.trip-detail-page {
+  // No margin tricks — page-content has no padding so nothing to counteract.
+}
+
+.trip-hero {
+  height: 260px;
+  background: linear-gradient(135deg, #1a237e, #42a5f5);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .hero-content {
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 16px 24px;
+    gap: 16px;
+
+    .back-btn {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      color: white;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .hero-text {
+      h1 {
+        margin: 0 0 4px;
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      }
+
+      .hero-destination, .hero-dates {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: rgba(255,255,255,0.9);
+        margin: 2px 0;
+        font-size: 0.95rem;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 4px;
+      padding-bottom: 4px;
+
+      button {
+        color: white;
+        background: rgba(0,0,0,0.3);
+      }
+    }
+  }
+}
+
+// Plain div — no Angular Material component, position:sticky works without interference.
+.trip-tab-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.tab-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 48px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: Roboto, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #616161;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: #1a237e;
+    background: #f5f7fa;
+  }
+
+  &.active {
+    color: #1a237e;
+    border-bottom-color: #1a237e;
+  }
+}
+
+.tab-body {
+  padding: 24px;
+  background: #f5f7fa;
+  min-height: calc(100vh - 400px);
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 80px;
+}

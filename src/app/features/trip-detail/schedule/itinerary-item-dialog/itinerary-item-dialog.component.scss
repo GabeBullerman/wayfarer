@@ -1,0 +1,13 @@
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  mat-form-field { width: 100%; }
+}
+
+mat-dialog-content {
+  min-width: 360px;
+  max-width: 560px;
+  max-height: 75vh;
+  padding-top: 8px !important;
+}

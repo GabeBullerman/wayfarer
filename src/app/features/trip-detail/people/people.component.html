@@ -1,0 +1,148 @@
+<div class="people-container">
+  <div class="people-header">
+    <h2>Trip Participants</h2>
+    @if (isOwner && !showAddForm()) {
+      <button mat-flat-button color="primary" (click)="openAdd()">
+        <mat-icon>person_add</mat-icon> Add Person
+      </button>
+    }
+  </div>
+
+  @if (showAddForm()) {
+    <div class="add-card">
+      <form [formGroup]="addForm" (ngSubmit)="saveAdd()">
+        <div class="inline-form">
+          <mat-form-field appearance="outline" class="name-field">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" placeholder="e.g. Alex Johnson" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="email-field">
+            <mat-label>Email (optional — to invite)</mat-label>
+            <input matInput formControlName="email" type="email"
+                   placeholder="alex@email.com" />
+            <mat-icon matSuffix>mail_outline</mat-icon>
+            @if (addForm.get('email')?.hasError('email')) {
+              <mat-error>Enter a valid email</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="city-field">
+            <mat-label>Home City</mat-label>
+            <input matInput formControlName="homeCity" placeholder="e.g. Denver, CO" />
+          </mat-form-field>
+          <div class="inline-actions">
+            <button mat-icon-button type="button" (click)="cancelAdd()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+            <button mat-flat-button color="primary" type="submit"
+                    [disabled]="addForm.invalid || saving()">
+              @if (saving()) { <mat-spinner diameter="18"></mat-spinner> }
+              @else { Add }
+            </button>
+          </div>
+        </div>
+        <div class="invite-hint">
+          <mat-icon>info_outline</mat-icon>
+          If you enter an email, this person will automatically see this trip when they log in with that address.
+        </div>
+      </form>
+    </div>
+  }
+
+  @if (participants$ | async; as participants) {
+    @if (participants.length === 0 && !showAddForm()) {
+      <div class="empty-state">
+        <mat-icon>group</mat-icon>
+        <h3>No participants yet</h3>
+        <p>Add everyone going on this trip to track shared costs and assign bookings.</p>
+      </div>
+    } @else {
+      <div class="participants-list">
+        @for (p of participants; track p.id) {
+          @if (editingId() === p.id) {
+            <div class="participant-card editing">
+              <form [formGroup]="editForm" (ngSubmit)="saveEdit(p)">
+                <div class="inline-form">
+                  <mat-form-field appearance="outline" class="name-field">
+                    <mat-label>Name</mat-label>
+                    <input matInput formControlName="name" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="city-field">
+                    <mat-label>Home City</mat-label>
+                    <input matInput formControlName="homeCity" />
+                  </mat-form-field>
+                  <div class="inline-actions">
+                    <button mat-icon-button type="button" (click)="cancelEdit()" matTooltip="Cancel">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                    <button mat-flat-button color="primary" type="submit" [disabled]="editForm.invalid">
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          } @else {
+            <div class="participant-card" [class.is-me]="isMe(p)">
+              <div class="participant-avatar">{{ initial(p.name) }}</div>
+              <div class="participant-info">
+                <div class="participant-name">
+                  {{ p.name }}
+                  @if (p.isOrganizer) {
+                    <span class="badge badge-organizer">Organizer</span>
+                  }
+                  @if (isMe(p)) {
+                    <span class="badge badge-you">You</span>
+                  }
+                  @if (p.inviteEmail && p.inviteStatus === 'pending') {
+                    <span class="badge badge-pending">Invite pending</span>
+                  }
+                  @if (p.inviteEmail && p.inviteStatus === 'accepted') {
+                    <span class="badge badge-accepted">Joined</span>
+                  }
+                </div>
+                <div class="participant-sub">
+                  @if (p.homeCity) {
+                    <span class="participant-city">
+                      <mat-icon>flight_takeoff</mat-icon> {{ p.homeCity }}
+                    </span>
+                  }
+                  @if (p.inviteEmail) {
+                    <span class="participant-email">
+                      <mat-icon>mail_outline</mat-icon> {{ p.inviteEmail }}
+                    </span>
+                  }
+                </div>
+              </div>
+              <div class="participant-actions">
+                <!-- Leave button for yourself (non-organizer) -->
+                @if (isMe(p) && !p.isOrganizer) {
+                  <button mat-stroked-button class="leave-btn" (click)="leaveTrip(p)"
+                          matTooltip="Leave this trip">
+                    <mat-icon>exit_to_app</mat-icon> Leave
+                  </button>
+                }
+                <!-- Edit/remove for trip owner -->
+                @if (isOwner && !isMe(p)) {
+                  <button mat-icon-button (click)="startEdit(p)" matTooltip="Edit">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="remove(p)" matTooltip="Remove"
+                          [disabled]="p.isOrganizer">
+                    <mat-icon>person_remove</mat-icon>
+                  </button>
+                }
+                @if (isOwner && isMe(p)) {
+                  <button mat-icon-button (click)="startEdit(p)" matTooltip="Edit">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+      </div>
+    }
+  } @else {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+</div>

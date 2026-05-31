@@ -1,0 +1,211 @@
+<div class="overview-grid">
+  @if (bookings$ | async; as bookings) {
+    @if (items$ | async; as items) {
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <mat-card class="stat-card">
+          <mat-icon>event</mat-icon>
+          <div>
+            <div class="stat-value">{{ items.length }}</div>
+            <div class="stat-label">Activities</div>
+          </div>
+        </mat-card>
+        <mat-card class="stat-card">
+          <mat-icon>confirmation_number</mat-icon>
+          <div>
+            <div class="stat-value">{{ bookings.length }}</div>
+            <div class="stat-label">Bookings</div>
+          </div>
+        </mat-card>
+        <mat-card class="stat-card">
+          <mat-icon>payments</mat-icon>
+          <div>
+            <div class="stat-value">{{ totalCost(bookings, items) | currency: trip.currency }}</div>
+            <div class="stat-label">Total Spent</div>
+          </div>
+        </mat-card>
+        <mat-card class="stat-card">
+          <mat-icon>photo_library</mat-icon>
+          <div>
+            <div class="stat-value accent">
+              {{ trip.startDate.toDate() | date:'MMM d' }} – {{ trip.endDate.toDate() | date:'MMM d' }}
+            </div>
+            <div class="stat-label">Travel Dates</div>
+          </div>
+        </mat-card>
+      </div>
+
+      <!-- Map -->
+      <mat-card class="map-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>map</mat-icon> Location Map
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (mapApiLoaded$ | async) {
+            <google-map height="400px" width="100%" [options]="mapOptions" [center]="mapCenter()">
+              @for (pin of getVisiblePins(items); track pin.item.id) {
+                <map-marker
+                  #marker="mapMarker"
+                  [position]="pin.position"
+                  [title]="pin.item.title"
+                  (mapClick)="openInfo(infoWindow, marker, pin.item)" />
+              }
+              <map-directions-renderer [directions]="$any(directionsResult())" [options]="rendererOptions" />
+              <map-info-window #infoWindow="mapInfoWindow">
+                @if (activePin()) {
+                  <div class="info-window">
+                    <div class="info-title">{{ activePin()!.title }}</div>
+                    @if (activePin()!.location) {
+                      <div class="info-row"><span class="info-icon">📍</span>{{ activePin()!.location }}</div>
+                    }
+                    <div class="info-row">
+                      <span class="info-icon">📅</span>
+                      {{ activePin()!.date.toDate() | date:'EEE, MMM d' }}
+                      @if (activePin()!.startTime) {
+                        &nbsp;·&nbsp; {{ activePin()!.startTime }}{{ activePin()!.endTime ? ' – ' + activePin()!.endTime : '' }}
+                      }
+                    </div>
+                    @if (activePin()!.cost) {
+                      <div class="info-row"><span class="info-icon">💰</span>{{ activePin()!.cost }} {{ activePin()!.currency }}</div>
+                    }
+                    @if (activePin()!.description) {
+                      <div class="info-description">{{ activePin()!.description }}</div>
+                    }
+                  </div>
+                }
+              </map-info-window>
+            </google-map>
+          } @else {
+            <div class="map-placeholder">
+              <mat-icon>map</mat-icon>
+              <p>Set your Google Maps API key in <code>environment.ts</code> to enable the map</p>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Day Route Planner -->
+      <mat-card class="route-card">
+        <mat-card-header>
+          <mat-card-title><mat-icon>alt_route</mat-icon> Day Route</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-form-field appearance="outline" class="day-select">
+            <mat-label>Select Day</mat-label>
+            <mat-select [ngModel]="selectedDayIso()" (ngModelChange)="selectedDayIso.set($event)">
+              <mat-option value="">All days</mat-option>
+              @for (day of tripDays; track day.iso) {
+                <mat-option [value]="day.iso">{{ day.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Travel Mode Selector -->
+          <div class="mode-selector">
+            @for (m of travelModes; track m.value) {
+              <button mat-icon-button
+                      class="mode-btn"
+                      [class.mode-active]="travelMode() === m.value"
+                      (click)="travelMode.set(m.value)"
+                      [title]="m.label">
+                <mat-icon>{{ m.icon }}</mat-icon>
+              </button>
+            }
+            <span class="mode-label">{{ activeModeLabel() }}</span>
+          </div>
+
+          @let route = getDayRoute(selectedDayIso());
+          @if (route.length === 0) {
+            <div class="route-empty">
+              <mat-icon>map</mat-icon>
+              <span>No activities scheduled for this day yet</span>
+            </div>
+          } @else {
+            <div class="route-stops">
+              @for (stop of route; track stop.id; let i = $index; let last = $last) {
+                <div class="route-stop">
+                  <div class="stop-connector">
+                    <div class="stop-badge">{{ i + 1 }}</div>
+                    @if (!last) { <div class="stop-line"></div> }
+                  </div>
+                  <div class="stop-info">
+                    <div class="stop-title">{{ stop.title }}</div>
+                    @if (stop.location) {
+                      <div class="stop-location"><mat-icon>place</mat-icon>{{ stop.location }}</div>
+                    }
+                    @if (stop.startTime) {
+                      <div class="stop-time">
+                        <mat-icon>schedule</mat-icon>
+                        {{ stop.startTime }}{{ stop.endTime ? ' – ' + stop.endTime : '' }}
+                      </div>
+                    }
+                    @if (!last && routeLegs()[i]) {
+                      <div class="leg-info">
+                        <mat-icon>{{ activeModeIcon() }}</mat-icon>
+                        <span>{{ routeLegs()[i].duration?.text }}</span>
+                        <span class="leg-distance">· {{ routeLegs()[i].distance?.text }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (loadingRoute()) {
+              <div class="route-loading">
+                <mat-spinner diameter="20"></mat-spinner>
+                <span>Calculating route…</span>
+              </div>
+            } @else if (routeLegs().length === 0 && route.filter(s => s.latitude && s.longitude).length < 2) {
+              <p class="no-locations-note">Add locations to your activities to show the route on the map</p>
+            }
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Description -->
+      @if (trip.description) {
+        <mat-card class="description-card">
+          <mat-card-header>
+            <mat-card-title><mat-icon>notes</mat-icon> Trip Notes</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>{{ trip.description }}</p>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Upcoming Bookings Preview -->
+      @if (bookings.length > 0) {
+        <mat-card class="upcoming-card">
+          <mat-card-header>
+            <mat-card-title><mat-icon>confirmation_number</mat-icon> Bookings at a Glance</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="booking-preview-list">
+              @for (booking of bookings; track booking.id) {
+                <div class="booking-preview-item">
+                  <div class="booking-type-icon" [class]="'type-' + booking.type">
+                    <mat-icon>{{ booking.type === 'flight' ? 'flight' : booking.type === 'hotel' ? 'hotel' : booking.type === 'airbnb' ? 'home' : booking.type === 'car-rental' ? 'directions_car' : 'bookmark' }}</mat-icon>
+                  </div>
+                  <div class="booking-info">
+                    <strong>{{ booking.title }}</strong>
+                    <small>{{ booking.confirmationNumber ? '#' + booking.confirmationNumber : booking.provider }}</small>
+                  </div>
+                  <div class="booking-status" [class]="'status-' + booking.status">
+                    {{ booking.status }}
+                  </div>
+                  @if (booking.cost) {
+                    <div class="booking-cost">{{ booking.cost | currency: (booking.currency ?? trip.currency) }}</div>
+                  }
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+    }
+  }
+</div>

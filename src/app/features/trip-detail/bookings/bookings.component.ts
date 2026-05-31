@@ -1,0 +1,163 @@
+import { Component, Input, OnInit, inject } from '@angular/core';
+import { AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatChipsModule } from '@angular/material/chips';
+import { BookingService } from '../../../core/services/booking.service';
+import { ParticipantService } from '../../../core/services/participant.service';
+import { Booking, BookingType } from '../../../core/models/booking.model';
+import { TripParticipant } from '../../../core/models/trip-participant.model';
+import { BookingDialogComponent } from './booking-dialog/booking-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { map, catchError } from 'rxjs/operators';
+import { Observable, of, from, combineLatest } from 'rxjs';
+import { Trip } from '../../../core/models/trip.model';
+
+interface BookingGroup {
+  type: BookingType;
+  label: string;
+  icon: string;
+  bookings: Booking[];
+}
+
+interface TravelHint {
+  icon: string;
+  text: string;
+}
+
+interface BookingsData {
+  groups: BookingGroup[];
+  participants: TripParticipant[];
+}
+
+@Component({
+  selector: 'app-bookings',
+  standalone: true,
+  imports: [
+    AsyncPipe, DatePipe, CurrencyPipe, TitleCasePipe,
+    MatButtonModule, MatIconModule, MatMenuModule,
+    MatTooltipModule, MatProgressSpinnerModule, MatExpansionModule, MatChipsModule,
+  ],
+  templateUrl: './bookings.component.html',
+  styleUrl: './bookings.component.scss',
+})
+export class BookingsComponent implements OnInit {
+  @Input() tripId!: string;
+  @Input() trip!: Trip;
+
+  private bookingService = inject(BookingService);
+  private participantService = inject(ParticipantService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+
+  data$!: Observable<BookingsData>;
+
+  ngOnInit() {
+    this.data$ = combineLatest([
+      this.bookingService.getBookings(this.tripId),
+      this.participantService.getParticipants(this.tripId),
+    ]).pipe(
+      map(([bookings, participants]) => ({
+        groups: this.groupBookings(bookings),
+        participants,
+      })),
+      catchError(() => of({ groups: [], participants: [] }))
+    );
+  }
+
+  typeConfig: Record<BookingType, { label: string; icon: string }> = {
+    flight: { label: 'Flights', icon: 'flight' },
+    hotel: { label: 'Hotels', icon: 'hotel' },
+    airbnb: { label: 'Airbnb / Vacation Rentals', icon: 'home' },
+    'car-rental': { label: 'Car Rentals', icon: 'directions_car' },
+    other: { label: 'Other Bookings', icon: 'bookmark' },
+  };
+
+  private groupBookings(bookings: Booking[]): BookingGroup[] {
+    const types: BookingType[] = ['flight', 'hotel', 'airbnb', 'car-rental', 'other'];
+    return types
+      .map(type => ({
+        type,
+        label: this.typeConfig[type].label,
+        icon: this.typeConfig[type].icon,
+        bookings: bookings.filter(b => b.type === type),
+      }))
+      .filter(g => g.bookings.length > 0);
+  }
+
+  getTravelHints(groups: BookingGroup[]): TravelHint[] {
+    const hints: TravelHint[] = [];
+    const bookings = groups.flatMap(g => g.bookings);
+    const flights = bookings.filter(b => b.type === 'flight');
+    const accommodation = bookings.filter(b => b.type === 'hotel' || b.type === 'airbnb');
+    const nights = Math.round(
+      (this.trip.endDate.toDate().getTime() - this.trip.startDate.toDate().getTime())
+      / (1000 * 60 * 60 * 24)
+    );
+
+    if (flights.length === 0) {
+      hints.push({ icon: 'flight_takeoff', text: 'No outbound flight booked yet.' });
+      if (nights >= 1) {
+        hints.push({ icon: 'flight_land', text: 'No return flight booked yet.' });
+      }
+    } else if (flights.length === 1 && nights >= 1) {
+      hints.push({ icon: 'flight_land', text: 'You have 1 flight booked — don\'t forget your return flight.' });
+    }
+
+    if (accommodation.length === 0 && nights >= 1) {
+      hints.push({ icon: 'hotel', text: `No accommodation booked for ${nights} night${nights !== 1 ? 's' : ''}.` });
+    }
+
+    return hints;
+  }
+
+  getPassengerNames(booking: Booking, participants: TripParticipant[]): string[] {
+    if (!booking.passengerIds?.length) return [];
+    return booking.passengerIds
+      .map(id => participants.find(p => p.id === id)?.name ?? '?')
+      .filter(Boolean);
+  }
+
+  getPayerName(booking: Booking, participants: TripParticipant[]): string | null {
+    if (booking.paidById == null) return null;
+    return participants.find(p => p.id === booking.paidById)?.name ?? null;
+  }
+
+  openAddBooking() {
+    this.dialog.open(BookingDialogComponent, {
+      data: { tripId: this.tripId },
+      width: '640px',
+      maxHeight: '90vh',
+    });
+  }
+
+  openEditBooking(booking: Booking) {
+    this.dialog.open(BookingDialogComponent, {
+      data: { tripId: this.tripId, booking },
+      width: '640px',
+      maxHeight: '90vh',
+    });
+  }
+
+  deleteBooking(booking: Booking) {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Remove Booking', message: `Remove "${booking.title}"?` },
+    }).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        from(this.bookingService.deleteBooking(booking.id!)).subscribe(() =>
+          this.snackBar.open('Booking removed', undefined, { duration: 2000 })
+        );
+      }
+    });
+  }
+
+  openBookingUrl(url: string) {
+    window.open(url, '_blank', 'noopener');
+  }
+}

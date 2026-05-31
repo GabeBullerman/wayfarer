@@ -1,0 +1,231 @@
+.bookings-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.bookings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1a237e;
+  }
+}
+
+mat-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booking-group {
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+}
+
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #1a237e;
+
+  mat-icon { color: #1a237e; }
+
+  .count-badge {
+    background: #e8eaf6;
+    color: #1a237e;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+}
+
+.booking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.booking-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 16px;
+  border-left: 4px solid #1a237e;
+}
+
+.booking-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.booking-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #212121;
+  }
+}
+
+.booking-card-actions {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+  button { width: 32px; height: 32px; line-height: 32px; }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-confirmed { background: #e8f5e9; color: #2e7d32; }
+.status-pending { background: #fff8e1; color: #f57f17; }
+.status-cancelled { background: #ffebee; color: #c62828; }
+
+.booking-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    color: #424242;
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; color: #757575; }
+
+    &.confirmation strong { color: #1a237e; }
+    &.cost { color: #1a237e; strong { font-size: 1rem; } }
+  }
+
+  .date-arrow { color: #9e9e9e; }
+}
+
+.booking-notes {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: #fff8e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #795548;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+}
+
+.hints-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.hint-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #fffbf0;
+  border: 1px solid #ffe082;
+  border-left: 4px solid #f9a825;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #5d4037;
+
+  .hint-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #f9a825;
+    flex-shrink: 0;
+  }
+
+  .hint-text { flex: 1; }
+
+  .hint-action {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    height: 28px;
+    line-height: 28px;
+    padding: 0 10px;
+    border-color: #f9a825;
+    color: #e65100;
+
+    mat-icon { font-size: 14px; width: 14px; height: 14px; vertical-align: middle; }
+  }
+}
+
+.booking-people {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: #f3f4ff;
+  border-radius: 6px;
+}
+
+.people-row, .payer-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .people-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    color: #3949ab;
+    flex-shrink: 0;
+  }
+}
+
+.passenger-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.passenger-chip {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e8eaf6;
+  color: #1a237e;
+  font-weight: 500;
+}
+
+.payer-label {
+  font-size: 0.8rem;
+  color: #424242;
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}

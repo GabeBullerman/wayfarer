@@ -1,0 +1,102 @@
+<div class="photos-container">
+  <div class="photos-header">
+    <h2>Trip Photos</h2>
+    <button mat-flat-button color="primary" (click)="triggerUpload()">
+      <mat-icon>add_photo_alternate</mat-icon> Add Photos
+    </button>
+    <input #fileInput type="file" accept="image/*" multiple hidden
+           (change)="onFilesSelected($event)" />
+  </div>
+
+  <!-- Upload Progress -->
+  @if (uploadProgress() !== null) {
+    <div class="upload-progress">
+      <mat-icon>cloud_upload</mat-icon>
+      <mat-progress-bar mode="determinate" [value]="uploadProgress()!"></mat-progress-bar>
+      <span>{{ uploadProgress()! | number:'1.0-0' }}%</span>
+    </div>
+  }
+
+  @if (photos$ | async; as photos) {
+    @if (photos.length === 0) {
+      <div class="drop-zone" (drop)="onDrop($event)" (dragover)="onDragOver($event)"
+           (click)="triggerUpload()">
+        <mat-icon>add_photo_alternate</mat-icon>
+        <h3>No photos yet</h3>
+        <p>Be the first to add photos from the trip. Anyone in the group can upload and everyone will see them here.</p>
+        <button mat-flat-button color="primary">Upload Photos</button>
+      </div>
+    } @else {
+      <div class="drop-overlay" (drop)="onDrop($event)" (dragover)="onDragOver($event)">
+
+        <!-- Group header: photo count + who's contributed -->
+        <div class="gallery-meta">
+          <span class="photo-count"><mat-icon>photo_library</mat-icon> {{ photos.length }} photo{{ photos.length !== 1 ? 's' : '' }}</span>
+          <span class="shared-hint"><mat-icon>group</mat-icon> Shared with everyone on this trip</span>
+        </div>
+
+        <div class="photo-grid">
+          @for (photo of photos; track photo.id) {
+            <div class="photo-tile" (click)="openLightbox(photo)">
+              <img [src]="photo.url" [alt]="photo.caption || 'Trip photo'" loading="lazy" />
+
+              <div class="photo-overlay">
+                @if (photo.userId === currentUserId) {
+                  <button mat-icon-button class="delete-btn" matTooltip="Delete"
+                          (click)="$event.stopPropagation(); deletePhoto(photo)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                }
+              </div>
+
+              <!-- Uploader attribution -->
+              <div class="photo-footer">
+                <div class="uploader-info">
+                  <span class="uploader-avatar">{{ (photo.uploaderName ?? 'U').charAt(0).toUpperCase() }}</span>
+                  <span class="uploader-name">{{ photo.uploaderName ?? 'Unknown' }}</span>
+                </div>
+                @if (photo.caption) {
+                  <span class="photo-caption-text">{{ photo.caption }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+</div>
+
+<!-- Lightbox -->
+@if (lightboxPhoto()) {
+  <div class="lightbox" (click)="closeLightbox()">
+    <button mat-icon-button class="lightbox-close" (click)="closeLightbox()">
+      <mat-icon>close</mat-icon>
+    </button>
+    <div class="lightbox-inner" (click)="$event.stopPropagation()">
+      <img [src]="lightboxPhoto()!.url" [alt]="lightboxPhoto()!.caption || 'Photo'" />
+      <div class="lightbox-meta">
+        <div class="lightbox-uploader">
+          <span class="uploader-avatar lg">{{ (lightboxPhoto()!.uploaderName ?? 'U').charAt(0).toUpperCase() }}</span>
+          <div>
+            <div class="lightbox-uploader-name">{{ lightboxPhoto()!.uploaderName ?? 'Unknown' }}</div>
+            @if (lightboxPhoto()!.uploadedAt) {
+              <div class="lightbox-date">{{ lightboxPhoto()!.uploadedAt.toDate() | date:'MMM d, y' }}</div>
+            }
+          </div>
+        </div>
+        @if (lightboxPhoto()!.caption) {
+          <div class="lightbox-caption">{{ lightboxPhoto()!.caption }}</div>
+        }
+        @if (lightboxPhoto()!.userId === currentUserId) {
+          <button mat-stroked-button color="warn" class="lightbox-delete"
+                  (click)="deletePhoto(lightboxPhoto()!); closeLightbox()">
+            <mat-icon>delete</mat-icon> Delete
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

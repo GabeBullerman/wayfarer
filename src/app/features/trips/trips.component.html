@@ -1,0 +1,99 @@
+<div class="trips-page">
+  <div class="page-header">
+    <div>
+      <h1>My Trips</h1>
+      <p class="subtitle">Plan, track, and relive your adventures</p>
+    </div>
+    <button mat-flat-button color="primary" (click)="openNewTrip()">
+      <mat-icon>add</mat-icon> New Trip
+    </button>
+  </div>
+
+  @if (trips$ | async; as trips) {
+    @if (trips.length === 0) {
+      <div class="empty-state">
+        <mat-icon>flight_takeoff</mat-icon>
+        <h3>No trips yet</h3>
+        <p>Create your first trip to start organizing your adventures</p>
+        <button mat-flat-button color="primary" (click)="openNewTrip()">
+          <mat-icon>add</mat-icon> Create a Trip
+        </button>
+      </div>
+    } @else {
+      <div class="trips-grid">
+        @for (trip of trips; track trip.id) {
+          <mat-card class="trip-card travel-card" (click)="openTrip(trip.id!)">
+            <div class="trip-cover" [style.background-image]="trip.coverPhotoUrl ? 'url(' + trip.coverPhotoUrl + ')' : null">
+              <div class="cover-gradient">
+                <div class="trip-status-badge" [class]="'status-' + tripStatus(trip)">
+                  {{ tripStatus(trip) | titlecase }}
+                </div>
+                @if (!isOwned(trip)) {
+                  <div class="shared-badge">
+                    <mat-icon>group</mat-icon> Shared
+                  </div>
+                }
+              </div>
+            </div>
+
+            <mat-card-content>
+              <div class="trip-header">
+                <div>
+                  <h2 class="trip-name">{{ trip.name }}</h2>
+                  <p class="trip-destination">
+                    <mat-icon class="inline-icon">location_on</mat-icon>
+                    {{ trip.destination }}
+                  </p>
+                </div>
+                <button mat-icon-button [matMenuTriggerFor]="tripMenu"
+                        (click)="$event.stopPropagation()">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #tripMenu>
+                  @if (isOwned(trip)) {
+                    <button mat-menu-item (click)="openEditTrip(trip, $event)">
+                      <mat-icon>edit</mat-icon> Edit
+                    </button>
+                    <button mat-menu-item (click)="deleteTrip(trip, $event)" class="delete-item">
+                      <mat-icon>delete</mat-icon> Delete
+                    </button>
+                  } @else {
+                    <button mat-menu-item (click)="leaveTrip(trip, $event)" class="delete-item">
+                      <mat-icon>exit_to_app</mat-icon> Leave Trip
+                    </button>
+                  }
+                </mat-menu>
+              </div>
+
+              <div class="trip-meta">
+                <div class="meta-item">
+                  <mat-icon>calendar_today</mat-icon>
+                  <span>
+                    {{ trip.startDate.toDate() | date:'MMM d' }} –
+                    {{ trip.endDate.toDate() | date:'MMM d, y' }}
+                  </span>
+                </div>
+                <div class="meta-item">
+                  <mat-icon>schedule</mat-icon>
+                  <span>{{ tripDuration(trip) }} days</span>
+                </div>
+                @if (trip.totalCost) {
+                  <div class="meta-item">
+                    <mat-icon>payments</mat-icon>
+                    <span>{{ trip.totalCost | currency: trip.currency }}</span>
+                  </div>
+                }
+              </div>
+
+              <p class="days-until">{{ trip.startDate | daysUntil }}</p>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  } @else {
+    <div class="loading-state">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+  }
+</div>

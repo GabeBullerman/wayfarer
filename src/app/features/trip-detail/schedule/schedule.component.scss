@@ -1,0 +1,231 @@
+.schedule-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.schedule-header {
+  margin-bottom: 24px;
+  h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1a237e;
+  }
+}
+
+.days-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.day-block {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: linear-gradient(90deg, #e8eaf6, #f3f4ff);
+  border-bottom: 1px solid #e8eaf6;
+  flex-wrap: wrap;
+
+  .day-number {
+    background: #1a237e;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .day-label {
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+  }
+
+  .add-btn {
+    font-size: 0.8rem;
+    height: 32px;
+    line-height: 32px;
+    gap: 4px;
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  }
+}
+
+.day-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 20px 4px;
+  padding: 8px 12px;
+  background: #fffbf0;
+  border: 1px solid #ffe082;
+  border-left: 4px solid #f9a825;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #5d4037;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: #f9a825; flex-shrink: 0; }
+
+  span { flex: 1; }
+
+  .hint-add-btn {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    min-width: 0;
+    padding: 0 8px;
+    height: 26px;
+    line-height: 26px;
+    color: #e65100;
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  }
+}
+
+.day-hint-depart {
+  border-left-color: #e65100;
+  mat-icon { color: #e65100; }
+}
+
+.day-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  color: #bdbdbd;
+  font-size: 0.9rem;
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+}
+
+.timeline {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 16px;
+}
+
+.timeline-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20px;
+  flex-shrink: 0;
+  padding-top: 4px;
+
+  .timeline-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid;
+    flex-shrink: 0;
+
+    &.dot-transport { background: #e3f2fd; border-color: #1565c0; }
+    &.dot-accommodation { background: #f3e5f5; border-color: #6a1b9a; }
+    &.dot-activity { background: #e8f5e9; border-color: #2e7d32; }
+    &.dot-food { background: #fff3e0; border-color: #e65100; }
+    &.dot-other { background: #f5f5f5; border-color: #616161; }
+  }
+
+  .timeline-line {
+    flex: 1;
+    width: 2px;
+    background: #e0e0e0;
+    margin: 4px 0;
+    min-height: 20px;
+  }
+}
+
+.timeline-content {
+  flex: 1;
+  padding-bottom: 20px;
+}
+
+.item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+
+  .item-time {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1a237e;
+    .no-time { color: #bdbdbd; font-weight: 400; }
+  }
+
+  .item-actions {
+    display: flex;
+    button { width: 28px; height: 28px; line-height: 28px; }
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  }
+}
+
+.item-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #212121;
+}
+
+.item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+
+  .category-chip {
+    font-size: 0.75rem;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    mat-icon { font-size: 12px; width: 12px; height: 12px; }
+  }
+
+  .item-location, .item-cost {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.8rem;
+    color: #616161;
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  }
+}
+
+.item-description {
+  margin: 4px 0;
+  font-size: 0.875rem;
+  color: #424242;
+}
+
+.item-notes {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px 10px;
+  background: #fff8e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #795548;
+  margin-top: 6px;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}

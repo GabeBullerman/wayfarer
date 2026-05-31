@@ -1,0 +1,254 @@
+<div class="costs-container">
+  <div class="costs-header">
+    <h2>Cost Tracker</h2>
+    <button mat-flat-button color="primary" (click)="openAddExpense()">
+      <mat-icon>add</mat-icon> Add Expense
+    </button>
+  </div>
+
+  @if (costs$ | async; as data) {
+
+    @if (data.total === 0 && data.expenses.length === 0) {
+      <div class="empty-state">
+        <mat-icon>savings</mat-icon>
+        <h3>No costs tracked yet</h3>
+        <p>Add an expense or assign costs to bookings and schedule items</p>
+      </div>
+    } @else {
+
+      <!-- Conversion Banner -->
+      @if (homeCurrency() && homeCurrency() !== trip.currency) {
+        <mat-card class="conversion-card">
+          <div class="conversion-row">
+            <div class="conversion-info">
+              <mat-icon>currency_exchange</mat-icon>
+              <div>
+                <div class="conversion-label">Home Currency</div>
+                <div class="conversion-currencies">
+                  {{ trip.currency }} → {{ homeCurrency() }}
+                </div>
+              </div>
+            </div>
+            <button mat-stroked-button (click)="toggleConversion()" [disabled]="loadingRate()">
+              @if (loadingRate()) { <mat-spinner diameter="18"></mat-spinner> }
+              @if (!loadingRate() && showConverted()) { <mat-icon>visibility_off</mat-icon> }
+              @if (!loadingRate() && !showConverted()) { <mat-icon>swap_horiz</mat-icon> }
+              @if (!loadingRate() && showConverted()) { Hide Conversion }
+              @if (!loadingRate() && !showConverted()) { Show in {{ homeCurrency() }} }
+            </button>
+          </div>
+
+          @if (showConverted() && rateResult()) {
+            <mat-divider></mat-divider>
+            <div class="rate-detail">
+              <span class="rate-value">
+                1 {{ trip.currency }} = {{ rateResult()!.rate | number:'1.4-4' }} {{ homeCurrency() }}
+              </span>
+              <span class="rate-source">via Frankfurter (ECB) · {{ rateResult()!.fetchedAt | date:'shortTime' }}</span>
+            </div>
+            <div class="fee-notice">
+              <mat-icon>info_outline</mat-icon>
+              <span>
+                Converted totals include an estimated <strong>2.5% foreign transaction fee</strong>.
+                Actual charges depend on your bank or card issuer and may vary.
+                All figures are <strong>estimates only</strong>.
+              </span>
+            </div>
+          }
+        </mat-card>
+      }
+
+      <!-- Total Banner -->
+      <mat-card class="total-card">
+        <div class="total-content">
+          <div>
+            <div class="total-label">Total Trip Cost</div>
+            <div class="total-amount">{{ data.total | currency: trip.currency }}</div>
+            @if (showConverted() && rateResult() && homeCurrency() !== trip.currency) {
+              <div class="total-converted">
+                ≈ {{ convertWithFee(data.total) | currency: homeCurrency()! }} {{ homeCurrency() }}
+                <span class="fee-included">(incl. ~2.5% fee)</span>
+              </div>
+            }
+          </div>
+          <mat-icon class="total-icon">account_balance_wallet</mat-icon>
+        </div>
+      </mat-card>
+
+      <!-- Per-Person Breakdown -->
+      @if (data.personShares.length > 0) {
+        <mat-card class="person-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>group</mat-icon>
+              Per Person
+            </mat-card-title>
+            <mat-card-subtitle>Based on assigned passengers and shared items</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="person-rows">
+              @for (ps of data.personShares; track ps.participant.id) {
+                <div class="person-row">
+                  <div class="person-avatar">{{ ps.participant.name.charAt(0).toUpperCase() }}</div>
+                  <div class="person-details">
+                    <div class="person-name">{{ ps.participant.name }}
+                      @if (ps.participant.isOrganizer) {
+                        <span class="organizer-tag">Organizer</span>
+                      }
+                    </div>
+                    <div class="person-share-detail">
+                      Total share: <strong>{{ ps.totalShare | currency: trip.currency }}</strong>
+                      @if (ps.paidSelf > 0) {
+                        · Paid themselves: <strong>{{ ps.paidSelf | currency: trip.currency }}</strong>
+                      }
+                    </div>
+                  </div>
+                  @if (ps.owesOrganizer > 0 && !ps.participant.isOrganizer) {
+                    <div class="owes-badge">
+                      Owes {{ ps.owesOrganizer | currency: trip.currency }}
+                    </div>
+                  } @else if (ps.participant.isOrganizer) {
+                    <div class="organizer-outlay">
+                      Paid {{ ps.totalShare | currency: trip.currency }}
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Visual Bar Chart -->
+      @if (data.total > 0) {
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>Spending Breakdown</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-bars">
+              @for (cat of data.breakdown; track cat.category) {
+                @if (cat.amount > 0) {
+                  <div class="chart-row">
+                    <div class="chart-label">
+                      <mat-icon [style.color]="cat.color">{{ cat.icon }}</mat-icon>
+                      <span>{{ cat.label }}</span>
+                    </div>
+                    <div class="chart-bar-wrapper">
+                      <div class="chart-bar" [style.width.%]="pct(cat.amount, data.total)"
+                           [style.background-color]="cat.color"></div>
+                    </div>
+                    <div class="chart-value">
+                      <strong>{{ cat.amount | currency: trip.currency }}</strong>
+                      @if (showConverted() && rateResult() && homeCurrency() !== trip.currency) {
+                        <small>≈ {{ convertWithFee(cat.amount) | currency: homeCurrency()! }}</small>
+                      } @else {
+                        <small>{{ pct(cat.amount, data.total) }}%</small>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Expenses List -->
+      @if (data.expenses.length > 0) {
+        <mat-card class="expenses-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>receipt_long</mat-icon>
+              Expenses
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="expense-list">
+              @for (expense of data.expenses; track expense.id) {
+                <div class="expense-row">
+                  <div class="expense-icon-wrap" [style.background]="categoryMeta[expense.category]?.color + '22'">
+                    <mat-icon [style.color]="categoryMeta[expense.category]?.color">
+                      {{ categoryMeta[expense.category]?.icon ?? 'more_horiz' }}
+                    </mat-icon>
+                  </div>
+                  <div class="expense-details">
+                    <div class="expense-title">{{ expense.title }}</div>
+                    <div class="expense-meta">
+                      <span class="expense-category">{{ categoryMeta[expense.category]?.label }}</span>
+                      @if (expense.paidById) {
+                        <span class="expense-payer">· Paid by {{ participantName(expense.paidById, data.participants) }}</span>
+                      }
+                      @if (expense.date) {
+                        <span class="expense-date">· {{ expense.date.toDate() | date:'MMM d' }}</span>
+                      }
+                    </div>
+                    @if (expense.notes) {
+                      <div class="expense-notes">{{ expense.notes }}</div>
+                    }
+                  </div>
+                  <div class="expense-amount">
+                    {{ expense.amount | currency: expense.currency }}
+                  </div>
+                  <div class="expense-actions">
+                    <button mat-icon-button (click)="openEditExpense(expense)" matTooltip="Edit">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button class="delete-btn" (click)="deleteExpense(expense)" matTooltip="Delete">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Category Breakdown Cards -->
+      <div class="breakdown-grid">
+        @for (cat of data.breakdown; track cat.category) {
+          @if (cat.items.length > 0) {
+            <mat-card class="breakdown-card">
+              <mat-card-header>
+                <div class="breakdown-header" [style.border-color]="cat.color">
+                  <mat-icon [style.color]="cat.color">{{ cat.icon }}</mat-icon>
+                  <mat-card-title>{{ cat.label }}</mat-card-title>
+                  <span class="breakdown-total">{{ cat.amount | currency: trip.currency }}</span>
+                </div>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="breakdown-items">
+                  @for (item of cat.items; track item.name) {
+                    <div class="breakdown-item">
+                      <span class="item-name">{{ item.name }}</span>
+                      <div class="item-cost-group">
+                        <span class="item-cost">{{ item.cost | currency: item.currency }}</span>
+                        @if (showConverted() && rateResult() && homeCurrency() !== trip.currency) {
+                          <span class="item-cost-converted">
+                            ≈ {{ convertWithFee(item.cost) | currency: homeCurrency()! }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+        }
+      </div>
+
+      @if (showConverted() && rateResult()) {
+        <p class="disclaimer">
+          * Exchange rates sourced from the European Central Bank via Frankfurter API.
+          Converted amounts include an estimated 2.5% foreign transaction fee — your actual fee may be 0–3.5%
+          depending on your bank, credit card, and payment method. Rates fluctuate daily.
+          This tool is for planning purposes only and does not constitute financial advice.
+        </p>
+      }
+    }
+  } @else {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+</div>

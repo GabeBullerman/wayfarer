@@ -1,0 +1,32 @@
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  mat-form-field { width: 100%; }
+}
+
+mat-dialog-content {
+  min-width: 360px;
+  max-width: 580px;
+  max-height: 80vh;
+  padding-top: 8px !important;
+}
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  color: #757575;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+  }
+}

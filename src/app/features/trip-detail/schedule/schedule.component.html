@@ -1,0 +1,116 @@
+<div class="schedule-container">
+  <div class="schedule-header">
+    <h2>Daily Schedule</h2>
+  </div>
+
+  @if (items$ | async; as days) {
+    <div class="days-list">
+      @for (day of days; track day.dayNumber; let first = $first; let last = $last) {
+        <div class="day-block">
+          <div class="day-header">
+            <div class="day-number">Day {{ day.dayNumber }}</div>
+            <div class="day-label">{{ day.label }}</div>
+            <button mat-stroked-button class="add-btn"
+                    (click)="openAddItem(day.date, day.items.length)">
+              <mat-icon>add</mat-icon> Add Activity
+            </button>
+          </div>
+
+          @if (first && !hasTransport(day)) {
+            <div class="day-hint">
+              <mat-icon>flight_land</mat-icon>
+              <span>No arrival or transfer planned on your first day.</span>
+              <button mat-button class="hint-add-btn" (click)="openAddItem(day.date, day.items.length)">
+                <mat-icon>add</mat-icon> Add
+              </button>
+            </div>
+          }
+          @if (last && !first && !hasTransport(day)) {
+            <div class="day-hint day-hint-depart">
+              <mat-icon>flight_takeoff</mat-icon>
+              <span>No departure or travel home planned on your last day.</span>
+              <button mat-button class="hint-add-btn" (click)="openAddItem(day.date, day.items.length)">
+                <mat-icon>add</mat-icon> Add
+              </button>
+            </div>
+          }
+
+          @if (day.items.length === 0) {
+            <div class="day-empty">
+              <mat-icon>wb_sunny</mat-icon>
+              <span>Free day — click "Add Activity" to plan something</span>
+            </div>
+          } @else {
+            <div class="timeline">
+              @for (item of day.items; track item.id; let last = $last) {
+                <div class="timeline-item">
+                  <div class="timeline-connector">
+                    <div class="timeline-dot" [class]="'dot-' + item.category"></div>
+                    @if (!last) { <div class="timeline-line"></div> }
+                  </div>
+
+                  <div class="timeline-content">
+                    <div class="item-header">
+                      <div class="item-time">
+                        @if (item.startTime) {
+                          {{ item.startTime }}
+                          @if (item.endTime) { – {{ item.endTime }} }
+                        } @else {
+                          <span class="no-time">No time set</span>
+                        }
+                      </div>
+                      <div class="item-actions">
+                        <button mat-icon-button (click)="openEditItem(item, day.items)"
+                                matTooltip="Edit">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="deleteItem(item)" matTooltip="Remove">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+
+                    <h3 class="item-title">{{ item.title }}</h3>
+
+                    <div class="item-meta">
+                      <mat-chip class="category-chip" [class]="'category-' + item.category">
+                        <mat-icon>{{ categoryIcon(item.category) }}</mat-icon>
+                        {{ item.category | titlecase }}
+                      </mat-chip>
+
+                      @if (item.location) {
+                        <span class="item-location">
+                          <mat-icon>place</mat-icon> {{ item.location }}
+                        </span>
+                      }
+
+                      @if (item.cost) {
+                        <span class="item-cost">
+                          <mat-icon>attach_money</mat-icon>
+                          {{ item.cost | number:'1.2-2' }} {{ item.currency }}
+                        </span>
+                      }
+                    </div>
+
+                    @if (item.description) {
+                      <p class="item-description">{{ item.description }}</p>
+                    }
+
+                    @if (item.notes) {
+                      <div class="item-notes">
+                        <mat-icon>sticky_note_2</mat-icon>
+                        <span>{{ item.notes }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+</div>

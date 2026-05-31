@@ -1,0 +1,145 @@
+<div class="bookings-container">
+  <div class="bookings-header">
+    <h2>Bookings & Confirmations</h2>
+    <button mat-flat-button color="primary" (click)="openAddBooking()">
+      <mat-icon>add</mat-icon> Add Booking
+    </button>
+  </div>
+
+  @if (data$ | async; as data) {
+    @let hints = getTravelHints(data.groups);
+    @if (hints.length > 0) {
+      <div class="hints-list">
+        @for (hint of hints; track hint.text) {
+          <div class="hint-card">
+            <mat-icon class="hint-icon">{{ hint.icon }}</mat-icon>
+            <span class="hint-text">{{ hint.text }}</span>
+            <button mat-stroked-button class="hint-action" (click)="openAddBooking()">
+              <mat-icon>add</mat-icon> Add
+            </button>
+          </div>
+        }
+      </div>
+    }
+    @if (data.groups.length === 0) {
+      <div class="empty-state">
+        <mat-icon>confirmation_number</mat-icon>
+        <h3>No bookings yet</h3>
+        <p>Add flights, hotels, Airbnbs, and other bookings here</p>
+      </div>
+    } @else {
+      <mat-accordion multi>
+        @for (group of data.groups; track group.type) {
+          <mat-expansion-panel [expanded]="true" class="booking-group">
+            <mat-expansion-panel-header>
+              <mat-panel-title class="group-title">
+                <mat-icon>{{ group.icon }}</mat-icon>
+                {{ group.label }}
+                <span class="count-badge">{{ group.bookings.length }}</span>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="booking-list">
+              @for (booking of group.bookings; track booking.id) {
+                <div class="booking-card">
+                  <div class="booking-card-main">
+                    <div class="booking-card-header">
+                      <div class="booking-title-row">
+                        <h3>{{ booking.title }}</h3>
+                        <span class="status-badge" [class]="'status-' + booking.status">
+                          {{ booking.status | titlecase }}
+                        </span>
+                      </div>
+                      <div class="booking-card-actions">
+                        @if (booking.bookingUrl) {
+                          <button mat-icon-button matTooltip="Open booking link"
+                                  (click)="openBookingUrl(booking.bookingUrl)">
+                            <mat-icon>open_in_new</mat-icon>
+                          </button>
+                        }
+                        <button mat-icon-button matTooltip="Edit" (click)="openEditBooking(booking)">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button matTooltip="Delete" (click)="deleteBooking(booking)">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="booking-details">
+                      @if (booking.provider) {
+                        <div class="detail-item">
+                          <mat-icon>business</mat-icon>
+                          <span>{{ booking.provider }}</span>
+                        </div>
+                      }
+
+                      @if (booking.confirmationNumber) {
+                        <div class="detail-item confirmation">
+                          <mat-icon>tag</mat-icon>
+                          <span>Confirmation: <strong>{{ booking.confirmationNumber }}</strong></span>
+                        </div>
+                      }
+
+                      @if (booking.checkIn) {
+                        <div class="detail-item">
+                          <mat-icon>flight_takeoff</mat-icon>
+                          <span>{{ booking.checkIn.toDate() | date:'MMM d, y' }}</span>
+                          @if (booking.checkOut) {
+                            <span class="date-arrow">→</span>
+                            <mat-icon>flight_land</mat-icon>
+                            <span>{{ booking.checkOut.toDate() | date:'MMM d, y' }}</span>
+                          }
+                        </div>
+                      }
+
+                      @if (booking.cost) {
+                        <div class="detail-item cost">
+                          <mat-icon>payments</mat-icon>
+                          <strong>{{ booking.cost | currency: (booking.currency ?? 'USD') }}</strong>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Participant chips -->
+                    @let passengerNames = getPassengerNames(booking, data.participants);
+                    @let payerName = getPayerName(booking, data.participants);
+                    @if (passengerNames.length > 0 || payerName) {
+                      <div class="booking-people">
+                        @if (passengerNames.length > 0) {
+                          <div class="people-row">
+                            <mat-icon class="people-icon">people</mat-icon>
+                            <div class="passenger-chips">
+                              @for (name of passengerNames; track name) {
+                                <span class="passenger-chip">{{ name }}</span>
+                              }
+                            </div>
+                          </div>
+                        }
+                        @if (payerName) {
+                          <div class="payer-row">
+                            <mat-icon class="people-icon">credit_card</mat-icon>
+                            <span class="payer-label">Paid by <strong>{{ payerName }}</strong></span>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    @if (booking.notes) {
+                      <div class="booking-notes">
+                        <mat-icon>sticky_note_2</mat-icon>
+                        <span>{{ booking.notes }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
+    }
+  } @else {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+</div>

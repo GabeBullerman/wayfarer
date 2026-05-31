@@ -1,0 +1,98 @@
+import { Component, inject, signal } from '@angular/core';
+import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ItineraryService } from '../../../../core/services/itinerary.service';
+import { ItineraryItem, ItemCategory } from '../../../../core/models/itinerary-item.model';
+import { Timestamp } from '@angular/fire/firestore';
+import { from, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+export interface ItineraryItemDialogData {
+  tripId: string;
+  item?: ItineraryItem;
+  defaultDate?: Date;
+  existingCount: number;
+}
+
+@Component({
+  selector: 'app-itinerary-item-dialog',
+  standalone: true,
+  imports: [
+    ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
+    MatButtonModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule,
+    MatIconModule, MatProgressSpinnerModule,
+  ],
+  templateUrl: './itinerary-item-dialog.component.html',
+  styleUrl: './itinerary-item-dialog.component.scss',
+})
+export class ItineraryItemDialogComponent {
+  private fb = inject(FormBuilder);
+  private itineraryService = inject(ItineraryService);
+  private dialogRef = inject(MatDialogRef<ItineraryItemDialogComponent>);
+  data = inject<ItineraryItemDialogData>(MAT_DIALOG_DATA);
+
+  loading = signal(false);
+  isEdit = !!this.data.item;
+
+  categories: { value: ItemCategory; label: string; icon: string }[] = [
+    { value: 'transport', label: 'Transport', icon: 'directions_car' },
+    { value: 'accommodation', label: 'Accommodation', icon: 'hotel' },
+    { value: 'activity', label: 'Activity', icon: 'local_activity' },
+    { value: 'food', label: 'Food & Drink', icon: 'restaurant' },
+    { value: 'other', label: 'Other', icon: 'more_horiz' },
+  ];
+
+  form = this.fb.group({
+    title: [this.data.item?.title ?? '', Validators.required],
+    date: [this.data.item?.date?.toDate() ?? this.data.defaultDate ?? null, Validators.required],
+    startTime: [this.data.item?.startTime ?? ''],
+    endTime: [this.data.item?.endTime ?? ''],
+    category: [this.data.item?.category ?? 'activity' as ItemCategory, Validators.required],
+    location: [this.data.item?.location ?? ''],
+    latitude: [this.data.item?.latitude ?? null],
+    longitude: [this.data.item?.longitude ?? null],
+    cost: [this.data.item?.cost ?? null],
+    currency: [this.data.item?.currency ?? 'USD'],
+    description: [this.data.item?.description ?? ''],
+    notes: [this.data.item?.notes ?? ''],
+  });
+
+  submit() {
+    if (this.form.invalid) return;
+    this.loading.set(true);
+    const v = this.form.value;
+    const payload: Omit<ItineraryItem, 'id'> = {
+      tripId: this.data.tripId,
+      title: v.title!,
+      date: Timestamp.fromDate(v.date!),
+      startTime: v.startTime ?? undefined,
+      endTime: v.endTime ?? undefined,
+      category: v.category!,
+      location: v.location ?? undefined,
+      latitude: v.latitude ? Number(v.latitude) : undefined,
+      longitude: v.longitude ? Number(v.longitude) : undefined,
+      cost: v.cost ? Number(v.cost) : undefined,
+      currency: v.currency ?? undefined,
+      description: v.description ?? undefined,
+      notes: v.notes ?? undefined,
+      order: this.data.item?.order ?? this.data.existingCount,
+    };
+
+    const op: Observable<void> = this.isEdit
+      ? from(this.itineraryService.updateItem(this.data.item!.id!, payload))
+      : from(this.itineraryService.createItem(payload)).pipe(map(() => undefined));
+
+    op.subscribe({
+      next: () => this.dialogRef.close(true),
+      error: () => this.loading.set(false),
+    });
+  }
+}

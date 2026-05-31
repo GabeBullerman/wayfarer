@@ -1,0 +1,129 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Booking' : 'Add Booking' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" id="booking-form" (ngSubmit)="submit()">
+    <div class="two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type">
+          @for (type of bookingTypes; track type.value) {
+            <mat-option [value]="type.value">
+              <mat-icon>{{ type.icon }}</mat-icon> {{ type.label }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          @for (s of statuses; track s.value) {
+            <mat-option [value]="s.value">{{ s.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width mt-16">
+      <mat-label>Title / Description</mat-label>
+      <input matInput formControlName="title"
+             placeholder="e.g. Delta Flight JFK → LAX, Airbnb Downtown Rome" />
+      @if (form.get('title')?.hasError('required')) {
+        <mat-error>Title is required</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="two-col mt-16">
+      <mat-form-field appearance="outline">
+        <mat-label>Provider / Airline / Host</mat-label>
+        <input matInput formControlName="provider" placeholder="e.g. Delta, Marriott" />
+        <mat-icon matPrefix>business</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Confirmation #</mat-label>
+        <input matInput formControlName="confirmationNumber" placeholder="ABC123" />
+        <mat-icon matPrefix>tag</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width mt-16">
+      <mat-label>Booking URL</mat-label>
+      <input matInput formControlName="bookingUrl" type="url"
+             placeholder="https://..." />
+      <mat-icon matPrefix>link</mat-icon>
+    </mat-form-field>
+
+    <div class="two-col mt-16">
+      <mat-form-field appearance="outline">
+        <mat-label>Check-In / Departure</mat-label>
+        <input matInput [matDatepicker]="checkInPicker" formControlName="checkIn" />
+        <mat-datepicker-toggle matIconSuffix [for]="checkInPicker"></mat-datepicker-toggle>
+        <mat-datepicker #checkInPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Check-Out / Arrival</mat-label>
+        <input matInput [matDatepicker]="checkOutPicker" formControlName="checkOut" />
+        <mat-datepicker-toggle matIconSuffix [for]="checkOutPicker"></mat-datepicker-toggle>
+        <mat-datepicker #checkOutPicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <div class="two-col mt-16">
+      <mat-form-field appearance="outline">
+        <mat-label>Cost</mat-label>
+        <input matInput type="number" formControlName="cost" placeholder="0.00" />
+        <mat-icon matPrefix>attach_money</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Currency</mat-label>
+        <input matInput formControlName="currency" placeholder="USD" />
+      </mat-form-field>
+    </div>
+
+    @if (participants().length > 0) {
+      <div class="section-divider">
+        <span>Group Details</span>
+      </div>
+
+      <div class="two-col mt-16">
+        <mat-form-field appearance="outline">
+          <mat-label>Who is this for?</mat-label>
+          <mat-select formControlName="passengerIds" multiple>
+            @for (p of participants(); track p.id) {
+              <mat-option [value]="p.id">{{ p.name }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>Leave empty = everyone</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Who paid?</mat-label>
+          <mat-select formControlName="paidById">
+            <mat-option [value]="null">Organizer / Not tracked</mat-option>
+            @for (p of participants(); track p.id) {
+              <mat-option [value]="p.id">{{ p.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    }
+
+    <mat-form-field appearance="outline" class="full-width mt-16">
+      <mat-label>Notes</mat-label>
+      <textarea matInput formControlName="notes" rows="3"
+                placeholder="Check-in instructions, cancellation policy, seat preferences...">
+      </textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="loading()">
+    @if (loading()) { <mat-spinner diameter="18"></mat-spinner> }
+    @else { {{ isEdit ? 'Save Changes' : 'Add Booking' }} }
+  </button>
+</mat-dialog-actions>

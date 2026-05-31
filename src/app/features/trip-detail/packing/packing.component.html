@@ -1,0 +1,143 @@
+<div class="packing-container">
+
+  <!-- Header -->
+  <div class="packing-header">
+    <div class="header-left">
+      <h2>Packing List</h2>
+      @if (totalItems() > 0) {
+        <span class="pack-count">{{ totalPacked() }} / {{ totalItems() }} packed</span>
+      }
+    </div>
+    <div class="header-right">
+      @if (participants().length > 0) {
+        <select class="person-filter" [value]="filterPersonId()"
+                (change)="filterPersonId.set($any($event.target).value)">
+          <option value="">Everyone</option>
+          @for (p of participants(); track p.id) {
+            <option [value]="p.id">{{ p.name }}</option>
+          }
+        </select>
+      }
+      @if (!showAddForm()) {
+        <button mat-flat-button color="primary" (click)="showAddForm.set(true)">
+          <mat-icon>add</mat-icon> Add Item
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  @if (totalItems() > 0) {
+    <div class="progress-row">
+      <mat-progress-bar mode="determinate" [value]="progressPct()" class="pack-progress"
+        [class.complete]="progressPct() === 100">
+      </mat-progress-bar>
+      <span class="progress-pct">{{ progressPct() }}%</span>
+    </div>
+  }
+
+  <!-- Add form -->
+  @if (showAddForm()) {
+    <div class="add-card">
+      <form [formGroup]="addForm" (ngSubmit)="saveAdd()">
+        <div class="add-row">
+          <mat-form-field appearance="outline" class="field-name">
+            <mat-label>Item name</mat-label>
+            <input matInput formControlName="name" placeholder="e.g. Passport" autofocus>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="field-category">
+            <mat-label>Category</mat-label>
+            <mat-select formControlName="category">
+              @for (cat of categories; track cat.value) {
+                <mat-option [value]="cat.value">
+                  <mat-icon [style.color]="cat.color">{{ cat.icon }}</mat-icon>
+                  {{ cat.label }}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="field-qty">
+            <mat-label>Qty</mat-label>
+            <input matInput type="number" formControlName="quantity" min="1">
+          </mat-form-field>
+
+          @if (participants().length > 0) {
+            <mat-form-field appearance="outline" class="field-person">
+              <mat-label>For</mat-label>
+              <mat-select formControlName="assignedTo">
+                <mat-option [value]="null">Everyone</mat-option>
+                @for (p of participants(); track p.id) {
+                  <mat-option [value]="p.id">{{ p.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+
+          <div class="add-actions">
+            <button mat-icon-button type="button" (click)="cancelAdd()" matTooltip="Cancel">
+              <mat-icon>close</mat-icon>
+            </button>
+            <button mat-flat-button color="primary" type="submit"
+                    [disabled]="addForm.invalid || saving()">
+              Add
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (totalItems() === 0 && !showAddForm()) {
+    <div class="empty-state">
+      <mat-icon>luggage</mat-icon>
+      <h3>Nothing packed yet</h3>
+      <p>Start adding items to your packing list</p>
+    </div>
+  }
+
+  <!-- All packed banner -->
+  @if (totalItems() > 0 && progressPct() === 100) {
+    <div class="all-packed-banner">
+      <mat-icon>check_circle</mat-icon>
+      <span>Everything's packed — you're ready to go!</span>
+    </div>
+  }
+
+  <!-- Category groups -->
+  @for (group of groups(); track group.meta.value) {
+    <div class="category-group">
+      <div class="category-header">
+        <mat-icon [style.color]="group.meta.color">{{ group.meta.icon }}</mat-icon>
+        <span class="category-label">{{ group.meta.label }}</span>
+        <span class="category-count">{{ group.packed }} / {{ group.items.length }}</span>
+      </div>
+
+      <div class="item-list">
+        @for (item of group.items; track item.id) {
+          <div class="packing-item" [class.packed]="item.isPacked">
+            <mat-checkbox [checked]="item.isPacked" (change)="togglePacked(item)"
+                          color="primary">
+            </mat-checkbox>
+            <div class="item-info">
+              <span class="item-name">{{ item.name }}</span>
+              @if (item.quantity > 1) {
+                <span class="item-qty">× {{ item.quantity }}</span>
+              }
+              @if (item.assignedTo) {
+                <span class="item-assignee">{{ participantName(item.assignedTo) }}</span>
+              }
+            </div>
+            <button mat-icon-button class="delete-btn" (click)="deleteItem(item)"
+                    matTooltip="Remove">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>

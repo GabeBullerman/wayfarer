@@ -1,0 +1,66 @@
+@if (trip$ | async; as trip) {
+  <div class="trip-detail-page">
+
+    <!-- Hero Header -->
+    <div class="trip-hero" [style.background-image]="trip.coverPhotoUrl ? 'url(' + trip.coverPhotoUrl + ')' : null">
+      <div class="hero-overlay">
+        <div class="hero-content">
+          <button mat-icon-button class="back-btn" (click)="back()" matTooltip="Back to trips">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <div class="hero-text">
+            <h1>{{ trip.name }}</h1>
+            <p class="hero-destination">
+              <mat-icon>location_on</mat-icon>
+              {{ trip.destination }}
+            </p>
+            <p class="hero-dates">
+              <mat-icon>calendar_today</mat-icon>
+              {{ trip.startDate.toDate() | date:'MMM d' }} –
+              {{ trip.endDate.toDate() | date:'MMM d, y' }}
+              &nbsp;·&nbsp; {{ tripDuration(trip) }} days
+            </p>
+          </div>
+          @if (isOwner(trip)) {
+            <div class="hero-actions">
+              <button mat-icon-button matTooltip="Edit trip" (click)="editTrip(trip)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Delete trip" (click)="deleteTrip(trip)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab navigation — plain div, no Angular Material wrapper -->
+    <div class="trip-tab-nav">
+      @for (tab of tabs; track tab.label; let i = $index) {
+        <button class="tab-link" [class.active]="selectedTab() === i" (click)="selectedTab.set(i)">
+          <mat-icon>{{ tab.icon }}</mat-icon>
+          <span>{{ tab.label }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- Tab content -->
+    <div class="tab-body">
+      @switch (selectedTab()) {
+        @case (0) { <app-overview [trip]="trip" [tripId]="id" /> }
+        @case (1) { <app-schedule [tripId]="id" [trip]="trip" /> }
+        @case (2) { <app-bookings [tripId]="id" [trip]="trip" /> }
+        @case (3) { <app-people [tripId]="id" [isOwner]="isOwner(trip)" /> }
+        @case (4) { <app-photos [tripId]="id" /> }
+        @case (5) { <app-costs [tripId]="id" [trip]="trip" /> }
+        @case (6) { <app-packing [tripId]="id" /> }
+      }
+    </div>
+
+  </div>
+} @else {
+  <div class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+}
