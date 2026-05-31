@@ -22,13 +22,28 @@ try {
 
 const aiAdvisor = require('../api/ai-advisor');
 
+// Wrap Node's ServerResponse with Vercel-compatible helpers
+function wrapRes(res) {
+  let statusCode = 200;
+  const wrapped = {
+    setHeader: (k, v) => res.setHeader(k, v),
+    status(code) { statusCode = code; return wrapped; },
+    json(data) {
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
+    },
+    end: (s) => res.end(s),
+  };
+  return wrapped;
+}
+
 http.createServer((req, res) => {
   if (req.url === '/api/ai-advisor' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => (body += chunk));
     req.on('end', async () => {
       try { req.body = JSON.parse(body); } catch (_) { req.body = {}; }
-      await aiAdvisor(req, res);
+      await aiAdvisor(req, wrapRes(res));
     });
   } else {
     res.writeHead(404).end('Not found');
