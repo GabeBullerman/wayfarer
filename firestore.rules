@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // ── Trips ───────────────────────────────────────────────────────────────
+    // Any signed-in user can read a trip by ID (URL/link sharing model).
+    // Only the owner can edit or delete.
+    match /trips/{tripId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // ── Photos ──────────────────────────────────────────────────────────────
+    // Any signed-in user can read (shared gallery across trip members).
+    // Only the uploader can modify or delete their own photo.
+    match /photos/{photoId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // ── Participants ─────────────────────────────────────────────────────────
+    match /participants/{participantId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── Bookings ─────────────────────────────────────────────────────────────
+    match /bookings/{bookingId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── Itinerary ────────────────────────────────────────────────────────────
+    match /itinerary/{itemId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── Expenses ─────────────────────────────────────────────────────────────
+    match /expenses/{expenseId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── Packing list ──────────────────────────────────────────────────────────
+    match /packingItems/{itemId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── User profiles ─────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+  }
+}
