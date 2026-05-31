@@ -233,6 +233,8 @@
   .category-count {
     font-size: 0.78rem;
     color: #9e9e9e;
+
+    &.all-done { color: #2e7d32; font-weight: 600; }
   }
 }
 
@@ -253,7 +255,14 @@
   &:hover { background: #fafafa; }
 
   &.packed {
-    .item-name { text-decoration: line-through; color: #9e9e9e; }
+    background: #f1f8e9;
+
+    .item-name {
+      text-decoration: line-through;
+      color: #a5d6a7;
+    }
+
+    .item-qty, .item-assignee { opacity: 0.5; }
   }
 }
 

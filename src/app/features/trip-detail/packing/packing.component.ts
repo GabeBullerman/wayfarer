@@ -1,5 +1,7 @@
-import { Component, Input, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Timestamp } from '@angular/fire/firestore';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -51,6 +53,7 @@ export class PackingComponent implements OnInit {
   private participantService = inject(ParticipantService);
   private aiService = inject(AiAdvisorService);
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
   items = signal<PackingItem[]>([]);
   participants = signal<TripParticipant[]>([]);
@@ -102,12 +105,21 @@ export class PackingComponent implements OnInit {
   );
 
   ngOnInit() {
-    this.packingService.getItems(this.tripId).subscribe(items => this.items.set(items));
-    this.participantService.getParticipants(this.tripId).subscribe(p => this.participants.set(p));
+    this.packingService.getItems(this.tripId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(items => this.items.set(items));
+    this.participantService.getParticipants(this.tripId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(p => this.participants.set(p));
   }
 
   togglePacked(item: PackingItem) {
-    from(this.packingService.togglePacked(item.id!, !item.isPacked)).subscribe();
+    const newValue = !item.isPacked;
+    // Optimistic update so counts and styling reflect immediately
+    this.items.update(list =>
+      list.map(i => i.id === item.id ? { ...i, isPacked: newValue } : i)
+    );
+    from(this.packingService.togglePacked(item.id!, newValue)).subscribe();
   }
 
   deleteItem(item: PackingItem) {
@@ -160,7 +172,22 @@ export class PackingComponent implements OnInit {
 
   addSelectedSuggestions() {
     const selected = this.aiSuggestions().filter(s => s.selected);
-    const adds = selected.map(s =>
+
+    // Optimistic update — items appear immediately without waiting for Firestore
+    const optimistic: PackingItem[] = selected.map((s, i) => ({
+      id: `__temp_${Date.now()}_${i}`,
+      tripId: this.tripId,
+      name: s.name,
+      category: s.category,
+      quantity: s.quantity,
+      assignedTo: null,
+      isPacked: false,
+      createdAt: Timestamp.now(),
+    }));
+    this.items.update(list => [...list, ...optimistic]);
+
+    // Persist to Firestore in background; real-time listener replaces temp IDs with real ones
+    selected.forEach(s =>
       from(this.packingService.createItem({
         tripId: this.tripId,
         name: s.name,
@@ -168,9 +195,9 @@ export class PackingComponent implements OnInit {
         quantity: s.quantity,
         assignedTo: null,
         isPacked: false,
-      }))
+      })).subscribe()
     );
-    adds.forEach(a => a.subscribe());
+
     this.showAiPanel.set(false);
     this.aiSuggestions.set([]);
   }

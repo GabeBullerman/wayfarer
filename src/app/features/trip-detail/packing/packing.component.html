@@ -164,7 +164,9 @@
       <div class="category-header">
         <mat-icon [style.color]="group.meta.color">{{ group.meta.icon }}</mat-icon>
         <span class="category-label">{{ group.meta.label }}</span>
-        <span class="category-count">{{ group.packed }} / {{ group.items.length }}</span>
+        <span class="category-count" [class.all-done]="group.packed === group.items.length">
+          {{ group.packed }} / {{ group.items.length }}
+        </span>
       </div>
 
       <div class="item-list">
