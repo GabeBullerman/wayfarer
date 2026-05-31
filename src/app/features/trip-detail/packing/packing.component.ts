@@ -9,11 +9,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { from } from 'rxjs';
 import { PackingService } from '../../../core/services/packing.service';
 import { ParticipantService } from '../../../core/services/participant.service';
+import { AiAdvisorService, PackingSuggestion } from '../../../core/services/ai-advisor.service';
 import { PackingItem, PackingCategory } from '../../../core/models/packing-item.model';
 import { TripParticipant } from '../../../core/models/trip-participant.model';
+import { Trip } from '../../../core/models/trip.model';
 
 interface CategoryMeta {
   value: PackingCategory;
@@ -35,16 +38,18 @@ interface CategoryGroup {
     ReactiveFormsModule,
     MatCheckboxModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatProgressBarModule, MatTooltipModule, MatChipsModule,
+    MatProgressBarModule, MatTooltipModule, MatChipsModule, MatProgressSpinnerModule,
   ],
   templateUrl: './packing.component.html',
   styleUrl: './packing.component.scss',
 })
 export class PackingComponent implements OnInit {
   @Input() tripId!: string;
+  @Input() trip!: Trip;
 
   private packingService = inject(PackingService);
   private participantService = inject(ParticipantService);
+  private aiService = inject(AiAdvisorService);
   private fb = inject(FormBuilder);
 
   items = signal<PackingItem[]>([]);
@@ -52,6 +57,9 @@ export class PackingComponent implements OnInit {
   showAddForm = signal(false);
   saving = signal(false);
   filterPersonId = signal<string>('');
+  aiSuggestions = signal<PackingSuggestion[]>([]);
+  loadingAi = signal(false);
+  showAiPanel = signal(false);
 
   readonly categories: CategoryMeta[] = [
     { value: 'documents',   label: 'Documents',   icon: 'description',     color: '#1565c0' },
@@ -127,6 +135,44 @@ export class PackingComponent implements OnInit {
   cancelAdd() {
     this.addForm.reset({ name: '', category: 'other', quantity: 1, assignedTo: null });
     this.showAddForm.set(false);
+  }
+
+  get selectedSuggestionsCount(): number {
+    return this.aiSuggestions().filter(s => s.selected).length;
+  }
+
+  fetchAiSuggestions() {
+    if (this.loadingAi()) return;
+    this.loadingAi.set(true);
+    this.showAiPanel.set(true);
+    const existing = this.items().map(i => i.name);
+    this.aiService.getPackingSuggestions(this.trip, existing).subscribe(suggestions => {
+      this.aiSuggestions.set(suggestions);
+      this.loadingAi.set(false);
+    });
+  }
+
+  toggleSuggestion(index: number) {
+    this.aiSuggestions.update(list =>
+      list.map((s, i) => i === index ? { ...s, selected: !s.selected } : s)
+    );
+  }
+
+  addSelectedSuggestions() {
+    const selected = this.aiSuggestions().filter(s => s.selected);
+    const adds = selected.map(s =>
+      from(this.packingService.createItem({
+        tripId: this.tripId,
+        name: s.name,
+        category: s.category,
+        quantity: s.quantity,
+        assignedTo: null,
+        isPacked: false,
+      }))
+    );
+    adds.forEach(a => a.subscribe());
+    this.showAiPanel.set(false);
+    this.aiSuggestions.set([]);
   }
 
   participantName(id: string | null | undefined): string {

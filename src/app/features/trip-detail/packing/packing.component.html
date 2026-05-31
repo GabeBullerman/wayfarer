@@ -18,6 +18,14 @@
           }
         </select>
       }
+      <button mat-stroked-button (click)="fetchAiSuggestions()" [disabled]="loadingAi()">
+        @if (loadingAi()) {
+          <mat-spinner diameter="16"></mat-spinner>
+        } @else {
+          <mat-icon>auto_awesome</mat-icon>
+        }
+        AI Suggestions
+      </button>
       @if (!showAddForm()) {
         <button mat-flat-button color="primary" (click)="showAddForm.set(true)">
           <mat-icon>add</mat-icon> Add Item
@@ -25,6 +33,50 @@
       }
     </div>
   </div>
+
+  <!-- AI Suggestions Panel -->
+  @if (showAiPanel()) {
+    <div class="ai-panel">
+      <div class="ai-panel-header">
+        <div class="ai-panel-title">
+          <mat-icon>auto_awesome</mat-icon>
+          <span>AI Packing Suggestions</span>
+        </div>
+        <button mat-icon-button (click)="showAiPanel.set(false)">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      @if (loadingAi()) {
+        <div class="ai-loading">
+          <mat-spinner diameter="32"></mat-spinner>
+          <p>Generating suggestions for {{ trip.destination }}…</p>
+        </div>
+      } @else if (aiSuggestions().length === 0) {
+        <p class="ai-empty">No suggestions returned. Make sure ANTHROPIC_API_KEY is set in Vercel.</p>
+      } @else {
+        <div class="ai-suggestions-list">
+          @for (s of aiSuggestions(); track $index) {
+            <label class="ai-suggestion-item" [class.selected]="s.selected">
+              <input type="checkbox" [checked]="s.selected" (change)="toggleSuggestion($index)" />
+              <mat-icon [style.color]="categoryMeta(s.category).color">{{ categoryMeta(s.category).icon }}</mat-icon>
+              <span class="s-name">{{ s.name }}</span>
+              @if (s.quantity > 1) {
+                <span class="s-qty">× {{ s.quantity }}</span>
+              }
+            </label>
+          }
+        </div>
+        <div class="ai-panel-actions">
+          <span class="selected-count">{{ selectedSuggestionsCount }} selected</span>
+          <button mat-flat-button color="primary" (click)="addSelectedSuggestions()"
+                  [disabled]="!aiSuggestions().length">
+            <mat-icon>playlist_add</mat-icon> Add Selected
+          </button>
+        </div>
+      }
+    </div>
+  }
 
   <!-- Progress bar -->
   @if (totalItems() > 0) {

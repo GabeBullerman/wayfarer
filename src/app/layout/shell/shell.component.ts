@@ -35,7 +35,8 @@ export class ShellComponent {
   isMobile$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(r => r.matches));
 
   navItems = [
-    { label: 'My Trips', icon: 'flight_takeoff', route: '/trips' },
+    { label: 'My Trips',   icon: 'flight_takeoff', route: '/trips' },
+    { label: 'Past Trips', icon: 'history',         route: '/past-trips' },
   ];
 
   logout() {

@@ -1,6 +1,21 @@
 <div class="overview-grid">
   @if (bookings$ | async; as bookings) {
     @if (items$ | async; as items) {
+
+      <!-- Bank Reminder Banner -->
+      @if (showBankReminder) {
+        <div class="bank-reminder">
+          <mat-icon>credit_card</mat-icon>
+          <div class="reminder-text">
+            <strong>Trip in {{ daysUntilTrip }} day{{ daysUntilTrip === 1 ? '' : 's' }} — notify your bank!</strong>
+            <span>Let your card issuers know you're traveling to {{ trip.destination }} to avoid declined charges abroad.</span>
+          </div>
+          <button mat-icon-button (click)="bankReminderDismissed.set(true)" matTooltip="Dismiss">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      }
+
       <!-- Stats Row -->
       <div class="stats-row">
         <mat-card class="stat-card">
@@ -34,6 +49,27 @@
           </div>
         </mat-card>
       </div>
+
+      <!-- Weather Widget -->
+      @if (weather().length > 0) {
+        <mat-card class="weather-card">
+          <mat-card-header>
+            <mat-card-title><mat-icon>wb_sunny</mat-icon> Weather in {{ trip.destination }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="weather-row">
+              @for (day of weather(); track day.date) {
+                <div class="weather-day">
+                  <span class="w-day">{{ day.date | date:'EEE' }}</span>
+                  <span class="w-emoji">{{ day.emoji }}</span>
+                  <span class="w-hi">{{ day.maxTemp }}°</span>
+                  <span class="w-lo">{{ day.minTemp }}°</span>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
 
       <!-- Map -->
       <mat-card class="map-card">

@@ -13,6 +13,7 @@ import { Trip } from '../../../core/models/trip.model';
 import { ItineraryService } from '../../../core/services/itinerary.service';
 import { BookingService } from '../../../core/services/booking.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
+import { WeatherService, WeatherDay } from '../../../core/services/weather.service';
 import { ItineraryItem } from '../../../core/models/itinerary-item.model';
 import { Booking } from '../../../core/models/booking.model';
 
@@ -49,11 +50,14 @@ export class OverviewComponent implements OnInit {
   private bookingService = inject(BookingService);
   private directionsService = inject(MapDirectionsService);
   private mapsLoader = inject(GoogleMapsLoaderService);
+  private weatherService = inject(WeatherService);
 
   items$!: Observable<ItineraryItem[]>;
   bookings$!: Observable<Booking[]>;
   mapApiLoaded$!: Observable<boolean>;
 
+  weather = signal<WeatherDay[]>([]);
+  bankReminderDismissed = signal(false);
   activePin = signal<ItineraryItem | null>(null);
   allItems = signal<ItineraryItem[]>([]);
   selectedDayIso = signal<string>('');
@@ -120,7 +124,17 @@ export class OverviewComponent implements OnInit {
       tap(loaded => { if (loaded) this.mapsLoaded.set(true); })
     );
 
-    // Leave selectedDayIso as '' — all pins shown, no directions by default
+    this.weatherService.getForecast(this.trip.destination)
+      .subscribe(days => this.weather.set(days));
+  }
+
+  get daysUntilTrip(): number {
+    return Math.ceil((this.trip.startDate.toDate().getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  }
+
+  get showBankReminder(): boolean {
+    const d = this.daysUntilTrip;
+    return d > 0 && d <= 14 && !this.bankReminderDismissed();
   }
 
   get tripDays(): TripDay[] {

@@ -19,6 +19,7 @@ import { CostsComponent } from './costs/costs.component';
 import { OverviewComponent } from './overview/overview.component';
 import { PeopleComponent } from './people/people.component';
 import { PackingComponent } from './packing/packing.component';
+import { AiAssistantComponent } from './ai-assistant/ai-assistant.component';
 import { from } from 'rxjs';
 
 export interface TabDef {
@@ -33,7 +34,7 @@ export interface TabDef {
     AsyncPipe, DatePipe, MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatTooltipModule,
     ScheduleComponent, BookingsComponent, PhotosComponent, CostsComponent,
-    OverviewComponent, PeopleComponent, PackingComponent,
+    OverviewComponent, PeopleComponent, PackingComponent, AiAssistantComponent,
   ],
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss',
@@ -62,6 +63,7 @@ export class TripDetailComponent implements OnInit {
     { label: 'Photos',    icon: 'photo_library' },
     { label: 'Costs',     icon: 'payments' },
     { label: 'Packing',   icon: 'luggage' },
+    { label: 'AI',        icon: 'auto_awesome' },
   ];
 
   ngOnInit() {

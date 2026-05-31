@@ -6,6 +6,65 @@
   margin: 0 auto;
 }
 
+.bank-reminder {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 12px;
+  padding: 14px 16px;
+
+  > mat-icon { color: #f9a825; font-size: 28px; width: 28px; height: 28px; flex-shrink: 0; }
+
+  .reminder-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.875rem;
+
+    strong { color: #e65100; }
+    span   { color: #6d4c00; }
+  }
+
+  button[mat-icon-button] { color: #bfa000; }
+}
+
+.weather-card {
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem !important;
+
+    mat-icon { color: #fb8c00; }
+  }
+}
+
+.weather-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.weather-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 52px;
+  padding: 10px 8px;
+  background: #f5f7ff;
+  border-radius: 12px;
+
+  .w-day   { font-size: 0.72rem; font-weight: 600; color: #9e9e9e; text-transform: uppercase; }
+  .w-emoji { font-size: 1.4rem; line-height: 1; }
+  .w-hi    { font-size: 0.9rem; font-weight: 700; color: #e65100; }
+  .w-lo    { font-size: 0.78rem; color: #90a4ae; }
+}
+
 .stats-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

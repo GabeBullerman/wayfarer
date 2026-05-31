@@ -75,6 +75,11 @@
   background: #1a237e !important;
 
   .toolbar-spacer { flex: 1; }
+
+  button[mat-icon-button] {
+    color: white;
+    mat-icon { color: white; }
+  }
 }
 
 .shell-content {

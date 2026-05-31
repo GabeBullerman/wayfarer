@@ -1,0 +1,72 @@
+<div class="ai-container">
+
+  <div class="ai-header">
+    <div class="ai-title">
+      <mat-icon class="ai-icon">auto_awesome</mat-icon>
+      <div>
+        <h2>AI Travel Assistant</h2>
+        <p>Ask anything about {{ trip.destination }}</p>
+      </div>
+    </div>
+    @if (messages().length > 0) {
+      <button mat-icon-button (click)="clearChat()" matTooltip="Clear chat">
+        <mat-icon>restart_alt</mat-icon>
+      </button>
+    }
+  </div>
+
+  <!-- Quick prompts — shown when no messages yet -->
+  @if (messages().length === 0) {
+    <div class="quick-prompts">
+      <p class="quick-label">Quick questions</p>
+      <div class="chips-wrap">
+        @for (prompt of quickPrompts; track prompt) {
+          <button class="chip" (click)="send(prompt)">{{ prompt }}</button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Message thread -->
+  @if (messages().length > 0) {
+    <div class="messages">
+      @for (msg of messages(); track $index) {
+        <div class="message" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'">
+          @if (msg.role === 'assistant') {
+            <div class="msg-avatar"><mat-icon>auto_awesome</mat-icon></div>
+          }
+          <div class="msg-bubble">{{ msg.content }}</div>
+        </div>
+      }
+      @if (loading()) {
+        <div class="message assistant">
+          <div class="msg-avatar"><mat-icon>auto_awesome</mat-icon></div>
+          <div class="msg-bubble thinking">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Input -->
+  <div class="input-row">
+    <mat-form-field appearance="outline" class="input-field">
+      <input matInput
+             placeholder="Ask about {{ trip.destination }}…"
+             [value]="inputText()"
+             (input)="inputText.set($any($event.target).value)"
+             (keydown)="onEnter($event)"
+             [disabled]="loading()" />
+    </mat-form-field>
+    <button mat-flat-button color="primary" class="send-btn"
+            (click)="send()" [disabled]="!inputText().trim() || loading()">
+      @if (loading()) {
+        <mat-spinner diameter="18" color="accent"></mat-spinner>
+      } @else {
+        <mat-icon>send</mat-icon>
+      }
+    </button>
+  </div>
+
+</div>

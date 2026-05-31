@@ -54,7 +54,8 @@
         @case (3) { <app-people [tripId]="id" [isOwner]="isOwner(trip)" /> }
         @case (4) { <app-photos [tripId]="id" /> }
         @case (5) { <app-costs [tripId]="id" [trip]="trip" /> }
-        @case (6) { <app-packing [tripId]="id" /> }
+        @case (6) { <app-packing [tripId]="id" [trip]="trip" /> }
+        @case (7) { <app-ai-assistant [trip]="trip" /> }
       }
     </div>
 
