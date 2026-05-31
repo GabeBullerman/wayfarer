@@ -35,6 +35,9 @@ const content = `export const environment = {
 };
 `;
 
-const outPath = path.join(__dirname, '../src/environments/environment.prod.ts');
-fs.writeFileSync(outPath, content);
-console.log('environment.prod.ts generated from environment variables.');
+const envDir = path.join(__dirname, '../src/environments');
+// Write both files — Angular's fileReplacement needs environment.ts to exist
+// as the source even in a production build, and environment.prod.ts is the replacement.
+fs.writeFileSync(path.join(envDir, 'environment.prod.ts'), content);
+fs.writeFileSync(path.join(envDir, 'environment.ts'), content);
+console.log('environment.ts and environment.prod.ts generated from environment variables.');
