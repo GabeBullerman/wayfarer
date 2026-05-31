@@ -22,10 +22,12 @@ try {
 
 const aiAdvisor    = require('../api/ai-advisor');
 const emailScraper = require('../api/email-scraper');
+const findPlans    = require('../api/find-plans');
 
 const routes = {
   '/api/ai-advisor':    aiAdvisor,
   '/api/email-scraper': emailScraper,
+  '/api/find-plans':    findPlans,
 };
 
 // Wrap Node's ServerResponse with Vercel-compatible helpers

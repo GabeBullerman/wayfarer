@@ -142,3 +142,9 @@ Trips should be accessible without signal — airports, remote areas, internatio
 - All LLM and third-party API keys should live in Firebase Remote Config or Cloud Function environment variables — never in `environment.ts` which gets bundled into the client
 - Plaid and Gmail OAuth require a backend; Firebase Cloud Functions (Node 20) are the natural fit given the existing stack
 - For the AI assistant, start with a simple Cloud Function proxy before investing in conversation history — validate the UX first
+
+---
+
+## Dev conventions
+
+- **Git commits**: do not include `Co-Authored-By:` tags in commit messages
