@@ -59,11 +59,16 @@
           <mat-card-content>
             <div class="weather-row">
               @for (day of weather(); track day.date) {
-                <div class="weather-day">
+                @let dayNum = tripDayNumber(day.date);
+                <div class="weather-day" [class.trip-day]="dayNum !== null">
+                  @if (dayNum !== null) {
+                    <span class="w-trip-day">Day {{ dayNum }}</span>
+                  }
                   <span class="w-day">{{ day.date | date:'EEE' }}</span>
                   <span class="w-emoji">{{ day.emoji }}</span>
                   <span class="w-hi">{{ day.maxTemp }}°</span>
                   <span class="w-lo">{{ day.minTemp }}°</span>
+                  <span class="w-desc">{{ day.description }}</span>
                 </div>
               }
             </div>

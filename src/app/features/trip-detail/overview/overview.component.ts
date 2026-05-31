@@ -132,6 +132,17 @@ export class OverviewComponent implements OnInit {
     return Math.ceil((this.trip.startDate.toDate().getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   }
 
+  tripDayNumber(date: Date): number | null {
+    const start = this.trip.startDate.toDate();
+    const end   = this.trip.endDate.toDate();
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    if (d < start || d > end) return null;
+    return Math.round((d.getTime() - start.getTime()) / 86400000) + 1;
+  }
+
   get showBankReminder(): boolean {
     const d = this.daysUntilTrip;
     return d > 0 && d <= 14 && !this.bankReminderDismissed();
