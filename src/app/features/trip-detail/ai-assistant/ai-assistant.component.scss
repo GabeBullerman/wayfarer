@@ -29,6 +29,20 @@
   }
 }
 
+.disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  color: #1565c0;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; }
+}
+
 .quick-prompts {
   background: #f5f7ff;
   border-radius: 16px;
