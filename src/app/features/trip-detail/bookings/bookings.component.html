@@ -48,11 +48,17 @@
               @for (booking of group.bookings; track booking.id) {
                 <div class="booking-card">
                   <div class="booking-card-main">
+                    @if (booking.status === 'suggested') {
+                      <div class="suggested-banner">
+                        <mat-icon>info</mat-icon>
+                        <span><strong>Not booked yet</strong> — this is a saved suggestion only. Research, book it yourself, then edit this entry and set the status to Confirmed.</span>
+                      </div>
+                    }
                     <div class="booking-card-header">
                       <div class="booking-title-row">
                         <h3>{{ booking.title }}</h3>
                         <span class="status-badge" [class]="'status-' + booking.status">
-                          {{ booking.status | titlecase }}
+                          {{ booking.status === 'suggested' ? 'Suggestion' : (booking.status | titlecase) }}
                         </span>
                       </div>
                       <div class="booking-card-actions">

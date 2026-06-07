@@ -53,9 +53,10 @@ export class BookingDialogComponent implements OnInit {
   ];
 
   statuses: { value: BookingStatus; label: string }[] = [
-    { value: 'confirmed', label: 'Confirmed' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'confirmed',  label: 'Confirmed' },
+    { value: 'pending',    label: 'Pending' },
+    { value: 'cancelled',  label: 'Cancelled' },
+    { value: 'suggested',  label: 'Suggestion (not yet booked)' },
   ];
 
   form = this.fb.group({

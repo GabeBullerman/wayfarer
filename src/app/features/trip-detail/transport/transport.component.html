@@ -1,0 +1,303 @@
+<div class="transport-container">
+
+  <!-- ── Intercity Travel ──────────────────────────────────────────────────── -->
+  <section class="transport-section">
+    <div class="section-header">
+      <div class="section-title">
+        <mat-icon>route</mat-icon>
+        <h2>Intercity Travel</h2>
+      </div>
+      <mat-button-toggle-group [value]="searchMode()" (change)="searchMode.set($event.value)" class="mode-toggle">
+        <mat-button-toggle value="trains">
+          <mat-icon>train</mat-icon> Trains
+        </mat-button-toggle>
+        <mat-button-toggle value="flights">
+          <mat-icon>flight</mat-icon> Flights
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- Train search -->
+    @if (searchMode() === 'trains') {
+      <div class="search-form">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Origin city / station</mat-label>
+          <mat-icon matPrefix>train</mat-icon>
+          <input matInput [ngModel]="origin()" (ngModelChange)="origin.set($event)" placeholder="e.g. London" />
+        </mat-form-field>
+
+        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Destination city / station</mat-label>
+          <mat-icon matPrefix>location_on</mat-icon>
+          <input matInput [ngModel]="destination()" (ngModelChange)="destination.set($event)" placeholder="e.g. Paris" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field form-field--date">
+          <mat-label>Departure</mat-label>
+          <mat-icon matPrefix>schedule</mat-icon>
+          <input matInput type="datetime-local" [ngModel]="departure()" (ngModelChange)="departure.set($event)" />
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" class="search-btn"
+                (click)="searchTrains()" [disabled]="searching()">
+          @if (searching()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            <mat-icon>search</mat-icon>
+          }
+          Search Trains
+        </button>
+      </div>
+
+      @if (trainError()) {
+        <div class="error-banner"><mat-icon>warning</mat-icon> {{ trainError() }}</div>
+      }
+
+      @if (journeys().length > 0) {
+        <div class="results-header">
+          <span class="results-label">{{ journeys().length }} journeys · {{ fromStation() || origin() }} → {{ toStation() || destination() }}</span>
+        </div>
+        <div class="journey-list">
+          @for (j of journeys(); track j.id) {
+            <div class="journey-card">
+              <div class="journey-times">
+                <div class="time-block">
+                  <span class="time">{{ formatTime(j.departure) }}</span>
+                  <span class="station">{{ j.legs[0]?.from ?? (fromStation() || origin()) }}</span>
+                </div>
+                <div class="journey-mid">
+                  <span class="duration">{{ j.duration ?? '—' }}</span>
+                  <div class="journey-line">
+                    <div class="journey-dot"></div>
+                    <div class="journey-track"></div>
+                    <div class="journey-dot"></div>
+                  </div>
+                  <span class="changes">{{ j.changes }} change{{ j.changes !== 1 ? 's' : '' }}</span>
+                </div>
+                <div class="time-block time-block--right">
+                  <span class="time">{{ formatTime(j.arrival) }}</span>
+                  <span class="station">{{ j.legs[j.legs.length - 1]?.to ?? (toStation() || destination()) }}</span>
+                </div>
+              </div>
+
+              <div class="journey-legs">
+                @for (leg of j.legs; track $index) {
+                  @if (!leg.mode || leg.mode !== 'walking') {
+                    <span class="leg-chip">
+                      <mat-icon>{{ modeIcon(leg.mode) }}</mat-icon>
+                      {{ leg.name ?? leg.product ?? leg.mode }}
+                    </span>
+                  }
+                }
+              </div>
+
+              <div class="journey-footer">
+                @if (j.price) {
+                  <span class="journey-price">{{ j.price.currency }} {{ j.price.amount }}</span>
+                }
+                <button mat-stroked-button class="add-journey-btn" (click)="addJourneyToItinerary(j)">
+                  <mat-icon>calendar_today</mat-icon> Add to Schedule
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Flight search -->
+    @if (searchMode() === 'flights') {
+      <div class="search-form">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Origin city or IATA code</mat-label>
+          <mat-icon matPrefix>flight_takeoff</mat-icon>
+          <input matInput [ngModel]="flightOrigin()" (ngModelChange)="flightOrigin.set($event)" placeholder="e.g. London or LHR" />
+        </mat-form-field>
+
+        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Destination city or IATA code</mat-label>
+          <mat-icon matPrefix>flight_land</mat-icon>
+          <input matInput [ngModel]="flightDestination()" (ngModelChange)="flightDestination.set($event)" placeholder="e.g. Paris or CDG" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field form-field--date">
+          <mat-label>Departure date</mat-label>
+          <mat-icon matPrefix>calendar_today</mat-icon>
+          <input matInput type="date" [ngModel]="flightDate()" (ngModelChange)="flightDate.set($event)" />
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" class="search-btn"
+                (click)="searchFlights()" [disabled]="searchingFlights()">
+          @if (searchingFlights()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            <mat-icon>search</mat-icon>
+          }
+          Search Flights
+        </button>
+      </div>
+
+      <div class="amadeus-note">
+        <mat-icon>info</mat-icon>
+        Prices and availability from Amadeus test API. Verify on airline / booking site before purchasing.
+      </div>
+
+      @if (flightError()) {
+        <div class="error-banner"><mat-icon>warning</mat-icon> {{ flightError() }}</div>
+      }
+
+      @if (flights().length > 0) {
+        <div class="results-header">
+          <span class="results-label">{{ flights().length }} flights · {{ fromAirport() || flightOrigin() }} → {{ toAirport() || flightDestination() }}</span>
+        </div>
+        <div class="flight-list">
+          @for (f of flights(); track f.id) {
+            <div class="flight-card">
+              <div class="flight-airline">
+                <mat-icon>airlines</mat-icon>
+                <span>{{ f.airline ?? '—' }}</span>
+                <span class="flight-number">{{ f.flightNumber }}</span>
+              </div>
+
+              <div class="journey-times">
+                <div class="time-block">
+                  <span class="time">{{ formatTime(f.departure) }}</span>
+                  <span class="station">{{ f.originCode }}</span>
+                  <span class="station-date">{{ formatDate(f.departure) }}</span>
+                </div>
+                <div class="journey-mid">
+                  <span class="duration">{{ f.duration ?? '—' }}</span>
+                  <div class="journey-line">
+                    <div class="journey-dot"></div>
+                    <div class="journey-track"></div>
+                    <div class="journey-dot"></div>
+                  </div>
+                  <span class="changes">
+                    {{ f.stops === 0 ? 'Direct' : f.stops + ' stop' + (f.stops !== 1 ? 's' : '') }}
+                  </span>
+                </div>
+                <div class="time-block time-block--right">
+                  <span class="time">{{ formatTime(f.arrival) }}</span>
+                  <span class="station">{{ f.destinationCode }}</span>
+                  <span class="station-date">{{ formatDate(f.arrival) }}</span>
+                </div>
+              </div>
+
+              <div class="journey-footer">
+                @if (f.price) {
+                  <span class="journey-price">{{ f.price.currency }} {{ f.price.amount | number:'1.2-2' }}</span>
+                }
+                <button mat-stroked-button class="add-journey-btn" (click)="saveFlightAsBooking(f)">
+                  <mat-icon>bookmark_add</mat-icon> Save as Suggestion
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+        <p class="suggestion-note">
+          <mat-icon>info</mat-icon>
+          Saved flights appear in your <strong>Bookings</strong> tab as suggestions. Mark as Confirmed once you've actually booked.
+        </p>
+      }
+    }
+  </section>
+
+  <!-- ── AI Transport Plan ──────────────────────────────────────────────────── -->
+  <section class="transport-section">
+    <div class="section-header">
+      <div class="section-title">
+        <mat-icon>auto_awesome</mat-icon>
+        <h2>AI Transport Plan</h2>
+      </div>
+      <button mat-stroked-button (click)="getAIPlan()" [disabled]="loadingPlan()">
+        @if (loadingPlan()) { <mat-spinner diameter="16"></mat-spinner> }
+        @else { <mat-icon>auto_awesome</mat-icon> }
+        Generate Plan
+      </button>
+    </div>
+
+    @if (loadingPlan()) {
+      <div class="plan-loading"><mat-spinner diameter="28"></mat-spinner><span>Generating transport plan…</span></div>
+    } @else if (aiPlan()) {
+      <div class="ai-plan-output">{{ aiPlan() }}</div>
+    } @else {
+      <p class="plan-empty">Click Generate Plan to get AI-powered transport advice based on your search results and local options.</p>
+    }
+  </section>
+
+  <!-- ── Local Transport at Destination ────────────────────────────────────── -->
+  <section class="transport-section">
+    <div class="section-header">
+      <div class="section-title">
+        <mat-icon>location_city</mat-icon>
+        <h2>Local Transport near {{ trip.destination }}</h2>
+      </div>
+    </div>
+
+    @if (loadingLocal()) {
+      <div class="plan-loading"><mat-spinner diameter="28"></mat-spinner><span>Loading local options…</span></div>
+    } @else if (localSummary().length === 0 && nearbyStops().length === 0) {
+      <p class="plan-empty">No local transport data found for this destination.</p>
+    } @else {
+
+      <!-- Summary chips -->
+      @if (localSummary().length > 0) {
+        <div class="local-grid">
+          @for (opt of localSummary(); track opt.type) {
+            <div class="local-card">
+              <div class="local-card-top">
+                <div class="local-icon">
+                  <mat-icon>{{ localIcon(opt.type) }}</mat-icon>
+                </div>
+                <div class="local-info">
+                  <div class="local-type">{{ opt.type }}</div>
+                  <div class="local-count">{{ opt.count }} location{{ opt.count !== 1 ? 's' : '' }} within 1.5–2 km</div>
+                </div>
+              </div>
+              <button mat-stroked-button class="save-local-btn"
+                      [disabled]="savedLocalOptions().has(opt.type)"
+                      (click)="saveLocalOptionAsBooking(opt)">
+                @if (savedLocalOptions().has(opt.type)) {
+                  <mat-icon>check</mat-icon> Saved
+                } @else {
+                  <mat-icon>bookmark_add</mat-icon> Save as Suggestion
+                }
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Nearby transit stops -->
+      @if (nearbyStops().length > 0) {
+        <div class="stops-section">
+          <button class="stops-toggle" (click)="showStops.set(!showStops())">
+            <mat-icon>{{ showStops() ? 'expand_less' : 'expand_more' }}</mat-icon>
+            {{ showStops() ? 'Hide' : 'Show' }} {{ nearbyStops().length }} nearby transit stops
+          </button>
+          @if (showStops()) {
+            <div class="stops-list">
+              @for (stop of nearbyStops(); track stop.id) {
+                <div class="stop-item">
+                  <mat-icon>directions_transit</mat-icon>
+                  <span class="stop-name">{{ stop.name }}</span>
+                  <span class="stop-dist">{{ stop.distance }}m</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <p class="suggestion-note">
+        <mat-icon>info</mat-icon>
+        Suggestions saved to <strong>Bookings</strong> are marked as unconfirmed. Update them once you've made actual arrangements.
+      </p>
+    }
+  </section>
+
+</div>

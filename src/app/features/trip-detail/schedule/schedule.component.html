@@ -49,23 +49,76 @@
           </button>
         </div>
 
-        <!-- Arrival / departure hints -->
-        @if (isFirstDay(day) && !hasTransport(day)) {
-          <div class="day-hint">
-            <mat-icon>flight_land</mat-icon>
-            <span>No arrival or transfer planned on your first day.</span>
-            <button mat-button (click)="openAddItem(day.date, day.items.length)">
-              <mat-icon>add</mat-icon> Add
-            </button>
-          </div>
-        }
-        @if (isLastDay(day) && !isFirstDay(day) && !hasTransport(day)) {
-          <div class="day-hint day-hint-depart">
-            <mat-icon>flight_takeoff</mat-icon>
-            <span>No departure or travel home planned on your last day.</span>
-            <button mat-button (click)="openAddItem(day.date, day.items.length)">
-              <mat-icon>add</mat-icon> Add
-            </button>
+        <!-- Transport gap warning -->
+        @if (showTransportGap()) {
+          <div class="transport-gap-panel">
+            <div class="gap-panel-header">
+              <div class="gap-panel-title">
+                <mat-icon>directions_transit</mat-icon>
+                <div>
+                  <strong>No transport planned for Day {{ day.dayNumber }}</strong>
+                  @if (isFirstDay(day)) {
+                    <span class="gap-subtitle">How will you get from the airport or station to your accommodation?</span>
+                  } @else if (isLastDay(day)) {
+                    <span class="gap-subtitle">How will you get to the airport or station to head home?</span>
+                  } @else {
+                    <span class="gap-subtitle">You have flights or accommodation booked but no transport for this day.</span>
+                  }
+                </div>
+              </div>
+              <button mat-icon-button matTooltip="Dismiss for this day" (click)="dismissGap()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+
+            <div class="gap-panel-actions">
+              <button mat-stroked-button class="gap-find-btn"
+                      (click)="findTransportOptions()" [disabled]="loadingGapOptions()">
+                @if (loadingGapOptions()) {
+                  <mat-spinner diameter="16"></mat-spinner>
+                } @else {
+                  <mat-icon>search</mat-icon>
+                }
+                Find Options Near {{ trip.destination }}
+              </button>
+              <button mat-button class="gap-manual-btn" (click)="openAddItem(day.date, day.items.length)">
+                <mat-icon>add</mat-icon> Add Manually
+              </button>
+            </div>
+
+            <!-- Gap option cards -->
+            @if (gapOptions().length > 0) {
+              <div class="gap-options-grid">
+                @for (opt of gapOptions(); track $index; let i = $index) {
+                  <div class="gap-option-card" [class.saved]="opt.saved">
+                    <div class="gap-option-top">
+                      <div class="gap-option-icon">
+                        <mat-icon>{{ opt.icon }}</mat-icon>
+                      </div>
+                      <div class="gap-option-info">
+                        <div class="gap-option-title">{{ opt.title }}</div>
+                        <div class="gap-option-desc">{{ opt.description }}</div>
+                      </div>
+                    </div>
+                    <button mat-stroked-button class="gap-save-btn"
+                            [disabled]="opt.saved"
+                            (click)="saveGapOptionAsBooking(i)">
+                      @if (opt.saved) {
+                        <mat-icon>check</mat-icon> Saved as Suggestion
+                      } @else {
+                        <mat-icon>bookmark_add</mat-icon> Save as Suggestion
+                      }
+                    </button>
+                  </div>
+                }
+              </div>
+              <p class="gap-disclaimer">
+                <mat-icon>info</mat-icon>
+                Suggestions appear in your <strong>Bookings</strong> tab marked as unconfirmed.
+                They are <strong>not booked</strong> — they're reminders to arrange transport before your trip.
+                Update each to Confirmed once actually booked.
+              </p>
+            }
           </div>
         }
 

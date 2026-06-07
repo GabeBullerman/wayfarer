@@ -11,10 +11,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { catchError, map } from 'rxjs/operators';
-import { from, of } from 'rxjs';
+import { combineLatest, from, of } from 'rxjs';
 import { Timestamp } from '@angular/fire/firestore';
 import { ItineraryService } from '../../../core/services/itinerary.service';
 import { ItineraryItem } from '../../../core/models/itinerary-item.model';
+import { BookingService } from '../../../core/services/booking.service';
+import { Booking } from '../../../core/models/booking.model';
+import { TransportService, LocalOption, NearbyStop } from '../../../core/services/transport.service';
+import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
 import { Trip } from '../../../core/models/trip.model';
 import { ItineraryItemDialogComponent } from './itinerary-item-dialog/itinerary-item-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -39,6 +43,15 @@ export interface PlanSuggestion {
   adding?: boolean;
 }
 
+interface TransportGapOption {
+  icon: string;
+  title: string;
+  description: string;
+  bookingType: 'car-rental' | 'other';
+  localOptionKey?: string;
+  saved: boolean;
+}
+
 @Component({
   selector: 'app-schedule',
   standalone: true,
@@ -54,25 +67,43 @@ export class ScheduleComponent implements OnInit {
   @Input() trip!: Trip;
 
   private itineraryService = inject(ItineraryService);
-  private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
-  private http = inject(HttpClient);
-  private destroyRef = inject(DestroyRef);
+  private bookingService   = inject(BookingService);
+  private transportService = inject(TransportService);
+  private mapsLoader       = inject(GoogleMapsLoaderService);
+  private dialog           = inject(MatDialog);
+  private snackBar         = inject(MatSnackBar);
+  private http             = inject(HttpClient);
+  private destroyRef       = inject(DestroyRef);
 
-  allDays = signal<DayGroup[]>([]);
+  allDays          = signal<DayGroup[]>([]);
   selectedDayIndex = signal(0);
-  findingPlans = signal(false);
-  showPlanPanel = signal(false);
-  planSuggestions = signal<PlanSuggestion[]>([]);
+  findingPlans     = signal(false);
+  showPlanPanel    = signal(false);
+  planSuggestions  = signal<PlanSuggestion[]>([]);
+
+  // ── Transport gap state ───────────────────────────────────
+  bookings            = signal<Booking[]>([]);
+  showTransportGap    = signal(false);
+  loadingGapOptions   = signal(false);
+  gapOptions          = signal<TransportGapOption[]>([]);
+  gapDismissed        = signal<Set<number>>(new Set());
 
   readonly selectedDay = computed(() => this.allDays()[this.selectedDayIndex()] ?? null);
 
   ngOnInit() {
-    this.itineraryService.getItems(this.tripId).pipe(
-      map(items => this.groupByDay(items)),
-      catchError(() => of(this.groupByDay([]))),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe(days => this.allDays.set(days));
+    combineLatest([
+      this.itineraryService.getItems(this.tripId).pipe(
+        map(items => this.groupByDay(items)),
+        catchError(() => of(this.groupByDay([]))),
+      ),
+      this.bookingService.getBookings(this.tripId).pipe(
+        catchError(() => of([])),
+      ),
+    ]).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(([days, bookings]) => {
+        this.allDays.set(days);
+        this.bookings.set(bookings);
+      });
   }
 
   hasTransport(day: DayGroup): boolean {
@@ -127,7 +158,116 @@ export class ScheduleComponent implements OnInit {
     this.selectedDayIndex.set(index);
     this.showPlanPanel.set(false);
     this.planSuggestions.set([]);
+    this.gapOptions.set([]);
+
+    const day = this.allDays()[index];
+    if (day) this.checkTransportGap(day);
   }
+
+  // ── Transport gap detection ───────────────────────────────
+
+  private checkTransportGap(day: DayGroup) {
+    if (this.hasTransport(day)) { this.showTransportGap.set(false); return; }
+    if (this.gapDismissed().has(day.dayNumber)) { this.showTransportGap.set(false); return; }
+
+    const isEdgeDay = this.isFirstDay(day) || this.isLastDay(day);
+    const hasFlightOrHotel = this.bookings().some(
+      b => (b.type === 'flight' || b.type === 'hotel' || b.type === 'airbnb') && b.status !== 'cancelled'
+    );
+
+    if (isEdgeDay || hasFlightOrHotel) {
+      this.showTransportGap.set(true);
+    } else {
+      this.showTransportGap.set(false);
+    }
+  }
+
+  dismissGap() {
+    const day = this.selectedDay();
+    if (!day) return;
+    this.gapDismissed.update(s => new Set([...s, day.dayNumber]));
+    this.showTransportGap.set(false);
+    this.gapOptions.set([]);
+  }
+
+  findTransportOptions() {
+    this.loadingGapOptions.set(true);
+    this.gapOptions.set([]);
+
+    this.mapsLoader.load().subscribe(loaded => {
+      if (!loaded) {
+        this.loadingGapOptions.set(false);
+        return;
+      }
+      const geocoder = new (window as any).google.maps.Geocoder();
+      geocoder.geocode({ address: this.trip.destination }, (results: any[], status: string) => {
+        if (status !== 'OK' || !results?.[0]) {
+          this.loadingGapOptions.set(false);
+          return;
+        }
+        const loc = results[0].geometry.location;
+        this.transportService.getLocalOptions(loc.lat(), loc.lng()).subscribe(data => {
+          const options = this.buildGapOptions(data.localSummary ?? [], data.nearbyStops ?? []);
+          this.gapOptions.set(options);
+          this.loadingGapOptions.set(false);
+        });
+      });
+    });
+  }
+
+  private buildGapOptions(summary: LocalOption[], stops: NearbyStop[]): TransportGapOption[] {
+    const iconMap: Record<string, string> = {
+      'Bike Share':             'pedal_bike',
+      'Bus':                    'directions_bus',
+      'Tram':                   'tram',
+      'Subway / Metro':         'subway',
+      'Taxi Stand':             'local_taxi',
+      'Car Rental':             'directions_car',
+      'Car Sharing':            'car_rental',
+      'Scooter / Moto Rental':  'two_wheeler',
+      'Ferry':                  'directions_boat',
+    };
+    const isRental = (t: string) => t === 'Car Rental' || t === 'Car Sharing' || t === 'Scooter / Moto Rental';
+
+    const fromSummary: TransportGapOption[] = summary.map(opt => ({
+      icon: iconMap[opt.type] ?? 'directions_transit',
+      title: `${opt.type} — ${opt.count} location${opt.count !== 1 ? 's' : ''} nearby`,
+      description: `${opt.count} ${opt.type} location${opt.count !== 1 ? 's' : ''} found within 1.5–2 km of ${this.trip.destination}.`,
+      bookingType: isRental(opt.type) ? 'car-rental' : 'other',
+      localOptionKey: opt.type,
+      saved: false,
+    }));
+
+    const topStops: TransportGapOption[] = stops.slice(0, 3).map(stop => ({
+      icon: 'directions_transit',
+      title: `${stop.name}`,
+      description: `Transit stop ${stop.distance}m from city centre.`,
+      bookingType: 'other',
+      saved: false,
+    }));
+
+    return [...fromSummary, ...topStops];
+  }
+
+  saveGapOptionAsBooking(index: number) {
+    const opt = this.gapOptions()[index];
+    if (!opt || opt.saved) return;
+
+    from(this.bookingService.createBooking({
+      tripId: this.tripId,
+      type: opt.bookingType,
+      title: opt.title,
+      status: 'suggested',
+      notes: `SUGGESTION — not yet booked. ${opt.description} Confirm and update status once you have arranged transport.`,
+    })).subscribe(() => {
+      this.gapOptions.update(list =>
+        list.map((o, i) => i === index ? { ...o, saved: true } : o)
+      );
+      this.snackBar.open('Saved as suggestion in Bookings tab', undefined, { duration: 2500 });
+    });
+  }
+
+  // ── Find Plans (existing) ─────────────────────────────────
 
   findPlans() {
     const day = this.selectedDay();
@@ -158,7 +298,6 @@ export class ScheduleComponent implements OnInit {
     if (!day) return;
     const s = this.planSuggestions()[index];
 
-    // Mark as adding
     this.planSuggestions.update(list =>
       list.map((item, i) => i === index ? { ...item, adding: true } : item)
     );
