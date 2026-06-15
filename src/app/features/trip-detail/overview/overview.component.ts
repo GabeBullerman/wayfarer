@@ -6,6 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { GoogleMap, MapMarker, MapInfoWindow, MapDirectionsService, MapDirectionsRenderer } from '@angular/google-maps';
 import { Observable, of, catchError, tap } from 'rxjs';
@@ -14,6 +16,8 @@ import { ItineraryService } from '../../../core/services/itinerary.service';
 import { BookingService } from '../../../core/services/booking.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
 import { WeatherService, WeatherDay } from '../../../core/services/weather.service';
+import { CardReminderService } from '../../../core/services/card-reminder.service';
+import { PushNotificationService } from '../../../core/services/push-notification.service';
 import { MoneyComponent } from '../../../shared/components/money/money.component';
 import { ItineraryItem } from '../../../core/models/itinerary-item.model';
 import { Booking } from '../../../core/models/booking.model';
@@ -36,7 +40,7 @@ export interface TripDay {
   imports: [
     AsyncPipe, DatePipe, CurrencyPipe, FormsModule,
     MatCardModule, MatIconModule, MatButtonModule,
-    MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule,
+    MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule, MatTooltipModule,
     GoogleMap, MapMarker, MapInfoWindow, MapDirectionsRenderer,
     MoneyComponent,
   ],
@@ -53,13 +57,17 @@ export class OverviewComponent implements OnInit {
   private directionsService = inject(MapDirectionsService);
   private mapsLoader = inject(GoogleMapsLoaderService);
   private weatherService = inject(WeatherService);
+  private cardReminderService = inject(CardReminderService);
+  private pushNotificationService = inject(PushNotificationService);
+  private snackBar = inject(MatSnackBar);
 
   items$!: Observable<ItineraryItem[]>;
   bookings$!: Observable<Booking[]>;
   mapApiLoaded$!: Observable<boolean>;
 
   weather = signal<WeatherDay[]>([]);
-  bankReminderDismissed = signal(false);
+  showCardReminder = signal(false);
+  remindersEnabled = signal(false);
   activePin = signal<ItineraryItem | null>(null);
   allItems = signal<ItineraryItem[]>([]);
   selectedDayIso = signal<string>('');
@@ -128,10 +136,33 @@ export class OverviewComponent implements OnInit {
 
     this.weatherService.getForecast(this.trip.destination)
       .subscribe(days => this.weather.set(days));
+
+    if (
+      this.cardReminderService.shouldRemind(this.trip) &&
+      !this.cardReminderService.isDismissed(this.tripId)
+    ) {
+      this.showCardReminder.set(true);
+    }
   }
 
   get daysUntilTrip(): number {
     return Math.ceil((this.trip.startDate.toDate().getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  }
+
+  dismissReminder(): void {
+    this.cardReminderService.dismiss(this.tripId);
+    this.showCardReminder.set(false);
+  }
+
+  async enableReminders(): Promise<void> {
+    const granted = await this.pushNotificationService.requestPermission();
+    if (granted) {
+      this.cardReminderService.scheduleNotification(this.trip, this.pushNotificationService);
+      this.remindersEnabled.set(true);
+      this.snackBar.open('Reminders enabled — you\'ll be notified 48 h before departure', undefined, { duration: 3500 });
+    } else {
+      this.snackBar.open('Notification permission denied', undefined, { duration: 2500 });
+    }
   }
 
   tripDayNumber(date: Date): number | null {
@@ -143,11 +174,6 @@ export class OverviewComponent implements OnInit {
     d.setHours(0, 0, 0, 0);
     if (d < start || d > end) return null;
     return Math.round((d.getTime() - start.getTime()) / 86400000) + 1;
-  }
-
-  get showBankReminder(): boolean {
-    const d = this.daysUntilTrip;
-    return d > 0 && d <= 14 && !this.bankReminderDismissed();
   }
 
   get tripDays(): TripDay[] {
