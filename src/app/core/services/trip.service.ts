@@ -2,7 +2,7 @@ import { Injectable, inject, Injector, runInInjectionContext } from '@angular/co
 import {
   Firestore, collection, collectionData, doc, docData,
   addDoc, updateDoc, deleteDoc, query, where, orderBy,
-  serverTimestamp,
+  serverTimestamp, getDocs, arrayUnion, arrayRemove,
 } from '@angular/fire/firestore';
 import { Observable, combineLatest, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -25,6 +25,7 @@ export class TripService {
   getTrips(): Observable<Trip[]> {
     const userId = this.auth.currentUser?.uid;
 
+    // Trips owned by the user
     const own$ = this.run(() =>
       collectionData(
         query(collection(this.firestore, 'trips'),
@@ -35,6 +36,17 @@ export class TripService {
       ) as Observable<Trip[]>
     );
 
+    // Trips where user is in collaboratorIds
+    const collab$ = this.run(() =>
+      collectionData(
+        query(collection(this.firestore, 'trips'),
+          where('collaboratorIds', 'array-contains', userId)
+        ),
+        { idField: 'id' }
+      ) as Observable<Trip[]>
+    );
+
+    // Trips where user is an accepted participant (legacy path)
     const shared$ = this.participantService.getAcceptedParticipations(userId!).pipe(
       switchMap((participations: TripParticipant[]) => {
         if (!participations.length) return of([] as Trip[]);
@@ -49,10 +61,13 @@ export class TripService {
       })
     );
 
-    return combineLatest([own$, shared$]).pipe(
-      map(([own, shared]) => {
+    return combineLatest([own$, collab$, shared$]).pipe(
+      map(([own, collab, shared]) => {
         const ownIds = new Set(own.map(t => t.id));
-        const all = [...own, ...shared.filter(t => t && !ownIds.has(t.id))];
+        const collabFiltered = collab.filter(t => t && !ownIds.has(t.id));
+        const collabIds = new Set(collabFiltered.map(t => t.id));
+        const sharedFiltered = shared.filter(t => t && !ownIds.has(t.id) && !collabIds.has(t.id));
+        const all = [...own, ...collabFiltered, ...sharedFiltered];
         return all.sort((a, b) => b.startDate.seconds - a.startDate.seconds);
       })
     );
@@ -87,5 +102,37 @@ export class TripService {
 
   deleteTrip(id: string) {
     return this.run(() => deleteDoc(doc(this.firestore, 'trips', id)));
+  }
+
+  /** Look up a registered user by email and add them as a collaborator on the trip. */
+  async inviteCollaborator(tripId: string, email: string): Promise<{ success: boolean; message: string }> {
+    const normalizedEmail = email.trim().toLowerCase();
+    const usersRef = collection(this.firestore, 'users');
+    const q = query(usersRef, where('email', '==', normalizedEmail));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return { success: false, message: 'No account found with that email' };
+    }
+
+    const userDoc = snapshot.docs[0];
+    const uid = userDoc.id;
+
+    await updateDoc(doc(this.firestore, 'trips', tripId), {
+      collaboratorIds: arrayUnion(uid),
+      updatedAt: serverTimestamp(),
+    });
+
+    const profile = userDoc.data() as { displayName?: string };
+    const name = profile.displayName || normalizedEmail;
+    return { success: true, message: `${name} added as collaborator` };
+  }
+
+  /** Remove a collaborator from the trip by UID. */
+  async removeCollaborator(tripId: string, uid: string): Promise<void> {
+    await updateDoc(doc(this.firestore, 'trips', tripId), {
+      collaboratorIds: arrayRemove(uid),
+      updatedAt: serverTimestamp(),
+    });
   }
 }

@@ -1,6 +1,87 @@
 <div class="people-container">
+
+  <!-- ── App Collaborators (owner-only invite section) ─────────────────── -->
+  @if (isOwner) {
+    <div class="section-block">
+      <div class="section-heading">
+        <mat-icon class="section-icon">manage_accounts</mat-icon>
+        <h2>App Collaborators</h2>
+      </div>
+      <p class="section-desc">
+        Invite a registered Wayfarer user by email. They'll see this trip in their trips list and can view and edit all tabs.
+      </p>
+
+      <!-- Invite form -->
+      <div class="invite-row">
+        <mat-form-field appearance="outline" class="invite-email-field">
+          <mat-label>Email address</mat-label>
+          <input matInput type="email"
+                 [value]="inviteEmail()"
+                 (input)="inviteEmail.set($any($event.target).value)"
+                 placeholder="friend@example.com"
+                 (keydown.enter)="sendInvite()" />
+          <mat-icon matSuffix>mail_outline</mat-icon>
+        </mat-form-field>
+        <button mat-flat-button color="primary"
+                [disabled]="!inviteEmail().trim() || inviteLoading()"
+                (click)="sendInvite()">
+          @if (inviteLoading()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            <ng-container>
+              <mat-icon>person_add</mat-icon> Invite
+            </ng-container>
+          }
+        </button>
+      </div>
+
+      <!-- Current collaborators list -->
+      @if (collaborators$ | async; as collaborators) {
+        @if (collaborators.length > 0) {
+          <div class="collaborators-list">
+            @for (c of collaborators; track c.uid) {
+              <div class="collaborator-card">
+                <div class="participant-avatar collab-avatar">{{ initial(c.displayName) }}</div>
+                <div class="participant-info">
+                  <div class="participant-name">
+                    {{ c.displayName }}
+                    @if (c.uid === currentUserId) {
+                      <span class="badge badge-you">You</span>
+                    }
+                  </div>
+                  <div class="participant-sub">
+                    <span class="participant-email">
+                      <mat-icon>mail_outline</mat-icon> {{ c.email }}
+                    </span>
+                  </div>
+                </div>
+                <div class="participant-actions">
+                  @if (c.uid !== currentUserId) {
+                    <button mat-icon-button
+                            matTooltip="Remove collaborator"
+                            (click)="removeCollaborator(c.uid, c.displayName)">
+                      <mat-icon>person_remove</mat-icon>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="no-collabs-hint">No app collaborators yet — invite someone above.</p>
+        }
+      }
+    </div>
+
+    <div class="section-divider"></div>
+  }
+
+  <!-- ── Travel Companions ──────────────────────────────────────────────── -->
   <div class="people-header">
-    <h2>Trip Participants</h2>
+    <div class="section-heading">
+      <mat-icon class="section-icon">group</mat-icon>
+      <h2>Travel Companions</h2>
+    </div>
     @if (isOwner && !showAddForm()) {
       <button mat-flat-button color="primary" (click)="openAdd()">
         <mat-icon>person_add</mat-icon> Add Person
@@ -52,7 +133,7 @@
     @if (participants.length === 0 && !showAddForm()) {
       <div class="empty-state">
         <mat-icon>group</mat-icon>
-        <h3>No participants yet</h3>
+        <h3>No travel companions yet</h3>
         <p>Add everyone going on this trip to track shared costs and assign bookings.</p>
       </div>
     } @else {

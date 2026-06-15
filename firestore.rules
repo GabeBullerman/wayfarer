@@ -8,12 +8,18 @@ service cloud.firestore {
     }
 
     // ── Trips ───────────────────────────────────────────────────────────────
-    // Any signed-in user can read a trip by ID (URL/link sharing model).
-    // Only the owner can edit or delete.
+    // Owner can read/write/delete. Collaborators (collaboratorIds) can read and update.
     match /trips/{tripId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        (resource.data.collaboratorIds != null && request.auth.uid in resource.data.collaboratorIds)
+      );
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        (resource.data.collaboratorIds != null && request.auth.uid in resource.data.collaboratorIds)
+      );
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
     // ── Photos ──────────────────────────────────────────────────────────────
