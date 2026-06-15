@@ -1,0 +1,166 @@
+<div class="docs-container">
+
+  <!-- Header -->
+  <div class="docs-header">
+    <h2>Travel Documents</h2>
+    <button mat-flat-button color="primary" (click)="triggerUpload()">
+      <mat-icon>upload_file</mat-icon> Add Document
+    </button>
+    <input #fileInput type="file" hidden (change)="onFilesSelected($event)" />
+  </div>
+
+  <!-- Upload progress -->
+  @if (uploadProgress() !== null) {
+    <div class="upload-progress">
+      <mat-icon>cloud_upload</mat-icon>
+      <div class="upload-progress-info">
+        <span class="upload-name">{{ uploadingName() }}</span>
+        <mat-progress-bar mode="determinate" [value]="uploadProgress()!"></mat-progress-bar>
+      </div>
+      <span class="upload-pct">{{ uploadProgress()! | number:'1.0-0' }}%</span>
+    </div>
+  }
+
+  <!-- Inline upload form -->
+  @if (showUploadForm() && pendingFile()) {
+    <div class="upload-form-panel">
+      <div class="upload-form-header">
+        <mat-icon>{{ fileIcon(pendingFile()!.type) }}</mat-icon>
+        <div class="upload-form-file-info">
+          <span class="upload-form-filename">{{ pendingFile()!.name }}</span>
+          <span class="upload-form-filesize">{{ formatFileSize(pendingFile()!.size) }}</span>
+        </div>
+      </div>
+
+      <div class="upload-form-fields">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Document name</mat-label>
+          <input matInput [(ngModel)]="documentName" placeholder="e.g. John's Passport" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Category</mat-label>
+          <mat-select [(ngModel)]="selectedCategory">
+            @for (cat of categories; track cat.value) {
+              <mat-option [value]="cat.value">{{ cat.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (showExpiryField()) {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Expiry date</mat-label>
+            <input matInput type="date" [(ngModel)]="documentExpiry" />
+          </mat-form-field>
+        }
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Notes (optional)</mat-label>
+          <textarea matInput rows="2" [(ngModel)]="documentNotes" placeholder="Any extra details…"></textarea>
+        </mat-form-field>
+      </div>
+
+      <div class="upload-form-actions">
+        <button mat-button (click)="cancelUpload()">Cancel</button>
+        <button mat-flat-button color="primary" (click)="confirmUpload()">
+          <mat-icon>upload</mat-icon> Upload
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Document list -->
+  @if (documents$ | async; as docs) {
+    @if (docs.length === 0 && !showUploadForm()) {
+      <!-- Empty state / drop zone -->
+      <div class="drop-zone" (drop)="onDrop($event)" (dragover)="onDragOver($event)"
+           (click)="triggerUpload()">
+        <mat-icon>folder_open</mat-icon>
+        <h3>No documents yet</h3>
+        <p>Upload passports, visas, insurance cards, booking confirmations, and more.
+           Drop a file here or click to browse.</p>
+        <button mat-flat-button color="primary" (click)="$event.stopPropagation(); triggerUpload()">
+          Upload Document
+        </button>
+      </div>
+    } @else if (docs.length > 0) {
+      <div class="docs-drop-overlay" (drop)="onDrop($event)" (dragover)="onDragOver($event)">
+        <div class="docs-meta">
+          <span><mat-icon>folder_open</mat-icon> {{ docs.length }} document{{ docs.length !== 1 ? 's' : '' }}</span>
+          <span class="shared-hint"><mat-icon>lock</mat-icon> Visible to all trip members</span>
+        </div>
+
+        <!-- Grouped sections -->
+        @for (group of groupedDocs(docs); track group.category) {
+          <div class="doc-group">
+            <div class="doc-group-header">
+              <mat-icon>{{ categoryIcon(group.category) }}</mat-icon>
+              <span>{{ group.label }}</span>
+              <span class="doc-group-count">{{ group.docs.length }}</span>
+            </div>
+
+            <div class="doc-grid">
+              @for (doc of group.docs; track doc.id) {
+                <div class="doc-card">
+                  <div class="doc-card-icon">
+                    <mat-icon>{{ fileIcon(doc.fileType) }}</mat-icon>
+                  </div>
+
+                  <div class="doc-card-body">
+                    <div class="doc-name" [matTooltip]="doc.name">{{ doc.name }}</div>
+
+                    <div class="doc-meta-row">
+                      <span class="doc-type-badge">{{ doc.fileType.split('/').pop() }}</span>
+                      <span class="doc-size">{{ formatFileSize(doc.fileSize) }}</span>
+                    </div>
+
+                    @if (doc.expiryDate) {
+                      <div class="doc-expiry" [class.expiry-warning]="isExpiryWarning(doc)" [class.expiry-expired]="isExpired(doc)">
+                        <mat-icon>event</mat-icon>
+                        @if (isExpired(doc)) {
+                          Expired {{ doc.expiryDate | date:'mediumDate' }}
+                        } @else if (isExpiryWarning(doc)) {
+                          Expires {{ doc.expiryDate | date:'mediumDate' }} · Expiring soon!
+                        } @else {
+                          Expires {{ doc.expiryDate | date:'mediumDate' }}
+                        }
+                      </div>
+                    }
+
+                    @if (doc.notes) {
+                      <div class="doc-notes">{{ doc.notes }}</div>
+                    }
+
+                    <div class="doc-uploader">
+                      <span class="uploader-avatar">{{ (doc.uploaderName ?? 'U').charAt(0).toUpperCase() }}</span>
+                      <span class="uploader-name">{{ doc.uploaderName }}</span>
+                      @if (doc.uploadedAt?.toDate) {
+                        <span class="upload-date">· {{ doc.uploadedAt.toDate() | date:'MMM d' }}</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="doc-card-actions">
+                    <button mat-icon-button matTooltip="Download"
+                            (click)="downloadDocument(doc)">
+                      <mat-icon>download</mat-icon>
+                    </button>
+                    @if (doc.userId === currentUserId) {
+                      <button mat-icon-button matTooltip="Delete" color="warn"
+                              (click)="deleteDocument(doc)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  } @else {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+
+</div>
