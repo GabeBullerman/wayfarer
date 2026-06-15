@@ -12,6 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { map } from 'rxjs/operators';
 import { CurrencyConverterComponent } from '../../shared/components/currency-converter/currency-converter.component';
+import { PwaInstallPromptComponent } from '../../shared/components/pwa-install-prompt/pwa-install-prompt.component';
 
 @Component({
   selector: 'app-shell',
@@ -20,7 +21,7 @@ import { CurrencyConverterComponent } from '../../shared/components/currency-con
     RouterOutlet, RouterLink, RouterLinkActive,
     MatSidenavModule, MatToolbarModule, MatButtonModule,
     MatIconModule, MatListModule, MatMenuModule, MatTooltipModule,
-    AsyncPipe, CurrencyConverterComponent,
+    AsyncPipe, CurrencyConverterComponent, PwaInstallPromptComponent,
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
