@@ -9,6 +9,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TripService } from '../../core/services/trip.service';
 import { AuthService } from '../../core/services/auth.service';
+import { CardReminderService } from '../../core/services/card-reminder.service';
+import { PushNotificationService } from '../../core/services/push-notification.service';
 import { Trip } from '../../core/models/trip.model';
 import { TripFormDialogComponent } from '../trips/trip-form-dialog/trip-form-dialog.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -21,7 +23,7 @@ import { PeopleComponent } from './people/people.component';
 import { PackingComponent } from './packing/packing.component';
 import { AiAssistantComponent } from './ai-assistant/ai-assistant.component';
 import { TransportComponent } from './transport/transport.component';
-import { from } from 'rxjs';
+import { from, take } from 'rxjs';
 
 export interface TabDef {
   label: string;
@@ -46,6 +48,8 @@ export class TripDetailComponent implements OnInit {
 
   private tripService = inject(TripService);
   private auth = inject(AuthService);
+  private cardReminderService = inject(CardReminderService);
+  private pushNotificationService = inject(PushNotificationService);
   private dialog = inject(MatDialog);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
@@ -71,6 +75,12 @@ export class TripDetailComponent implements OnInit {
 
   ngOnInit() {
     this.trip$ = this.tripService.getTrip(this.id);
+    // Schedule a departure-reminder notification on first load (no-op if timing is outside window)
+    this.trip$.pipe(take(1)).subscribe(trip => {
+      if (trip) {
+        this.cardReminderService.scheduleNotification(trip, this.pushNotificationService);
+      }
+    });
   }
 
   get tripId() { return this.id; }

@@ -2,17 +2,55 @@
   @if (bookings$ | async; as bookings) {
     @if (items$ | async; as items) {
 
-      <!-- Bank Reminder Banner -->
-      @if (showBankReminder) {
-        <div class="bank-reminder">
-          <mat-icon>credit_card</mat-icon>
-          <div class="reminder-text">
-            <strong>Trip in {{ daysUntilTrip }} day{{ daysUntilTrip === 1 ? '' : 's' }} — notify your bank!</strong>
-            <span>Let your card issuers know you're traveling to {{ trip.destination }} to avoid declined charges abroad.</span>
+      <!-- Card Reminder Banner -->
+      @if (showCardReminder()) {
+        <div class="card-reminder-banner">
+          <div class="reminder-banner-header">
+            <div class="reminder-banner-title">
+              <mat-icon class="reminder-icon">credit_card</mat-icon>
+              <strong>Notify your bank before you travel</strong>
+            </div>
+            <button mat-icon-button class="reminder-dismiss-btn" (click)="dismissReminder()" aria-label="Dismiss">
+              <mat-icon>close</mat-icon>
+            </button>
           </div>
-          <button mat-icon-button (click)="bankReminderDismissed.set(true)" matTooltip="Dismiss">
-            <mat-icon>close</mat-icon>
-          </button>
+
+          <p class="reminder-body">
+            Most cards get flagged for foreign transactions. Notify your card issuers before departing for
+            <strong>{{ trip.destination }}</strong> on <strong>{{ trip.startDate.toDate() | date:'MMM d' }}</strong>.
+          </p>
+
+          <ul class="reminder-checklist">
+            <li>
+              <mat-icon>check_circle_outline</mat-icon>
+              Log in to your bank app and set a travel notice
+            </li>
+            <li>
+              <mat-icon>check_circle_outline</mat-icon>
+              Check if your card charges foreign transaction fees
+            </li>
+            <li>
+              <mat-icon>check_circle_outline</mat-icon>
+              Save your bank's international contact number offline
+            </li>
+          </ul>
+
+          <div class="reminder-actions">
+            <button mat-button class="reminder-got-it-btn" (click)="dismissReminder()">
+              Got it, don't remind me
+            </button>
+            @if (!remindersEnabled()) {
+              <button mat-flat-button class="reminder-enable-btn" (click)="enableReminders()">
+                <mat-icon>notifications_active</mat-icon>
+                Enable Departure Reminders
+              </button>
+            } @else {
+              <span class="reminders-enabled-label">
+                <mat-icon>check_circle</mat-icon>
+                Reminders enabled
+              </span>
+            }
+          </div>
         </div>
       }
 
