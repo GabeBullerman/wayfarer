@@ -1,0 +1,72 @@
+<div class="guide-modal">
+
+  <!-- Header -->
+  <div class="guide-header">
+    <div class="guide-header-left">
+      <div class="feature-icon">
+        <mat-icon>{{ currentPage().icon }}</mat-icon>
+      </div>
+      <div>
+        <h2 class="feature-title">{{ currentPage().title }}</h2>
+        <span class="status-badge"
+              [style.color]="statusColor(currentPage().status)"
+              [style.background]="statusBg(currentPage().status)">
+          {{ currentPage().statusLabel }}
+        </span>
+      </div>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="close()" matTooltip="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- GIF / preview area -->
+  <div class="guide-media">
+    <img [src]="currentPage().gifPath"
+         [alt]="currentPage().title + ' demo'"
+         class="feature-gif"
+         (error)="gifEl.style.display='none'; placeholder.style.display='flex'"
+         #gifEl />
+    <div class="gif-placeholder" #placeholder style="display:none">
+      <mat-icon>movie</mat-icon>
+      <span>{{ currentPage().gifPath }}</span>
+      <small>Add a screen recording GIF to <code>public/{{ currentPage().gifPath }}</code></small>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="guide-body">
+    <p class="feature-description">{{ currentPage().description }}</p>
+    <ul class="feature-bullets">
+      @for (bullet of currentPage().bullets; track bullet) {
+        <li>
+          <mat-icon class="bullet-icon">check_circle</mat-icon>
+          <span>{{ bullet }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+
+  <!-- Footer nav -->
+  <div class="guide-footer">
+    <button mat-icon-button class="nav-btn" (click)="prev()" [disabled]="isFirst()" matTooltip="Previous (←)">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <!-- Dot indicators -->
+    <div class="dot-row">
+      @for (page of pages; track page.title; let i = $index) {
+        <button class="dot" [class.dot-active]="currentIndex() === i" (click)="goTo(i)"
+                [matTooltip]="page.title">
+        </button>
+      }
+    </div>
+
+    <button mat-icon-button class="nav-btn" (click)="next()" [disabled]="isLast()" matTooltip="Next (→)">
+      <mat-icon>arrow_forward</mat-icon>
+    </button>
+  </div>
+
+  <div class="page-counter">{{ currentIndex() + 1 }} / {{ total }}</div>
+
+</div>

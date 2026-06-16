@@ -7,11 +7,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 import { AsyncPipe } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { map } from 'rxjs/operators';
 import { CurrencyConverterComponent } from '../../shared/components/currency-converter/currency-converter.component';
+import { GuideModalComponent } from '../../shared/components/guide-modal/guide-modal.component';
 
 @Component({
   selector: 'app-shell',
@@ -29,6 +31,7 @@ export class ShellComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);
+  private dialog = inject(MatDialog);
 
   @ViewChild('sidenav') sidenav!: MatSidenav;
 
@@ -43,5 +46,13 @@ export class ShellComponent {
 
   logout() {
     this.auth.logout().subscribe(() => this.router.navigate(['/auth/login']));
+  }
+
+  openGuide() {
+    this.dialog.open(GuideModalComponent, {
+      panelClass: 'guide-dialog-panel',
+      maxWidth: '720px',
+      width: '95vw',
+    });
   }
 }
