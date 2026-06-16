@@ -1,0 +1,56 @@
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <style>
+    .b1{animation:fadeUp .4s .1s ease both}
+    .b2{animation:fadeUp .4s .3s ease both}
+    .b3{animation:fadeUp .4s .5s ease both}
+    .scan{animation:fadeUp .4s .8s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .blink{animation:blink 1.5s 1s step-end infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  </style>
+  <rect width="680" height="300" fill="#f0f2fb"/>
+  <rect width="680" height="50" fill="#1a237e"/>
+  <text x="24" y="22" fill="white" font-size="11" font-weight="700" letter-spacing="1">PARIS TRIP</text>
+  <text x="24" y="40" fill="#9fa8da" font-size="13">Bookings</text>
+  <rect x="608" y="14" width="56" height="24" rx="12" fill="#3949ab"/>
+  <text x="636" y="30" fill="white" font-size="11" font-weight="600" text-anchor="middle">+ Add</text>
+
+  <!-- Flight booking -->
+  <g class="b1">
+    <rect x="16" y="60" width="648" height="64" rx="10" fill="white" filter="url(#sh)"/>
+    <rect x="16" y="60" width="6" height="64" rx="3 0 0 3" fill="#42a5f5"/>
+    <text x="36" y="80" fill="#1a237e" font-size="10" font-weight="700" letter-spacing=".5">FLIGHT</text>
+    <text x="36" y="97" fill="#212121" font-size="13" font-weight="600">London Heathrow → Paris CDG</text>
+    <text x="36" y="113" fill="#757575" font-size="10">Jun 20 · BA 303 · 10:15 – 12:40 · easyJet</text>
+    <rect x="560" y="70" width="88" height="20" rx="10" fill="#e8f5e9"/>
+    <text x="604" y="84" fill="#2e7d32" font-size="10" font-weight="700" text-anchor="middle">CONFIRMED</text>
+  </g>
+
+  <!-- Hotel booking -->
+  <g class="b2">
+    <rect x="16" y="134" width="648" height="64" rx="10" fill="white" filter="url(#sh)"/>
+    <rect x="16" y="134" width="6" height="64" rx="3 0 0 3" fill="#ab47bc"/>
+    <text x="36" y="154" fill="#1a237e" font-size="10" font-weight="700" letter-spacing=".5">HOTEL</text>
+    <text x="36" y="171" fill="#212121" font-size="13" font-weight="600">Hôtel du Louvre, Paris</text>
+    <text x="36" y="187" fill="#757575" font-size="10">Jun 20 – Jun 27 · 7 nights · Ref: HLX-9921</text>
+    <rect x="560" y="144" width="88" height="20" rx="10" fill="#e8f5e9"/>
+    <text x="604" y="158" fill="#2e7d32" font-size="10" font-weight="700" text-anchor="middle">CONFIRMED</text>
+  </g>
+
+  <!-- Suggestion booking -->
+  <g class="b3">
+    <rect x="16" y="208" width="648" height="64" rx="10" fill="#fffde7" stroke="#ffb300" stroke-width="1" stroke-dasharray="5,3" filter="url(#sh)"/>
+    <rect x="16" y="208" width="6" height="64" rx="3 0 0 3" fill="#ffa726"/>
+    <text x="36" y="228" fill="#e65100" font-size="10" font-weight="700" letter-spacing=".5">TRANSPORT · SUGGESTION</text>
+    <text x="36" y="245" fill="#212121" font-size="13" font-weight="600">Vélib' Bike Share — Paris</text>
+    <text x="36" y="261" fill="#757575" font-size="10">AI-suggested · Confirm booking manually when ready</text>
+    <rect x="540" y="218" width="108" height="20" rx="10" fill="#fff3e0" stroke="#ffb300" stroke-width="1"/>
+    <text x="594" y="232" fill="#e65100" font-size="10" font-weight="700" text-anchor="middle">SUGGESTION</text>
+  </g>
+
+  <defs>
+    <filter id="sh" x="-2%" y="-5%" width="104%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0000001a"/>
+    </filter>
+  </defs>
+</svg>

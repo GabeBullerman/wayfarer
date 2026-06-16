@@ -1,0 +1,68 @@
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <style>
+    .c1{animation:fadeUp .5s .1s ease both}
+    .c2{animation:fadeUp .5s .35s ease both}
+    .c3{animation:fadeUp .5s .6s ease both}
+    .fab{animation:pop .4s .9s ease both;opacity:0}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+  </style>
+  <rect width="680" height="300" fill="#f0f2fb"/>
+  <!-- toolbar -->
+  <rect width="680" height="50" fill="#1a237e"/>
+  <text x="20" y="32" fill="white" font-size="15" font-weight="700" letter-spacing=".5">Wayfarer</text>
+  <text x="620" y="32" fill="#c5cae9" font-size="12">My Trips</text>
+  <!-- section label -->
+  <text x="20" y="80" fill="#5c6bc0" font-size="11" font-weight="700" letter-spacing="1">UPCOMING</text>
+
+  <!-- card 1 Paris -->
+  <g class="c1">
+    <rect x="20" y="90" width="192" height="148" rx="12" fill="white" filter="url(#sh)"/>
+    <rect x="20" y="90" width="192" height="58" rx="12" fill="#3949ab"/>
+    <rect x="20" y="126" width="192" height="22" fill="#3949ab"/>
+    <text x="36" y="115" fill="white" font-size="15" font-weight="700">Paris</text>
+    <text x="36" y="132" fill="#9fa8da" font-size="10">France · Jun 20 – Jun 27</text>
+    <text x="36" y="164" fill="#616161" font-size="11">📅  7 nights</text>
+    <text x="36" y="182" fill="#616161" font-size="11">💶  EUR budget</text>
+    <rect x="36" y="196" width="68" height="18" rx="9" fill="#e8f5e9"/>
+    <text x="70" y="209" fill="#2e7d32" font-size="9" font-weight="700" text-anchor="middle">UPCOMING</text>
+  </g>
+
+  <!-- card 2 Tokyo -->
+  <g class="c2">
+    <rect x="232" y="90" width="192" height="148" rx="12" fill="white" filter="url(#sh)"/>
+    <rect x="232" y="90" width="192" height="58" rx="12" fill="#6a1b9a"/>
+    <rect x="232" y="126" width="192" height="22" fill="#6a1b9a"/>
+    <text x="248" y="115" fill="white" font-size="15" font-weight="700">Tokyo</text>
+    <text x="248" y="132" fill="#ce93d8" font-size="10">Japan · Aug 5 – Aug 18</text>
+    <text x="248" y="164" fill="#616161" font-size="11">📅  13 nights</text>
+    <text x="248" y="182" fill="#616161" font-size="11">💴  JPY budget</text>
+    <rect x="248" y="196" width="60" height="18" rx="9" fill="#fff3e0"/>
+    <text x="278" y="209" fill="#e65100" font-size="9" font-weight="700" text-anchor="middle">PLANNED</text>
+  </g>
+
+  <!-- card 3 New York -->
+  <g class="c3">
+    <rect x="444" y="90" width="192" height="148" rx="12" fill="white" filter="url(#sh)"/>
+    <rect x="444" y="90" width="192" height="58" rx="12" fill="#00695c"/>
+    <rect x="444" y="126" width="192" height="22" fill="#00695c"/>
+    <text x="460" y="115" fill="white" font-size="15" font-weight="700">New York</text>
+    <text x="460" y="132" fill="#80cbc4" font-size="10">USA · Dec 20 – Dec 30</text>
+    <text x="460" y="164" fill="#616161" font-size="11">📅  10 nights</text>
+    <text x="460" y="182" fill="#616161" font-size="11">💵  USD budget</text>
+    <rect x="460" y="196" width="56" height="18" rx="9" fill="#e3f2fd"/>
+    <text x="488" y="209" fill="#1565c0" font-size="9" font-weight="700" text-anchor="middle">FUTURE</text>
+  </g>
+
+  <!-- FAB -->
+  <g class="fab">
+    <circle cx="638" cy="260" r="26" fill="#1a237e" filter="url(#sh)"/>
+    <text x="638" y="268" fill="white" font-size="22" text-anchor="middle">+</text>
+  </g>
+
+  <defs>
+    <filter id="sh" x="-8%" y="-8%" width="116%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0000001a"/>
+    </filter>
+  </defs>
+</svg>

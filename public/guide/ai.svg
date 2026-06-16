@@ -1,0 +1,68 @@
+<svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+  <style>
+    .m1{animation:fadeUp .4s .1s ease both}
+    .m2{animation:fadeUp .4s .4s ease both}
+    .m3{animation:fadeUp .4s .75s ease both}
+    .typing{animation:fadeUp .4s 1.05s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .dot1{animation:bounce .9s .1s ease-in-out infinite}
+    .dot2{animation:bounce .9s .25s ease-in-out infinite}
+    .dot3{animation:bounce .9s .4s ease-in-out infinite}
+    @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  </style>
+  <rect width="680" height="300" fill="#f0f2fb"/>
+  <rect width="680" height="50" fill="#1a237e"/>
+  <text x="24" y="22" fill="white" font-size="11" font-weight="700" letter-spacing="1">PARIS TRIP</text>
+  <text x="24" y="40" fill="#9fa8da" font-size="13">AI Assistant ✦</text>
+
+  <!-- context chip -->
+  <rect x="196" y="55" width="288" height="20" rx="10" fill="#e8eaf6"/>
+  <text x="340" y="69" fill="#5c6bc0" font-size="9" font-weight="600" text-anchor="middle">Context: Paris · Jun 20–27 · 7 nights · EUR</text>
+
+  <!-- user message -->
+  <g class="m1">
+    <rect x="330" y="80" width="330" height="46" rx="12 12 4 12" fill="#1a237e"/>
+    <text x="346" y="99" fill="white" font-size="11">What should I pack for Paris in June?</text>
+    <text x="346" y="116" fill="#9fa8da" font-size="10">What's the weather usually like?</text>
+  </g>
+
+  <!-- AI response -->
+  <g class="m2">
+    <circle cx="34" cy="153" r="14" fill="#3949ab"/>
+    <text x="34" y="158" fill="white" font-size="11" text-anchor="middle">✦</text>
+    <rect x="56" y="134" width="396" height="86" rx="4 12 12 12" fill="white" filter="url(#sh)"/>
+    <text x="74" y="152" fill="#212121" font-size="11" font-weight="600">Paris in June is warm and mild (18–24°C).</text>
+    <text x="74" y="168" fill="#424242" font-size="10">✓  Light layers — mornings can be cool</text>
+    <text x="74" y="183" fill="#424242" font-size="10">✓  Comfortable walking shoes (lots of cobblestones!)</text>
+    <text x="74" y="198" fill="#424242" font-size="10">✓  Compact umbrella — occasional June showers</text>
+    <text x="74" y="213" fill="#424242" font-size="10">✓  Smart-casual outfit for Michelin restaurants</text>
+  </g>
+
+  <!-- second user message -->
+  <g class="m3">
+    <rect x="400" y="232" width="256" height="30" rx="12 12 4 12" fill="#1a237e"/>
+    <text x="416" y="252" fill="white" font-size="11">Any restaurant recommendations?</text>
+  </g>
+
+  <!-- typing indicator -->
+  <g class="typing">
+    <circle cx="34" cy="279" r="14" fill="#3949ab"/>
+    <text x="34" y="284" fill="white" font-size="11" text-anchor="middle">✦</text>
+    <rect x="56" y="264" width="72" height="30" rx="4 12 12 12" fill="white" filter="url(#sh)"/>
+    <circle cx="80" cy="279" r="4" fill="#c5cae9" class="dot1"/>
+    <circle cx="94" cy="279" r="4" fill="#c5cae9" class="dot2"/>
+    <circle cx="108" cy="279" r="4" fill="#c5cae9" class="dot3"/>
+  </g>
+
+  <!-- input bar -->
+  <rect x="0" y="284" width="680" height="16" fill="white"/>
+  <rect x="16" y="287" width="558" height="11" rx="6" fill="#f5f5f5"/>
+  <rect x="588" y="285" width="76" height="14" rx="7" fill="#1a237e"/>
+  <text x="626" y="295" fill="white" font-size="9" font-weight="700" text-anchor="middle">Send ↑</text>
+
+  <defs>
+    <filter id="sh" x="-2%" y="-5%" width="104%" height="125%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0000001a"/>
+    </filter>
+  </defs>
+</svg>

@@ -27,7 +27,7 @@ const PAGES: GuidePage[] = [
       'View upcoming and past trips separately',
       'Edit or delete trips at any time',
     ],
-    gifPath: 'guide/trips.gif',
+    gifPath: 'guide/trips.svg',
   },
   {
     title: 'Schedule',
@@ -41,7 +41,7 @@ const PAGES: GuidePage[] = [
       'AI "Find Plans" suggests real things to do at your destination',
       'Transport gap warnings on days with flights/hotels but no travel planned',
     ],
-    gifPath: 'guide/schedule.gif',
+    gifPath: 'guide/schedule.svg',
   },
   {
     title: 'Bookings',
@@ -55,7 +55,7 @@ const PAGES: GuidePage[] = [
       'Suggested bookings from transport search are clearly marked as unconfirmed',
       'Hints warn you about missing return flights or accommodation',
     ],
-    gifPath: 'guide/bookings.gif',
+    gifPath: 'guide/bookings.svg',
   },
   {
     title: 'Transport',
@@ -70,7 +70,7 @@ const PAGES: GuidePage[] = [
       'Local transport auto-loaded: buses, trams, bike share, car rentals, ferries',
       'AI transport advisor generates a personalised travel plan',
     ],
-    gifPath: 'guide/transport.gif',
+    gifPath: 'guide/transport.svg',
   },
   {
     title: 'Document Vault',
@@ -84,7 +84,7 @@ const PAGES: GuidePage[] = [
       'Expiry date warnings when a document expires within 90 days',
       'Documents stored securely in Firebase, private to your account',
     ],
-    gifPath: 'guide/documents.gif',
+    gifPath: 'guide/documents.svg',
   },
   {
     title: 'Costs & Currency',
@@ -98,7 +98,7 @@ const PAGES: GuidePage[] = [
       'Currency converter with common amounts, FX fee estimator, and live rates',
       'Per-person cost split across trip participants',
     ],
-    gifPath: 'guide/costs.gif',
+    gifPath: 'guide/costs.svg',
   },
   {
     title: 'Collaborative Trips',
@@ -112,7 +112,7 @@ const PAGES: GuidePage[] = [
       'Trip owner can remove collaborators at any time',
       'Separate from Travel Companions — those don\'t need Wayfarer accounts',
     ],
-    gifPath: 'guide/collab.gif',
+    gifPath: 'guide/collab.svg',
   },
   {
     title: 'Card Flagging Reminders',
@@ -126,7 +126,7 @@ const PAGES: GuidePage[] = [
       'Enable browser notifications for a 48-hour-before-departure alert',
       'Dismiss per trip — won\'t reappear after acknowledged',
     ],
-    gifPath: 'guide/card-reminder.gif',
+    gifPath: 'guide/card-reminder.svg',
   },
   {
     title: 'AI Assistant',
@@ -140,7 +140,7 @@ const PAGES: GuidePage[] = [
       'Powered by Groq / LLaMA 3.3 70B for fast responses',
       'Conversation history kept per trip session',
     ],
-    gifPath: 'guide/ai.gif',
+    gifPath: 'guide/ai.svg',
   },
   {
     title: 'Offline & PWA',
@@ -154,7 +154,7 @@ const PAGES: GuidePage[] = [
       'Recent transport and weather results cached by service worker',
       'Edits made offline sync automatically when connectivity returns',
     ],
-    gifPath: 'guide/pwa.gif',
+    gifPath: 'guide/pwa.svg',
   },
 ];
 
