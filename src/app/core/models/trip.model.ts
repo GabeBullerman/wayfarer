@@ -13,4 +13,5 @@ export interface Trip {
   currency: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  collaboratorIds?: string[];
 }

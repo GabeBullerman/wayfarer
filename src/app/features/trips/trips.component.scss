@@ -78,6 +78,10 @@ mat-card-content {
   backdrop-filter: blur(4px);
 
   mat-icon { font-size: 13px; width: 13px; height: 13px; }
+
+  &.collab-badge {
+    background: rgba(57, 73, 171, 0.80);
+  }
 }
 
 .trip-header {

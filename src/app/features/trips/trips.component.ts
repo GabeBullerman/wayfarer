@@ -104,7 +104,16 @@ export class TripsComponent implements OnInit {
       },
     }).afterClosed().subscribe(confirmed => {
       if (!confirmed) return;
-      // Find and delete this user's participant record for the trip
+
+      // If the user is in collaboratorIds, remove themselves that way
+      if (trip.collaboratorIds?.includes(this.currentUserId)) {
+        from(this.tripService.removeCollaborator(trip.id!, this.currentUserId)).subscribe(() =>
+          this.snackBar.open('You have left the trip', undefined, { duration: 2500 })
+        );
+        return;
+      }
+
+      // Otherwise remove via participant record (legacy path)
       this.participantService.getParticipants(trip.id!)
         .pipe(take(1))
         .subscribe(participants => {
@@ -116,6 +125,11 @@ export class TripsComponent implements OnInit {
           }
         });
     });
+  }
+
+  /** True if the current user is a named collaborator (not owner) on this trip */
+  isCollaborator(trip: Trip): boolean {
+    return !this.isOwned(trip) && (trip.collaboratorIds?.includes(this.currentUserId) ?? false);
   }
 
   openTrip(id: string) {

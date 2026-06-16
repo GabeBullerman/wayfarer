@@ -28,7 +28,11 @@
                 <div class="trip-status-badge" [class]="'status-' + tripStatus(trip)">
                   {{ tripStatus(trip) | titlecase }}
                 </div>
-                @if (!isOwned(trip)) {
+                @if (isCollaborator(trip)) {
+                  <div class="shared-badge collab-badge">
+                    <mat-icon>manage_accounts</mat-icon> Shared with you
+                  </div>
+                } @else if (!isOwned(trip)) {
                   <div class="shared-badge">
                     <mat-icon>group</mat-icon> Shared
                   </div>

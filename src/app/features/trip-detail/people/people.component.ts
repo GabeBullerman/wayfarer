@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,11 +9,16 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
-import { Observable, from } from 'rxjs';
+import { Observable, from, combineLatest, of } from 'rxjs';
+import { switchMap, map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ParticipantService } from '../../../core/services/participant.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { TripService } from '../../../core/services/trip.service';
+import { UserService } from '../../../core/services/user.service';
 import { TripParticipant } from '../../../core/models/trip-participant.model';
+import { UserProfile } from '../../../core/models/user-profile.model';
+import { Trip } from '../../../core/models/trip.model';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -27,11 +32,13 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
   templateUrl: './people.component.html',
   styleUrl: './people.component.scss',
 })
-export class PeopleComponent implements OnInit {
+export class PeopleComponent implements OnInit, OnChanges {
   @Input() tripId!: string;
   @Input() isOwner = false;
 
   private participantService = inject(ParticipantService);
+  private tripService = inject(TripService);
+  private userService = inject(UserService);
   private auth = inject(AuthService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -41,9 +48,16 @@ export class PeopleComponent implements OnInit {
   readonly currentUserId = this.auth.currentUser?.uid ?? '';
 
   participants$!: Observable<TripParticipant[]>;
+  /** Observable of resolved collaborator profiles */
+  collaborators$!: Observable<(UserProfile & { uid: string })[]>;
+
   showAddForm = signal(false);
   saving = signal(false);
   editingId = signal<string | null>(null);
+
+  // Invite collaborator form
+  inviteEmail = signal('');
+  inviteLoading = signal(false);
 
   addForm = this.fb.group({
     name: ['', Validators.required],
@@ -58,6 +72,68 @@ export class PeopleComponent implements OnInit {
 
   ngOnInit() {
     this.participants$ = this.participantService.getParticipants(this.tripId);
+    this.loadCollaborators();
+  }
+
+  ngOnChanges() {
+    if (this.tripId) {
+      this.participants$ = this.participantService.getParticipants(this.tripId);
+      this.loadCollaborators();
+    }
+  }
+
+  private loadCollaborators() {
+    this.collaborators$ = this.tripService.getTrip(this.tripId).pipe(
+      switchMap((trip: Trip) => {
+        const ids = trip?.collaboratorIds ?? [];
+        if (ids.length === 0) return of([] as (UserProfile & { uid: string })[]);
+        return combineLatest(
+          ids.map(uid =>
+            this.userService.getProfile(uid).pipe(
+              map(profile => profile ? { ...profile, uid } : null)
+            )
+          )
+        ).pipe(
+          map(profiles =>
+            profiles.filter((p): p is UserProfile & { uid: string } => p !== null)
+          )
+        );
+      })
+    );
+  }
+
+  /** Send a collaborator invite */
+  async sendInvite() {
+    const email = this.inviteEmail().trim();
+    if (!email) return;
+    this.inviteLoading.set(true);
+    try {
+      const result = await this.tripService.inviteCollaborator(this.tripId, email);
+      this.snackBar.open(result.message, undefined, { duration: 4000 });
+      if (result.success) {
+        this.inviteEmail.set('');
+      }
+    } catch {
+      this.snackBar.open('Something went wrong. Please try again.', undefined, { duration: 3000 });
+    } finally {
+      this.inviteLoading.set(false);
+    }
+  }
+
+  /** Remove a collaborator */
+  removeCollaborator(uid: string, name: string) {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Remove Collaborator',
+        message: `Remove ${name} from this trip? They will no longer be able to view or edit it.`,
+      },
+    }).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        from(this.tripService.removeCollaborator(this.tripId, uid)).subscribe(() =>
+          this.snackBar.open('Collaborator removed', undefined, { duration: 2500 })
+        );
+      }
+    });
   }
 
   openAdd() {
