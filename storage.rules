@@ -20,5 +20,13 @@ service firebase.storage {
       // Only the uploader can delete their own photo
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
+
+    // ── Trip documents (any file type, 25 MB max, signed-in only) ────────────
+    match /documents/{userId}/{tripId}/{fileName} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId
+        && request.resource.size < 25 * 1024 * 1024;  // 25 MB max, any content type
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }

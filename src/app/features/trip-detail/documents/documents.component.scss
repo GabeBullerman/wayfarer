@@ -1,0 +1,349 @@
+.docs-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.docs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1a237e;
+    flex: 1;
+  }
+}
+
+/* ── Upload progress bar ─────────────────────────────────────────────────── */
+.upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #e3f2fd;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+
+  mat-icon { color: #1565c0; flex-shrink: 0; }
+  mat-progress-bar { flex: 1; }
+
+  .upload-progress-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .upload-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #1565c0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .upload-pct {
+    color: #1565c0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    min-width: 36px;
+    text-align: right;
+  }
+}
+
+/* ── Inline upload form ───────────────────────────────────────────────────── */
+.upload-form-panel {
+  background: #fff;
+  border: 1.5px solid #c5cae9;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(26,35,126,0.06);
+}
+
+.upload-form-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    color: #3949ab;
+  }
+
+  .upload-form-file-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .upload-form-filename {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a237e;
+  }
+
+  .upload-form-filesize {
+    font-size: 0.78rem;
+    color: #9e9e9e;
+  }
+}
+
+.upload-form-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.upload-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── Empty / drop zone ───────────────────────────────────────────────────── */
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  border: 2px dashed #90caf9;
+  border-radius: 16px;
+  background: #f8f9ff;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  gap: 10px;
+  text-align: center;
+  padding: 40px;
+
+  &:hover { border-color: #1a237e; background: #e8eaf6; }
+
+  mat-icon { font-size: 56px; width: 56px; height: 56px; color: #90caf9; }
+  h3 { margin: 0; color: #1a237e; font-weight: 600; }
+  p { margin: 0; color: #9e9e9e; font-size: 0.875rem; max-width: 360px; }
+}
+
+.docs-drop-overlay {
+  min-height: 100px;
+}
+
+/* ── Document list meta ──────────────────────────────────────────────────── */
+.docs-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+  color: #757575;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  }
+
+  .shared-hint { color: #3949ab; }
+}
+
+/* ── Category group ──────────────────────────────────────────────────────── */
+.doc-group {
+  margin-bottom: 28px;
+}
+
+.doc-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: #1a237e;
+  font-size: 0.95rem;
+  font-weight: 600;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+  .doc-group-count {
+    margin-left: auto;
+    background: #e8eaf6;
+    color: #3949ab;
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+}
+
+/* ── Document card grid ──────────────────────────────────────────────────── */
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.doc-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border: 1px solid #e8eaf6;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(26,35,126,0.12);
+  }
+}
+
+.doc-card-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #e8eaf6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    color: #3949ab;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.doc-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.doc-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #212121;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.doc-type-badge {
+  background: #f5f5f5;
+  color: #616161;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.doc-size {
+  font-size: 0.75rem;
+  color: #9e9e9e;
+}
+
+.doc-expiry {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #757575;
+
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+
+  &.expiry-warning {
+    color: #e65100;
+    font-weight: 600;
+    mat-icon { color: #e65100; }
+  }
+
+  &.expiry-expired {
+    color: #b71c1c;
+    font-weight: 700;
+    mat-icon { color: #b71c1c; }
+  }
+}
+
+.doc-notes {
+  font-size: 0.75rem;
+  color: #757575;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-uploader {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.uploader-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a237e, #3949ab);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.uploader-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #616161;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.upload-date {
+  font-size: 0.72rem;
+  color: #9e9e9e;
+  white-space: nowrap;
+}
+
+.doc-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}

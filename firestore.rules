@@ -62,5 +62,14 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isSignedIn() && request.auth.uid == uid;
     }
+
+    // ── Trip Documents ────────────────────────────────────────────────────────
+    // Any signed-in user can read (shared across trip members).
+    // Only the uploader can modify or delete their own document.
+    match /tripDocuments/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
   }
 }

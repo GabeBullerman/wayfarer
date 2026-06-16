@@ -23,6 +23,7 @@ import { PeopleComponent } from './people/people.component';
 import { PackingComponent } from './packing/packing.component';
 import { AiAssistantComponent } from './ai-assistant/ai-assistant.component';
 import { TransportComponent } from './transport/transport.component';
+import { DocumentsComponent } from './documents/documents.component';
 import { from, take } from 'rxjs';
 
 export interface TabDef {
@@ -38,7 +39,7 @@ export interface TabDef {
     MatProgressSpinnerModule, MatTooltipModule,
     ScheduleComponent, BookingsComponent, PhotosComponent, CostsComponent,
     OverviewComponent, PeopleComponent, PackingComponent, AiAssistantComponent,
-    TransportComponent,
+    TransportComponent, DocumentsComponent,
   ],
   templateUrl: './trip-detail.component.html',
   styleUrl: './trip-detail.component.scss',
@@ -71,6 +72,7 @@ export class TripDetailComponent implements OnInit {
     { label: 'Packing',   icon: 'luggage' },
     { label: 'AI',        icon: 'auto_awesome' },
     { label: 'Transport', icon: 'directions_transit' },
+    { label: 'Documents', icon: 'folder_open' },
   ];
 
   ngOnInit() {
