@@ -24,6 +24,20 @@ module.exports = async (req, res) => {
   const groq = new Groq({ apiKey });
 
   try {
+    if (type === 'diag') {
+      const out = { keyLen: apiKey.length, keyPrefix: apiKey.slice(0, 4) };
+      try {
+        const raw = await fetch('https://api.groq.com/openai/v1/models', {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        });
+        out.rawStatus = raw.status;
+        out.rawBody = (await raw.text()).slice(0, 300);
+      } catch (e) {
+        out.rawFetchError = e?.message ?? String(e);
+      }
+      return res.status(200).json(out);
+    }
+
     if (type === 'packing') {
       const response = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
