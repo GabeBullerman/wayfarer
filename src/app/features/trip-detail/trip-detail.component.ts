@@ -1,5 +1,5 @@
 import { Component, inject, Input, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -53,6 +53,7 @@ export class TripDetailComponent implements OnInit {
   private pushNotificationService = inject(PushNotificationService);
   private dialog = inject(MatDialog);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private snackBar = inject(MatSnackBar);
 
   readonly currentUserId = this.auth.currentUser?.uid ?? '';
@@ -77,11 +78,30 @@ export class TripDetailComponent implements OnInit {
 
   ngOnInit() {
     this.trip$ = this.tripService.getTrip(this.id);
+
+    // Restore tab from URL query param (e.g. ?tab=people)
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam) {
+      const idx = this.tabs.findIndex(t => t.label.toLowerCase() === tabParam.toLowerCase());
+      if (idx !== -1) this.selectedTab.set(idx);
+    }
+
     // Schedule a departure-reminder notification on first load (no-op if timing is outside window)
     this.trip$.pipe(take(1)).subscribe(trip => {
       if (trip) {
         this.cardReminderService.scheduleNotification(trip, this.pushNotificationService);
       }
+    });
+  }
+
+  selectTab(index: number) {
+    this.selectedTab.set(index);
+    const slug = this.tabs[index].label.toLowerCase();
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: slug },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 
