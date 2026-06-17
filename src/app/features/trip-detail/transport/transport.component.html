@@ -20,7 +20,7 @@
       </mat-button-toggle-group>
     </div>
 
-    <!-- Train search -->
+    <!-- ── Train search (live DB API) ───────────────────────────────────── -->
     @if (searchMode() === 'trains') {
       <div class="search-form">
         <mat-form-field appearance="outline" class="form-field">
@@ -45,11 +45,8 @@
 
         <button mat-flat-button color="primary" class="search-btn"
                 (click)="searchTrains()" [disabled]="searching()">
-          @if (searching()) {
-            <mat-spinner diameter="18"></mat-spinner>
-          } @else {
-            <mat-icon>search</mat-icon>
-          }
+          @if (searching()) { <mat-spinner diameter="18"></mat-spinner> }
+          @else { <mat-icon>search</mat-icon> }
           Search Trains
         </button>
       </div>
@@ -87,7 +84,7 @@
 
               <div class="journey-legs">
                 @for (leg of j.legs; track $index) {
-                  @if (!leg.mode || leg.mode !== 'walking') {
+                  @if (leg.mode !== 'walking') {
                     <span class="leg-chip">
                       <mat-icon>{{ modeIcon(leg.mode) }}</mat-icon>
                       {{ leg.name ?? leg.product ?? leg.mode }}
@@ -110,21 +107,23 @@
       }
     }
 
-    <!-- Flight search -->
+    <!-- ── Flight search (external links) ───────────────────────────────── -->
     @if (searchMode() === 'flights') {
       <div class="search-form">
         <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Origin city or IATA code</mat-label>
+          <mat-label>Origin city or airport</mat-label>
           <mat-icon matPrefix>flight_takeoff</mat-icon>
-          <input matInput [ngModel]="flightOrigin()" (ngModelChange)="flightOrigin.set($event)" placeholder="e.g. London or LHR" />
+          <input matInput [ngModel]="flightOrigin()" (ngModelChange)="flightOrigin.set($event)"
+                 placeholder="e.g. London or LHR" />
         </mat-form-field>
 
         <mat-icon class="arrow-icon">arrow_forward</mat-icon>
 
         <mat-form-field appearance="outline" class="form-field">
-          <mat-label>Destination city or IATA code</mat-label>
+          <mat-label>Destination city or airport</mat-label>
           <mat-icon matPrefix>flight_land</mat-icon>
-          <input matInput [ngModel]="flightDestination()" (ngModelChange)="flightDestination.set($event)" placeholder="e.g. Paris or CDG" />
+          <input matInput [ngModel]="flightDestination()" (ngModelChange)="flightDestination.set($event)"
+                 placeholder="e.g. Paris or CDG" />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field form-field--date">
@@ -132,183 +131,65 @@
           <mat-icon matPrefix>calendar_today</mat-icon>
           <input matInput type="date" [ngModel]="flightDate()" (ngModelChange)="flightDate.set($event)" />
         </mat-form-field>
-
-        <button mat-flat-button color="primary" class="search-btn"
-                (click)="searchFlights()" [disabled]="searchingFlights()">
-          @if (searchingFlights()) {
-            <mat-spinner diameter="18"></mat-spinner>
-          } @else {
-            <mat-icon>search</mat-icon>
-          }
-          Search Flights
-        </button>
       </div>
 
-      <div class="amadeus-note">
-        <mat-icon>info</mat-icon>
-        Prices and availability from Amadeus test API. Verify on airline / booking site before purchasing.
+      <div class="external-search-note">
+        <mat-icon>open_in_new</mat-icon>
+        Fill in your route above, then choose where to search — each button opens a pre-filled search in a new tab.
       </div>
 
-      @if (flightError()) {
-        <div class="error-banner"><mat-icon>warning</mat-icon> {{ flightError() }}</div>
-      }
-
-      @if (flights().length > 0) {
-        <div class="results-header">
-          <span class="results-label">{{ flights().length }} flights · {{ fromAirport() || flightOrigin() }} → {{ toAirport() || flightDestination() }}</span>
-        </div>
-        <div class="flight-list">
-          @for (f of flights(); track f.id) {
-            <div class="flight-card">
-              <div class="flight-airline">
-                <mat-icon>airlines</mat-icon>
-                <span>{{ f.airline ?? '—' }}</span>
-                <span class="flight-number">{{ f.flightNumber }}</span>
-              </div>
-
-              <div class="journey-times">
-                <div class="time-block">
-                  <span class="time">{{ formatTime(f.departure) }}</span>
-                  <span class="station">{{ f.originCode }}</span>
-                  <span class="station-date">{{ formatDate(f.departure) }}</span>
-                </div>
-                <div class="journey-mid">
-                  <span class="duration">{{ f.duration ?? '—' }}</span>
-                  <div class="journey-line">
-                    <div class="journey-dot"></div>
-                    <div class="journey-track"></div>
-                    <div class="journey-dot"></div>
-                  </div>
-                  <span class="changes">
-                    {{ f.stops === 0 ? 'Direct' : f.stops + ' stop' + (f.stops !== 1 ? 's' : '') }}
-                  </span>
-                </div>
-                <div class="time-block time-block--right">
-                  <span class="time">{{ formatTime(f.arrival) }}</span>
-                  <span class="station">{{ f.destinationCode }}</span>
-                  <span class="station-date">{{ formatDate(f.arrival) }}</span>
-                </div>
-              </div>
-
-              <div class="journey-footer">
-                @if (f.price) {
-                  <span class="journey-price">{{ f.price.currency }} {{ f.price.amount | number:'1.2-2' }}</span>
-                }
-                <button mat-stroked-button class="add-journey-btn" (click)="saveFlightAsBooking(f)">
-                  <mat-icon>bookmark_add</mat-icon> Save as Suggestion
-                </button>
-              </div>
+      <div class="site-grid">
+        @for (site of flightSites; track site.name) {
+          <button class="site-card" (click)="openSite(site)" [style.--site-color]="site.color">
+            <div class="site-icon-wrap">
+              <mat-icon [style.color]="site.color">{{ site.icon }}</mat-icon>
             </div>
-          }
-        </div>
-        <p class="suggestion-note">
-          <mat-icon>info</mat-icon>
-          Saved flights appear in your <strong>Bookings</strong> tab as suggestions. Mark as Confirmed once you've actually booked.
-        </p>
-      }
+            <span class="site-name">{{ site.name }}</span>
+            <mat-icon class="site-open-icon">open_in_new</mat-icon>
+          </button>
+        }
+      </div>
     }
 
-    <!-- Hotel search -->
+    <!-- ── Hotel search (external links) ────────────────────────────────── -->
     @if (searchMode() === 'hotels') {
       <div class="search-form">
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Destination city</mat-label>
           <mat-icon matPrefix>hotel</mat-icon>
-          <input matInput [ngModel]="hotelDestination()" (ngModelChange)="hotelDestination.set($event)" placeholder="e.g. Paris" />
+          <input matInput [ngModel]="hotelDestination()" (ngModelChange)="hotelDestination.set($event)"
+                 placeholder="e.g. Paris" />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field form-field--date">
           <mat-label>Check-in date</mat-label>
-          <mat-icon matPrefix>calendar_today</mat-icon>
+          <mat-icon matPrefix>login</mat-icon>
           <input matInput type="date" [ngModel]="hotelCheckIn()" (ngModelChange)="hotelCheckIn.set($event)" />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field form-field--date">
           <mat-label>Check-out date</mat-label>
-          <mat-icon matPrefix>calendar_month</mat-icon>
+          <mat-icon matPrefix>logout</mat-icon>
           <input matInput type="date" [ngModel]="hotelCheckOut()" (ngModelChange)="hotelCheckOut.set($event)" />
         </mat-form-field>
-
-        <button mat-flat-button color="primary" class="search-btn"
-                (click)="searchHotels()" [disabled]="searchingHotels()">
-          @if (searchingHotels()) {
-            <mat-spinner diameter="18"></mat-spinner>
-          } @else {
-            <mat-icon>search</mat-icon>
-          }
-          Search Hotels
-        </button>
       </div>
 
-      <div class="amadeus-note">
-        <mat-icon>info</mat-icon>
-        Powered by Amadeus test API. Prices are indicative — verify availability and book directly on the hotel site.
+      <div class="external-search-note">
+        <mat-icon>open_in_new</mat-icon>
+        Fill in your destination and dates above, then choose where to search.
       </div>
 
-      @if (hotelError()) {
-        <div class="error-banner"><mat-icon>warning</mat-icon> {{ hotelError() }}</div>
-      }
-
-      @if (hotels().length > 0) {
-        <div class="results-header">
-          <span class="results-label">{{ hotels().length }} hotels · {{ hotelCityCode() || hotelDestination() }}</span>
-        </div>
-        <div class="hotel-list">
-          @for (h of hotels(); track h.hotelId) {
-            <div class="hotel-card">
-              <div class="hotel-header">
-                <div class="hotel-name-block">
-                  <span class="hotel-name">{{ h.hotelName }}</span>
-                  @if (h.rating) {
-                    <span class="hotel-stars">
-                      @for (star of [].constructor(h.rating); track $index) {
-                        <mat-icon class="star-icon">star</mat-icon>
-                      }
-                    </span>
-                  }
-                </div>
-                <span class="hotel-city">{{ h.cityCode }}</span>
-              </div>
-
-              <div class="hotel-dates">
-                <span class="hotel-date-label">
-                  <mat-icon>login</mat-icon> {{ h.checkIn ?? hotelCheckIn() }}
-                </span>
-                <span class="hotel-date-sep">→</span>
-                <span class="hotel-date-label">
-                  <mat-icon>logout</mat-icon> {{ h.checkOut ?? hotelCheckOut() }}
-                </span>
-              </div>
-
-              @if (h.roomType || h.boardType) {
-                <div class="hotel-meta">
-                  @if (h.roomType) {
-                    <span class="hotel-chip"><mat-icon>bed</mat-icon> {{ h.roomType }}</span>
-                  }
-                  @if (h.boardType) {
-                    <span class="hotel-chip"><mat-icon>restaurant</mat-icon> {{ h.boardType | titlecase }}</span>
-                  }
-                </div>
-              }
-
-              <div class="journey-footer">
-                @if (h.price) {
-                  <span class="journey-price">{{ h.price.currency }} {{ h.price.amount | number:'1.2-2' }}</span>
-                } @else {
-                  <span class="hotel-no-price">Price on request</span>
-                }
-                <button mat-stroked-button class="add-journey-btn" (click)="saveHotelAsBooking(h)">
-                  <mat-icon>bookmark_add</mat-icon> Save as Suggestion
-                </button>
-              </div>
+      <div class="site-grid">
+        @for (site of hotelSites; track site.name) {
+          <button class="site-card" (click)="openSite(site)" [style.--site-color]="site.color">
+            <div class="site-icon-wrap">
+              <mat-icon [style.color]="site.color">{{ site.icon }}</mat-icon>
             </div>
-          }
-        </div>
-        <p class="suggestion-note">
-          <mat-icon>info</mat-icon>
-          Saved hotels appear in your <strong>Bookings</strong> tab as suggestions. Mark as Confirmed once you've actually booked.
-        </p>
-      }
+            <span class="site-name">{{ site.name }}</span>
+            <mat-icon class="site-open-icon">open_in_new</mat-icon>
+          </button>
+        }
+      </div>
     }
   </section>
 
@@ -331,7 +212,7 @@
     } @else if (aiPlan()) {
       <div class="ai-plan-output">{{ aiPlan() }}</div>
     } @else {
-      <p class="plan-empty">Click Generate Plan to get AI-powered transport advice based on your search results and local options.</p>
+      <p class="plan-empty">Search for trains first, then click Generate Plan for AI-powered transport advice based on your results and local options.</p>
     }
   </section>
 
@@ -350,7 +231,6 @@
       <p class="plan-empty">No local transport data found for this destination.</p>
     } @else {
 
-      <!-- Summary chips -->
       @if (localSummary().length > 0) {
         <div class="local-grid">
           @for (opt of localSummary(); track opt.type) {
@@ -378,7 +258,6 @@
         </div>
       }
 
-      <!-- Nearby transit stops -->
       @if (nearbyStops().length > 0) {
         <div class="stops-section">
           <button class="stops-toggle" (click)="showStops.set(!showStops())">

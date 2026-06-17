@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,16 +13,23 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { Timestamp } from '@angular/fire/firestore';
 import { from } from 'rxjs';
 import { Trip } from '../../../core/models/trip.model';
-import { TransportService, Journey, FlightOffer, HotelOffer, LocalOption, NearbyStop } from '../../../core/services/transport.service';
+import { TransportService, Journey, LocalOption, NearbyStop } from '../../../core/services/transport.service';
 import { ItineraryService } from '../../../core/services/itinerary.service';
 import { BookingService } from '../../../core/services/booking.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
+
+export interface SearchSite {
+  name: string;
+  icon: string;       // Material icon fallback
+  color: string;
+  url: () => string;
+}
 
 @Component({
   selector: 'app-transport',
   standalone: true,
   imports: [
-    FormsModule, DatePipe, DecimalPipe, TitleCasePipe,
+    FormsModule, DatePipe, TitleCasePipe,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatProgressSpinnerModule, MatChipsModule, MatTooltipModule, MatButtonToggleModule,
   ],
@@ -43,33 +50,24 @@ export class TransportComponent implements OnInit {
   searchMode = signal<'trains' | 'flights' | 'hotels'>('trains');
 
   // ── Train search ──────────────────────────────────────────
-  origin       = signal('');
-  destination  = signal('');
-  departure    = signal('');
-  searching    = signal(false);
-  journeys     = signal<Journey[]>([]);
-  trainError   = signal('');
-  fromStation  = signal('');
-  toStation    = signal('');
+  origin      = signal('');
+  destination = signal('');
+  departure   = signal('');
+  searching   = signal(false);
+  journeys    = signal<Journey[]>([]);
+  trainError  = signal('');
+  fromStation = signal('');
+  toStation   = signal('');
 
-  // ── Flight search ─────────────────────────────────────────
+  // ── Flight search inputs ──────────────────────────────────
   flightOrigin      = signal('');
   flightDestination = signal('');
   flightDate        = signal('');
-  searchingFlights  = signal(false);
-  flights           = signal<FlightOffer[]>([]);
-  flightError       = signal('');
-  fromAirport       = signal('');
-  toAirport         = signal('');
 
-  // ── Hotel search ──────────────────────────────────────────
+  // ── Hotel search inputs ───────────────────────────────────
   hotelDestination = signal('');
   hotelCheckIn     = signal('');
   hotelCheckOut    = signal('');
-  searchingHotels  = signal(false);
-  hotels           = signal<HotelOffer[]>([]);
-  hotelError       = signal('');
-  hotelCityCode    = signal('');
 
   // ── Local transport ───────────────────────────────────────
   loadingLocal = signal(false);
@@ -81,24 +79,152 @@ export class TransportComponent implements OnInit {
   aiPlan      = signal('');
 
   // ── UI state ──────────────────────────────────────────────
-  showStops   = signal(false);
-
-  // Track which local options have been saved as bookings
+  showStops = signal(false);
   savedLocalOptions = signal<Set<string>>(new Set());
 
   ngOnInit() {
     this.destination.set(this.trip.destination);
     this.flightDestination.set(this.trip.destination);
     this.hotelDestination.set(this.trip.destination);
-    const d    = this.trip.startDate.toDate();
-    const end  = this.trip.endDate.toDate();
-    const dateStr = d.toISOString().slice(0, 16);
-    this.departure.set(dateStr);
+    const d   = this.trip.startDate.toDate();
+    const end = this.trip.endDate.toDate();
+    this.departure.set(d.toISOString().slice(0, 16));
     this.flightDate.set(d.toISOString().slice(0, 10));
     this.hotelCheckIn.set(d.toISOString().slice(0, 10));
     this.hotelCheckOut.set(end.toISOString().slice(0, 10));
     this.geocodeAndLoadLocal(this.trip.destination);
   }
+
+  // ── External flight search sites ──────────────────────────
+
+  get flightSites(): SearchSite[] {
+    const o    = encodeURIComponent(this.flightOrigin() || this.trip.destination);
+    const d    = encodeURIComponent(this.flightDestination() || this.trip.destination);
+    const date = this.flightDate() || this.trip.startDate.toDate().toISOString().slice(0, 10);
+    // Skyscanner wants YYMMDD
+    const ssDate = date.replace(/-/g, '').slice(2);
+    // Kayak wants YYYY-MM-DD (already that format)
+    const raw  = this.flightOrigin() || '';
+    const rawD = this.flightDestination() || '';
+
+    return [
+      {
+        name:  'Google Flights',
+        icon:  'flight',
+        color: '#4285F4',
+        url: () =>
+          `https://www.google.com/travel/flights?q=Flights+from+${o}+to+${d}+on+${encodeURIComponent(date)}`,
+      },
+      {
+        name:  'Skyscanner',
+        icon:  'search',
+        color: '#0770E3',
+        url: () =>
+          `https://www.skyscanner.com/transport/flights/${encodeURIComponent(raw)}/${encodeURIComponent(rawD)}/${ssDate}/`,
+      },
+      {
+        name:  'Kayak',
+        icon:  'compare_arrows',
+        color: '#FF690F',
+        url: () =>
+          `https://www.kayak.com/flights/${encodeURIComponent(raw)}-${encodeURIComponent(rawD)}/${date}`,
+      },
+      {
+        name:  'Expedia',
+        icon:  'luggage',
+        color: '#00355F',
+        url: () =>
+          `https://www.expedia.com/Flights-Search?trip=oneway&leg1=from:${o},to:${d},departure:${date}TANYT`,
+      },
+    ];
+  }
+
+  // ── External hotel search sites ───────────────────────────
+
+  get hotelSites(): SearchSite[] {
+    const dest    = encodeURIComponent(this.hotelDestination() || this.trip.destination);
+    const checkIn  = this.hotelCheckIn()  || this.trip.startDate.toDate().toISOString().slice(0, 10);
+    const checkOut = this.hotelCheckOut() || this.trip.endDate.toDate().toISOString().slice(0, 10);
+
+    return [
+      {
+        name:  'Booking.com',
+        icon:  'hotel',
+        color: '#003580',
+        url: () =>
+          `https://www.booking.com/searchresults.html?ss=${dest}&checkin=${checkIn}&checkout=${checkOut}&group_adults=2&no_rooms=1`,
+      },
+      {
+        name:  'Google Hotels',
+        icon:  'bed',
+        color: '#4285F4',
+        url: () =>
+          `https://www.google.com/travel/hotels?q=hotels+in+${dest}&checkin=${checkIn}&checkout=${checkOut}`,
+      },
+      {
+        name:  'Airbnb',
+        icon:  'house',
+        color: '#FF5A5F',
+        url: () =>
+          `https://www.airbnb.com/s/${dest}/homes?checkin=${checkIn}&checkout=${checkOut}`,
+      },
+      {
+        name:  'Hostelworld',
+        icon:  'group',
+        color: '#F37012',
+        url: () =>
+          `https://www.hostelworld.com/s?q=${dest}&checkIn=${checkIn}&checkOut=${checkOut}`,
+      },
+    ];
+  }
+
+  openSite(site: SearchSite) {
+    window.open(site.url(), '_blank', 'noopener');
+  }
+
+  // ── Train search ──────────────────────────────────────────
+
+  searchTrains() {
+    const o   = this.origin().trim();
+    const d   = this.destination().trim();
+    const dep = this.departure();
+    if (!o || !d || !dep) return;
+
+    this.searching.set(true);
+    this.journeys.set([]);
+    this.trainError.set('');
+
+    this.transportService.searchTrains(o, d, dep).subscribe(result => {
+      this.searching.set(false);
+      if (result.error) { this.trainError.set(result.error); return; }
+      this.journeys.set(result.journeys ?? []);
+      if (result.fromStation?.name) this.fromStation.set(result.fromStation.name);
+      if (result.toStation?.name)   this.toStation.set(result.toStation.name);
+      if (!result.journeys?.length) this.trainError.set('No trains found for this route and date.');
+    });
+  }
+
+  addJourneyToItinerary(j: Journey) {
+    const dep    = j.departure ? new Date(j.departure) : this.trip.startDate.toDate();
+    const label  = j.legs.map(l => [l.from, l.to].filter(Boolean).join(' → ')).join(' | ');
+    const timeStr = j.departure ? new Date(j.departure).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : undefined;
+    const endStr  = j.arrival   ? new Date(j.arrival).toLocaleTimeString('en-US',   { hour: '2-digit', minute: '2-digit' }) : undefined;
+
+    from(this.itineraryService.createItem({
+      tripId:    this.tripId,
+      title:     `Train: ${this.fromStation() || this.origin()} → ${this.toStation() || this.destination()}`,
+      category:  'transport',
+      date:      Timestamp.fromDate(dep),
+      startTime: timeStr,
+      endTime:   endStr,
+      description: `${j.duration ?? ''} · ${j.changes} change${j.changes !== 1 ? 's' : ''}. ${label}`,
+      order: 0,
+    })).subscribe(() =>
+      this.snackBar.open('Train journey added to schedule', undefined, { duration: 2500 })
+    );
+  }
+
+  // ── Local transport ───────────────────────────────────────
 
   private geocodeAndLoadLocal(place: string) {
     this.mapsLoader.load().subscribe(loaded => {
@@ -122,84 +248,21 @@ export class TransportComponent implements OnInit {
     });
   }
 
-  searchTrains() {
-    const o = this.origin().trim();
-    const d = this.destination().trim();
-    const dep = this.departure();
-    if (!o || !d || !dep) return;
-
-    this.searching.set(true);
-    this.journeys.set([]);
-    this.trainError.set('');
-
-    this.transportService.searchTrains(o, d, dep).subscribe(result => {
-      this.searching.set(false);
-      if (result.error) { this.trainError.set(result.error); return; }
-      this.journeys.set(result.journeys ?? []);
-      if (result.fromStation?.name) this.fromStation.set(result.fromStation.name);
-      if (result.toStation?.name)   this.toStation.set(result.toStation.name);
-      if (!result.journeys?.length) this.trainError.set('No trains found for this route and date.');
-    });
-  }
-
-  searchFlights() {
-    const o = this.flightOrigin().trim();
-    const d = this.flightDestination().trim();
-    const date = this.flightDate();
-    if (!o || !d || !date) return;
-
-    this.searchingFlights.set(true);
-    this.flights.set([]);
-    this.flightError.set('');
-
-    this.transportService.searchFlights(o, d, date).subscribe(result => {
-      this.searchingFlights.set(false);
-      if (result.error) { this.flightError.set(result.error); return; }
-      this.flights.set(result.flights ?? []);
-      if (result.fromAirport) this.fromAirport.set(`${result.fromAirport.name} (${result.fromAirport.code})`);
-      if (result.toAirport)   this.toAirport.set(`${result.toAirport.name} (${result.toAirport.code})`);
-      if (!result.flights?.length) this.flightError.set('No flights found for this route and date.');
-    });
-  }
-
-  searchHotels() {
-    const dest     = this.hotelDestination().trim();
-    const checkIn  = this.hotelCheckIn();
-    const checkOut = this.hotelCheckOut();
-    if (!dest || !checkIn || !checkOut) return;
-
-    this.searchingHotels.set(true);
-    this.hotels.set([]);
-    this.hotelError.set('');
-
-    this.transportService.searchHotels(dest, checkIn, checkOut).subscribe(result => {
-      this.searchingHotels.set(false);
-      if (result.error) { this.hotelError.set(result.error); return; }
-      this.hotels.set(result.hotels ?? []);
-      if (result.cityCode) this.hotelCityCode.set(result.cityCode);
-      if (!result.hotels?.length) this.hotelError.set('No hotel offers found for this destination and dates.');
-    });
-  }
-
-  saveHotelAsBooking(h: HotelOffer) {
-    const checkInDate  = h.checkIn  ? Timestamp.fromDate(new Date(h.checkIn))  : undefined;
-    const checkOutDate = h.checkOut ? Timestamp.fromDate(new Date(h.checkOut)) : undefined;
-    const priceStr = h.price ? `${h.price.currency} ${h.price.amount.toFixed(2)}` : '';
-    const starStr  = h.rating ? ` (${h.rating}-star)` : '';
-
+  saveLocalOptionAsBooking(option: LocalOption) {
+    const key = option.type;
     from(this.bookingService.createBooking({
       tripId: this.tripId,
-      type: 'hotel',
-      title: `${h.hotelName}${starStr}`,
+      type:   option.type === 'Car Rental' || option.type === 'Car Sharing' ? 'car-rental' : 'other',
+      title:  `${option.type} near ${this.trip.destination}`,
       status: 'suggested',
-      ...(checkInDate  ? { checkIn:  checkInDate }  : {}),
-      ...(checkOutDate ? { checkOut: checkOutDate } : {}),
-      ...(h.price ? { cost: h.price.amount, currency: h.price.currency } : {}),
-      notes: `SUGGESTION — not yet booked. ${priceStr ? 'Shown price: ' + priceStr + '. ' : ''}${h.roomType ? 'Room: ' + h.roomType + '. ' : ''}${h.boardType ? 'Board: ' + h.boardType + '. ' : ''}Verify availability and book directly on hotel site. Powered by Amadeus test API.`,
-    })).subscribe(() =>
-      this.snackBar.open('Hotel saved as suggestion in Bookings', undefined, { duration: 2500 })
-    );
+      notes:  `SUGGESTION — not yet booked. ${option.count} ${option.type} location${option.count !== 1 ? 's' : ''} found near your destination. Research and book before travelling.`,
+    })).subscribe(() => {
+      this.savedLocalOptions.update(s => new Set([...s, key]));
+      this.snackBar.open(`${option.type} saved as suggestion in Bookings`, undefined, { duration: 2500 });
+    });
   }
+
+  // ── AI plan ───────────────────────────────────────────────
 
   getAIPlan() {
     this.loadingPlan.set(true);
@@ -215,80 +278,30 @@ export class TransportComponent implements OnInit {
     });
   }
 
-  addJourneyToItinerary(j: Journey) {
-    const dep = j.departure ? new Date(j.departure) : this.trip.startDate.toDate();
-    const label = j.legs.map(l => [l.from, l.to].filter(Boolean).join(' → ')).join(' | ');
-    const timeStr = j.departure ? new Date(j.departure).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : undefined;
-    const endStr  = j.arrival  ? new Date(j.arrival).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : undefined;
-
-    from(this.itineraryService.createItem({
-      tripId: this.tripId,
-      title: `Train: ${this.fromStation() || this.origin()} → ${this.toStation() || this.destination()}`,
-      category: 'transport',
-      date: Timestamp.fromDate(dep),
-      startTime: timeStr,
-      endTime: endStr,
-      description: `${j.duration ?? ''} · ${j.changes} change${j.changes !== 1 ? 's' : ''}. ${label}`,
-      order: 0,
-    })).subscribe(() =>
-      this.snackBar.open('Train journey added to schedule', undefined, { duration: 2500 })
-    );
-  }
-
-  saveFlightAsBooking(f: FlightOffer) {
-    const depDate = f.departure ? Timestamp.fromDate(new Date(f.departure)) : undefined;
-    const arrDate = f.arrival   ? Timestamp.fromDate(new Date(f.arrival))   : undefined;
-    const priceStr = f.price ? `${f.price.currency} ${f.price.amount.toFixed(2)}` : '';
-
-    from(this.bookingService.createBooking({
-      tripId: this.tripId,
-      type: 'flight',
-      title: `Flight ${f.flightNumber}: ${f.originCode} → ${f.destinationCode}`,
-      provider: f.airline ?? undefined,
-      status: 'suggested',
-      ...(depDate ? { checkIn: depDate }   : {}),
-      ...(arrDate ? { checkOut: arrDate }  : {}),
-      ...(f.price ? { cost: f.price.amount, currency: f.price.currency } : {}),
-      notes: `SUGGESTION — not yet booked. ${priceStr ? 'Shown price: ' + priceStr + '. ' : ''}Confirm booking and update status when purchased.`,
-    })).subscribe(() =>
-      this.snackBar.open('Flight saved as suggestion in Bookings', undefined, { duration: 2500 })
-    );
-  }
-
-  saveLocalOptionAsBooking(option: LocalOption) {
-    const key = option.type;
-    from(this.bookingService.createBooking({
-      tripId: this.tripId,
-      type: option.type === 'Car Rental' || option.type === 'Car Sharing' ? 'car-rental' : 'other',
-      title: `${option.type} near ${this.trip.destination}`,
-      status: 'suggested',
-      notes: `SUGGESTION — not yet booked. ${option.count} ${option.type} location${option.count !== 1 ? 's' : ''} found near your destination. Research and book before travelling.`,
-    })).subscribe(() => {
-      this.savedLocalOptions.update(s => new Set([...s, key]));
-      this.snackBar.open(`${option.type} saved as suggestion in Bookings`, undefined, { duration: 2500 });
-    });
-  }
+  // ── Helpers ───────────────────────────────────────────────
 
   modeIcon(mode: string): string {
-    if (mode === 'train' || mode === 'nationalExpress' || mode === 'national' || mode === 'regional') return 'train';
-    if (mode === 'bus')   return 'directions_bus';
-    if (mode === 'tram')  return 'tram';
+    if (['train', 'nationalExpress', 'national', 'regional'].includes(mode)) return 'train';
+    if (mode === 'bus')     return 'directions_bus';
+    if (mode === 'tram')    return 'tram';
     if (mode === 'subway' || mode === 'metro') return 'subway';
     if (mode === 'walking') return 'directions_walk';
     return 'directions_transit';
   }
 
   localIcon(type: string): string {
-    if (type === 'Bike Share')               return 'pedal_bike';
-    if (type === 'Bus')                      return 'directions_bus';
-    if (type === 'Tram')                     return 'tram';
-    if (type === 'Subway / Metro')           return 'subway';
-    if (type === 'Taxi Stand')               return 'local_taxi';
-    if (type === 'Car Rental')               return 'directions_car';
-    if (type === 'Car Sharing')              return 'car_rental';
-    if (type === 'Scooter / Moto Rental')    return 'two_wheeler';
-    if (type === 'Ferry')                    return 'directions_boat';
-    return 'directions_transit';
+    const map: Record<string, string> = {
+      'Bike Share':           'pedal_bike',
+      'Bus':                  'directions_bus',
+      'Tram':                 'tram',
+      'Subway / Metro':       'subway',
+      'Taxi Stand':           'local_taxi',
+      'Car Rental':           'directions_car',
+      'Car Sharing':          'car_rental',
+      'Scooter / Moto Rental':'two_wheeler',
+      'Ferry':                'directions_boat',
+    };
+    return map[type] ?? 'directions_transit';
   }
 
   formatTime(iso: string | null): string {

@@ -23,31 +23,6 @@ export interface Journey {
   price: { amount: number; currency: string } | null;
 }
 
-export interface FlightOffer {
-  id: string;
-  departure: string | null;
-  arrival: string | null;
-  duration: string | null;
-  stops: number;
-  airline: string | null;
-  flightNumber: string;
-  originCode: string;
-  destinationCode: string;
-  price: { amount: number; currency: string } | null;
-}
-
-export interface HotelOffer {
-  hotelId: string | null;
-  hotelName: string;
-  cityCode: string;
-  checkIn: string | null;
-  checkOut: string | null;
-  price: { amount: number; currency: string } | null;
-  rating: number | null;
-  roomType: string | null;
-  boardType: string | null;
-}
-
 export interface LocalOption {
   type: string;
   count: number;
@@ -75,17 +50,6 @@ export class TransportService {
     }).pipe(catchError(() => of({ journeys: [], error: 'Could not reach transport API' })));
   }
 
-  searchFlights(flightOrigin: string, flightDestination: string, flightDate: string): Observable<{
-    flights: FlightOffer[];
-    fromAirport?: { code: string; name: string };
-    toAirport?: { code: string; name: string };
-    error?: string;
-  }> {
-    return this.http.post<any>('/api/transport', {
-      action: 'flights', flightOrigin, flightDestination, flightDate,
-    }).pipe(catchError(() => of({ flights: [], error: 'Could not reach flights API' })));
-  }
-
   getLocalOptions(lat: number, lon: number): Observable<{
     localSummary: LocalOption[];
     nearbyStops: NearbyStop[];
@@ -104,13 +68,4 @@ export class TransportService {
     );
   }
 
-  searchHotels(hotelDestination: string, hotelCheckIn: string, hotelCheckOut: string): Observable<{
-    hotels: HotelOffer[];
-    cityCode?: string;
-    error?: string;
-  }> {
-    return this.http.post<any>('/api/transport', {
-      action: 'hotels', hotelDestination, hotelCheckIn, hotelCheckOut,
-    }).pipe(catchError(() => of({ hotels: [], error: 'Could not reach hotels API' })));
-  }
 }

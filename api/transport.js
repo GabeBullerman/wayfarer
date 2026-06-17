@@ -1,9 +1,7 @@
 const Groq = require('groq-sdk');
 
-const DB_API        = 'https://v6.db.transport.rest';
-const OVERPASS      = 'https://overpass-api.de/api/interpreter';
-const SKYSCRAPPER   = 'https://sky-scrapper.p.rapidapi.com';
-const MAKCORPS      = 'https://makcorps.p.rapidapi.com';
+const DB_API   = 'https://v6.db.transport.rest';
+const OVERPASS = 'https://overpass-api.de/api/interpreter';
 
 // ── Deutsche Bahn helpers ─────────────────────────────────────────────────────
 
@@ -59,134 +57,6 @@ out body 40;`;
     lat:  e.lat,
     lon:  e.lon,
   }));
-}
-
-// ── Sky Scrapper (RapidAPI) — flight search ───────────────────────────────────
-
-function rapidHeaders(apiKey, host) {
-  return {
-    'X-RapidAPI-Key':  apiKey,
-    'X-RapidAPI-Host': host,
-    'Accept':          'application/json',
-  };
-}
-
-async function searchAirportSS(apiKey, query) {
-  const url = `${SKYSCRAPPER}/api/v1/flights/searchAirport?query=${encodeURIComponent(query)}&locale=en-US`;
-  const res = await fetch(url, { headers: rapidHeaders(apiKey, 'sky-scrapper.p.rapidapi.com') });
-  if (!res.ok) return null;
-  const data = await res.json();
-  const airports = data?.data ?? [];
-  // prefer entries that look like airports (IATA codes are usually 3 uppercase chars)
-  return airports.find(a => /^[A-Z]{3,4}$/.test(a.skyId ?? '')) ?? airports[0] ?? null;
-}
-
-async function searchFlightsSS(apiKey, originSkyId, destSkyId, originEntityId, destEntityId, date) {
-  const params = new URLSearchParams({
-    originSkyId,
-    destinationSkyId:  destSkyId,
-    originEntityId,
-    destinationEntityId: destEntityId,
-    date,
-    adults:      '1',
-    currency:    'USD',
-    locale:      'en-US',
-    market:      'en-US',
-    countryCode: 'US',
-  });
-  const url = `${SKYSCRAPPER}/api/v2/flights/searchFlights?${params}`;
-  const res = await fetch(url, { headers: rapidHeaders(apiKey, 'sky-scrapper.p.rapidapi.com') });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => res.status);
-    throw new Error(`Sky Scrapper flights ${res.status}: ${txt}`);
-  }
-  return res.json();
-}
-
-function parseFlightsSS(data, originCode, destinationCode) {
-  const itineraries = data?.data?.itineraries ?? [];
-  return itineraries.slice(0, 6).map((it, idx) => {
-    const leg      = it.legs?.[0] ?? {};
-    const carrier  = leg.carriers?.marketing?.[0] ?? {};
-    const price    = it.price ?? {};
-    const dMin     = leg.durationInMinutes;
-
-    return {
-      id:              it.id ?? String(idx),
-      departure:       leg.departure ?? null,
-      arrival:         leg.arrival   ?? null,
-      duration:        dMin ? `${Math.floor(dMin / 60)}h ${dMin % 60}m` : null,
-      stops:           leg.stopCount ?? 0,
-      airline:         carrier.name  ?? null,
-      flightNumber:    leg.segments?.[0]?.flightNumber ?? '',
-      originCode:      leg.origin?.displayCode      ?? originCode,
-      destinationCode: leg.destination?.displayCode ?? destinationCode,
-      price: price.raw != null ? {
-        amount:   price.raw,
-        currency: 'USD',
-      } : null,
-    };
-  });
-}
-
-// ── Makcorps (RapidAPI) — hotel search ───────────────────────────────────────
-
-async function lookupCityMakcorps(apiKey, cityName) {
-  const url = `${MAKCORPS}/mapping?name=${encodeURIComponent(cityName)}`;
-  const res = await fetch(url, { headers: rapidHeaders(apiKey, 'makcorps.p.rapidapi.com') });
-  if (!res.ok) return null;
-  const data = await res.json();
-  const cities = Array.isArray(data) ? data : (data?.cities ?? data?.data ?? []);
-  return cities[0] ?? null;
-}
-
-async function searchHotelsMakcorps(apiKey, cityId, checkIn, checkOut) {
-  const params = new URLSearchParams({
-    cityid:   String(cityId),
-    checkin:  checkIn,
-    checkout: checkOut,
-    adults:   '2',
-    rooms:    '1',
-    cur:      'USD',
-  });
-  const url = `${MAKCORPS}/city?${params}`;
-  const res = await fetch(url, { headers: rapidHeaders(apiKey, 'makcorps.p.rapidapi.com') });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => res.status);
-    throw new Error(`Makcorps hotels ${res.status}: ${txt}`);
-  }
-  return res.json();
-}
-
-function parseHotelsMakcorps(data, checkIn, checkOut) {
-  // Makcorps returns either an array at root or nested under a key
-  const raw = Array.isArray(data) ? data
-    : (data?.hotels ?? data?.data ?? data?.results ?? []);
-
-  return raw.slice(0, 10).map((h, idx) => {
-    // field names differ slightly between Makcorps plan tiers
-    const name    = h.hotel_name ?? h.hotelName ?? h.name ?? 'Unknown Hotel';
-    const id      = h.hotel_id   ?? h.hotelId   ?? h.id   ?? String(idx);
-    const stars   = h.hotel_star_rating ?? h.stars ?? h.rating ?? null;
-    const roomTxt = h.room_type  ?? h.roomType   ?? null;
-
-    // price may be nested or flat
-    const priceObj  = h.min_price ?? h.price ?? h.lowestPrice ?? null;
-    const priceAmt  = typeof priceObj === 'number' ? priceObj
-      : (priceObj?.price ?? priceObj?.amount ?? priceObj?.total ?? null);
-
-    return {
-      hotelId:   String(id),
-      hotelName: name,
-      cityCode:  '',
-      checkIn,
-      checkOut,
-      price: priceAmt != null ? { amount: parseFloat(priceAmt), currency: 'USD' } : null,
-      rating:    stars ? parseInt(stars, 10) : null,
-      roomType:  roomTxt,
-      boardType: h.board_type ?? h.boardType ?? null,
-    };
-  });
 }
 
 // ── Shared formatters ─────────────────────────────────────────────────────────
@@ -280,42 +150,6 @@ module.exports = async (req, res) => {
       });
     }
 
-    // ── Flight search (Sky Scrapper via RapidAPI) ─────────────────────────────
-    if (action === 'flights') {
-      const apiKey = process.env.RAPIDAPI_KEY;
-      if (!apiKey) {
-        return res.status(500).json({ error: 'RAPIDAPI_KEY not configured' });
-      }
-
-      const { flightOrigin, flightDestination, flightDate } = req.body;
-      if (!flightOrigin || !flightDestination || !flightDate) {
-        return res.status(400).json({ error: 'Missing flightOrigin, flightDestination, or flightDate' });
-      }
-
-      const [fromAirport, toAirport] = await Promise.all([
-        searchAirportSS(apiKey, flightOrigin),
-        searchAirportSS(apiKey, flightDestination),
-      ]);
-
-      if (!fromAirport) return res.status(200).json({ flights: [], error: `No airport found for "${flightOrigin}"` });
-      if (!toAirport)   return res.status(200).json({ flights: [], error: `No airport found for "${flightDestination}"` });
-
-      const dateStr = flightDate.slice(0, 10);
-      const data    = await searchFlightsSS(
-        apiKey,
-        fromAirport.skyId,      toAirport.skyId,
-        fromAirport.entityId,   toAirport.entityId,
-        dateStr,
-      );
-      const flights = parseFlightsSS(data, fromAirport.skyId, toAirport.skyId);
-
-      return res.status(200).json({
-        flights,
-        fromAirport: { code: fromAirport.skyId, name: fromAirport.presentation?.title ?? flightOrigin },
-        toAirport:   { code: toAirport.skyId,   name: toAirport.presentation?.title   ?? flightDestination },
-      });
-    }
-
     // ── Local transport options (Overpass + DB nearby) ────────────────────────
     if (action === 'local') {
       if (!lat || !lon) return res.status(400).json({ error: 'Missing lat/lon' });
@@ -362,37 +196,6 @@ module.exports = async (req, res) => {
       });
 
       return res.status(200).json({ plan: response.choices[0].message.content });
-    }
-
-    // ── Hotel search (Makcorps via RapidAPI) ──────────────────────────────────
-    if (action === 'hotels') {
-      const apiKey = process.env.RAPIDAPI_KEY;
-      if (!apiKey) {
-        return res.status(500).json({ error: 'RAPIDAPI_KEY not configured' });
-      }
-
-      const { hotelDestination, hotelCheckIn, hotelCheckOut } = req.body;
-      if (!hotelDestination || !hotelCheckIn || !hotelCheckOut) {
-        return res.status(400).json({ error: 'Missing hotelDestination, hotelCheckIn, or hotelCheckOut' });
-      }
-
-      const cityEntry = await lookupCityMakcorps(apiKey, hotelDestination);
-      if (!cityEntry) {
-        return res.status(200).json({ hotels: [], error: `Could not resolve city for "${hotelDestination}"` });
-      }
-
-      const cityId  = cityEntry.city_id ?? cityEntry.cityId ?? cityEntry.id;
-      if (!cityId) {
-        return res.status(200).json({ hotels: [], error: `No city ID found for "${hotelDestination}"` });
-      }
-
-      const checkIn  = hotelCheckIn.slice(0, 10);
-      const checkOut = hotelCheckOut.slice(0, 10);
-
-      const raw    = await searchHotelsMakcorps(apiKey, cityId, checkIn, checkOut);
-      const hotels = parseHotelsMakcorps(raw, checkIn, checkOut);
-
-      return res.status(200).json({ hotels });
     }
 
     return res.status(400).json({ error: `Unknown action: ${action}` });
