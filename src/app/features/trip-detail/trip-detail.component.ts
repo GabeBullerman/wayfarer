@@ -63,16 +63,16 @@ export class TripDetailComponent implements OnInit {
   readonly selectedTab = signal(0);
 
   readonly tabs: TabDef[] = [
-    { label: 'Overview',  icon: 'map' },
-    { label: 'Schedule',  icon: 'event_note' },
-    { label: 'Bookings',  icon: 'confirmation_number' },
-    { label: 'People',    icon: 'group' },
-    { label: 'Photos',    icon: 'photo_library' },
-    { label: 'Costs',     icon: 'payments' },
-    { label: 'Packing',   icon: 'luggage' },
-    { label: 'AI',        icon: 'auto_awesome' },
-    { label: 'Transport', icon: 'directions_transit' },
-    { label: 'Documents', icon: 'folder_open' },
+    { label: 'Overview',   icon: 'map' },
+    { label: 'Schedule',   icon: 'event_note' },
+    { label: 'Transport',  icon: 'directions_transit' },
+    { label: 'Photos',     icon: 'photo_library' },
+    { label: 'Costs',      icon: 'payments' },
+    { label: 'Bookings',   icon: 'confirmation_number' },
+    { label: 'People',     icon: 'group' },
+    { label: 'Packing',    icon: 'luggage' },
+    { label: 'Documents',  icon: 'folder_open' },
+    { label: 'AI',         icon: 'auto_awesome' },
   ];
 
   ngOnInit() {

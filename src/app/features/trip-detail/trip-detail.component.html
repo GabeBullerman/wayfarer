@@ -50,14 +50,14 @@
       @switch (selectedTab()) {
         @case (0) { <app-overview [trip]="trip" [tripId]="id" /> }
         @case (1) { <app-schedule [tripId]="id" [trip]="trip" /> }
-        @case (2) { <app-bookings [tripId]="id" [trip]="trip" /> }
-        @case (3) { <app-people [tripId]="id" [isOwner]="isOwner(trip)" /> }
-        @case (4) { <app-photos [tripId]="id" /> }
-        @case (5) { <app-costs [tripId]="id" [trip]="trip" /> }
-        @case (6) { <app-packing [tripId]="id" [trip]="trip" /> }
-        @case (7) { <app-ai-assistant [trip]="trip" /> }
-        @case (8) { <app-transport [trip]="trip" [tripId]="id" /> }
-        @case (9) { <app-documents [tripId]="id" [trip]="trip" /> }
+        @case (2) { <app-transport [trip]="trip" [tripId]="id" /> }
+        @case (3) { <app-photos [tripId]="id" /> }
+        @case (4) { <app-costs [tripId]="id" [trip]="trip" /> }
+        @case (5) { <app-bookings [tripId]="id" [trip]="trip" /> }
+        @case (6) { <app-people [tripId]="id" [isOwner]="isOwner(trip)" /> }
+        @case (7) { <app-packing [tripId]="id" [trip]="trip" /> }
+        @case (8) { <app-documents [tripId]="id" [trip]="trip" /> }
+        @case (9) { <app-ai-assistant [trip]="trip" /> }
       }
     </div>
 
