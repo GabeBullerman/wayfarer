@@ -109,13 +109,17 @@ export class PeopleComponent implements OnInit, OnChanges {
         const collabIds = (trip?.collaboratorIds ?? []).filter(id => id !== ownerUid);
 
         const owner$ = this.userService.getProfile(ownerUid).pipe(
-          map(profile => ({
-            uid: ownerUid,
-            ...resolve(ownerUid, profile),
-            homeCurrency: profile?.homeCurrency ?? '',
-            createdAt: profile?.createdAt ?? null as any,
-            isOwner: true,
-          } as Member))
+          map(profile => {
+            const resolved = resolve(ownerUid, profile);
+            return {
+              uid: ownerUid,
+              ...resolved,
+              displayName: resolved.displayName !== 'Member' ? resolved.displayName : 'Trip Owner',
+              homeCurrency: profile?.homeCurrency ?? '',
+              createdAt: profile?.createdAt ?? null as any,
+              isOwner: true,
+            } as Member;
+          })
         );
 
         if (collabIds.length === 0) {
