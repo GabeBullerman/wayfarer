@@ -36,13 +36,16 @@
     </div>
 
     <!-- Tab navigation — plain div, no Angular Material wrapper -->
-    <div class="trip-tab-nav">
-      @for (tab of tabs; track tab.label; let i = $index) {
-        <button class="tab-link" [class.active]="selectedTab() === i" (click)="selectTab(i)">
-          <mat-icon>{{ tab.icon }}</mat-icon>
-          <span>{{ tab.label }}</span>
-        </button>
-      }
+    <div class="trip-tab-nav-wrapper">
+      <div class="trip-tab-nav" #tabNav>
+        @for (tab of tabs; track tab.label; let i = $index) {
+          <button class="tab-link" [class.active]="selectedTab() === i" (click)="selectTab(i)"
+                  [attr.aria-label]="tab.label">
+            <mat-icon>{{ tab.icon }}</mat-icon>
+            <span class="tab-label">{{ tab.label }}</span>
+          </button>
+        }
+      </div>
     </div>
 
     <!-- Tab content -->

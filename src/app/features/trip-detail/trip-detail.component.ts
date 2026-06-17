@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, inject, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -46,6 +46,7 @@ export interface TabDef {
 })
 export class TripDetailComponent implements OnInit {
   @Input() id!: string;
+  @ViewChild('tabNav') tabNavRef!: ElementRef<HTMLDivElement>;
 
   private tripService = inject(TripService);
   private auth = inject(AuthService);
@@ -103,6 +104,12 @@ export class TripDetailComponent implements OnInit {
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
+    // Scroll active tab into centre of the nav bar (helps on mobile)
+    setTimeout(() => {
+      const nav = this.tabNavRef?.nativeElement;
+      const btn = nav?.querySelector<HTMLElement>('.tab-link.active');
+      btn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }, 0);
   }
 
   get tripId() { return this.id; }
