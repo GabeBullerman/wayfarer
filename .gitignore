@@ -47,3 +47,4 @@ Thumbs.db
 src/environments/environment.ts
 .vercel
 .env*.local
+.claude/
