@@ -14,7 +14,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Photo } from '../../../core/models/photo.model';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { Observable, of, from } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-photos',
@@ -40,7 +40,9 @@ export class PhotosComponent implements OnInit {
   readonly currentUserId = this.auth.currentUser?.uid ?? '';
 
   ngOnInit() {
-    this.photos$ = this.photoService.getPhotos(this.tripId).pipe(catchError(() => of([])));
+    this.photos$ = this.photoService.getPhotos(this.tripId).pipe(
+      catchError(err => { console.error('Photos query failed:', err); return of([]); })
+    );
   }
   uploadProgress = signal<number | null>(null);
   uploadCaption = signal('');
