@@ -82,4 +82,19 @@ export class RegisterComponent {
       },
     });
   }
+
+  googleLoading = signal(false);
+
+  loginWithGoogle() {
+    this.googleLoading.set(true);
+    this.auth.loginWithGoogle().subscribe({
+      next: () => this.router.navigate(['/trips']),
+      error: err => {
+        this.googleLoading.set(false);
+        if (err.code !== 'auth/popup-closed-by-user') {
+          this.snackBar.open('Google sign-in failed. Please try again.', 'Dismiss', { duration: 4000 });
+        }
+      },
+    });
+  }
 }
