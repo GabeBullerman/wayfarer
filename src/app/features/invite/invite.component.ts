@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, inject } from '@angular/core';
+﻿import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,17 +15,14 @@ const PENDING_INVITE_KEY = 'pendingInviteToken';
   imports: [MatProgressSpinnerModule, MatIconModule, MatButtonModule],
   template: `
     <div class="invite-page">
-      @if (state === 'loading') {
+      @if (state() === 'loading' || state() === 'redirecting') {
         <mat-spinner diameter="48"></mat-spinner>
-        <p>Joining trip...</p>
-      } @else if (state === 'success') {
+        <p>{{ state() === 'redirecting' ? 'Taking you to the trip...' : 'Joining trip...' }}</p>
+      } @else if (state() === 'success') {
         <mat-icon class="invite-icon success">check_circle</mat-icon>
         <h2>You're in!</h2>
-        <p>You've been added to <strong>{{ tripName }}</strong>. Taking you there...</p>
-      } @else if (state === 'redirecting') {
-        <mat-spinner diameter="48"></mat-spinner>
-        <p>Taking you to the trip…</p>
-      } @else if (state === 'invalid') {
+        <p>Added to <strong>{{ tripName() }}</strong>. Taking you there...</p>
+      } @else if (state() === 'invalid') {
         <mat-icon class="invite-icon error">link_off</mat-icon>
         <h2>Invalid invite link</h2>
         <p>This link may have expired or been revoked.</p>
@@ -65,9 +62,9 @@ export class InviteComponent implements OnInit {
   private firebaseAuth = inject(Auth);
   private snackBar = inject(MatSnackBar);
 
-  state: 'loading' | 'success' | 'redirecting' | 'invalid' = 'loading';
-  tripName = '';
-  tripId = '';
+  readonly state = signal<'loading' | 'success' | 'redirecting' | 'invalid'>('loading');
+  readonly tripName = signal('');
+  readonly tripId = signal('');
 
   async ngOnInit() {
     const token = this.route.snapshot.paramMap.get('token') ?? '';
@@ -90,30 +87,28 @@ export class InviteComponent implements OnInit {
     try {
       const result = await this.tripService.acceptInvite(token);
       if (!result) {
-        this.state = 'invalid';
+        this.state.set('invalid');
         return;
       }
-      this.tripId = result.tripId;
-      this.tripName = result.tripName;
+      this.tripId.set(result.tripId);
+      this.tripName.set(result.tripName);
 
       if (result.alreadyMember) {
-        // Show a brief redirect screen so the user is never stuck on 'loading'
-        this.state = 'redirecting';
-        this.snackBar.open(`You're already a member of ${this.tripName}`, undefined, { duration: 4000 });
-        this.router.navigate(['/trips', this.tripId]);
+        this.state.set('redirecting');
+        this.snackBar.open(`You're already a member of ${result.tripName}`, undefined, { duration: 4000 });
+        this.router.navigate(['/trips', result.tripId]);
       } else {
-        // Briefly show "You're in!" then navigate
-        this.state = 'success';
+        this.state.set('success');
         setTimeout(() => {
-          this.router.navigate(['/trips', this.tripId]);
-          this.snackBar.open(`Welcome to ${this.tripName}!`, undefined, { duration: 4000 });
+          this.router.navigate(['/trips', result.tripId]);
+          this.snackBar.open(`Welcome to ${result.tripName}!`, undefined, { duration: 4000 });
         }, 1500);
       }
-    } catch {
-      this.state = 'invalid';
+    } catch (err) {
+      console.error('[InviteComponent] processInvite error:', err);
+      this.state.set('invalid');
     }
   }
 }
 
 export const PENDING_INVITE_KEY_EXPORT = PENDING_INVITE_KEY;
-
