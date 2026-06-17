@@ -1,6 +1,6 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
-  Firestore, collection, collectionData, doc, docData,
+  Firestore, collection, collectionData, doc, docData, getDoc,
   addDoc, updateDoc, deleteDoc, query, where, orderBy,
   serverTimestamp, getDocs, arrayUnion, arrayRemove,
 } from '@angular/fire/firestore';
@@ -136,40 +136,41 @@ export class TripService {
     });
   }
 
-  /** Generate (or return existing) an invite token for a trip. */
+  /** Generate an invite token and return the full shareable slug ({tripId}.{random}). */
   async generateInviteToken(tripId: string): Promise<string> {
-    const token = Array.from(crypto.getRandomValues(new Uint8Array(18)))
+    const random = Array.from(crypto.getRandomValues(new Uint8Array(12)))
       .map(b => b.toString(36).padStart(2, '0')).join('');
     await this.run(() =>
       updateDoc(doc(this.firestore, 'trips', tripId), {
-        inviteToken: token,
+        inviteToken: random,
         updatedAt: serverTimestamp(),
       })
     );
-    return token;
+    return `${tripId}.${random}`;
   }
 
-  /** Accept an invite: look up trip by token, add current user as collaborator. */
-  async acceptInvite(token: string): Promise<{ tripId: string; tripName: string; alreadyMember: boolean } | null> {
+  /** Accept an invite: token is {tripId}.{random}. Uses getDoc — no query needed. */
+  async acceptInvite(slug: string): Promise<{ tripId: string; tripName: string; alreadyMember: boolean } | null> {
     const uid = this.auth.currentUser?.uid;
     if (!uid) return null;
-    const q = query(
-      collection(this.firestore, 'trips'),
-      where('inviteToken', '==', token)
-    );
-    const snap = await this.run(() => getDocs(q));
-    if (snap.empty) return null;
-    const tripDoc = snap.docs[0];
-    const trip = tripDoc.data() as Trip;
+    const dot = slug.indexOf('.');
+    if (dot === -1) return null;
+    const tripId = slug.slice(0, dot);
+    const random = slug.slice(dot + 1);
+    const tripRef = doc(this.firestore, 'trips', tripId);
+    const tripSnap = await this.run(() => getDoc(tripRef));
+    if (!tripSnap.exists()) return null;
+    const trip = tripSnap.data() as Trip;
+    if (trip.inviteToken !== random) return null;
     const alreadyMember = trip.userId === uid || (trip.collaboratorIds ?? []).includes(uid);
     if (!alreadyMember) {
       await this.run(() =>
-        updateDoc(tripDoc.ref, {
+        updateDoc(tripRef, {
           collaboratorIds: arrayUnion(uid),
           updatedAt: serverTimestamp(),
         })
       );
     }
-    return { tripId: tripDoc.id, tripName: trip.name, alreadyMember };
+    return { tripId, tripName: trip.name, alreadyMember };
   }
 }

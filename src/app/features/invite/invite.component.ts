@@ -5,6 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { TripService } from '../../core/services/trip.service';
 import { AuthService } from '../../core/services/auth.service';
+import { firstValueFrom } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 const PENDING_INVITE_KEY = 'pendingInviteToken';
 
@@ -73,7 +75,11 @@ export class InviteComponent implements OnInit {
 
   async ngOnInit() {
     const token = this.route.snapshot.paramMap.get('token') ?? '';
-    const user = this.auth.currentUser;
+
+    // Wait for Firebase auth to resolve (currentUser is null until SDK initializes)
+    const user = await firstValueFrom(
+      this.auth.currentUser$.pipe(filter(u => u !== undefined))
+    );
 
     if (!user) {
       localStorage.setItem(PENDING_INVITE_KEY, token);
