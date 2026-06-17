@@ -11,6 +11,6 @@ export interface PackingItem {
   category: PackingCategory;
   quantity: number;
   assignedTo?: string | null;
-  isPacked: boolean;
+  packedBy: string[]; // UIDs of members who have packed this item
   createdAt: Timestamp;
 }

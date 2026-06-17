@@ -2,6 +2,7 @@ import { Injectable, inject, Injector, runInInjectionContext } from '@angular/co
 import {
   Firestore, collection, collectionData, doc,
   addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp,
+  arrayUnion, arrayRemove,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { PackingItem } from '../models/packing-item.model';
@@ -35,9 +36,11 @@ export class PackingService {
     );
   }
 
-  togglePacked(id: string, isPacked: boolean) {
+  togglePacked(id: string, uid: string, currentlyPacked: boolean) {
     return this.run(() =>
-      updateDoc(doc(this.firestore, 'packingItems', id), { isPacked })
+      updateDoc(doc(this.firestore, 'packingItems', id), {
+        packedBy: currentlyPacked ? arrayRemove(uid) : arrayUnion(uid),
+      })
     );
   }
 

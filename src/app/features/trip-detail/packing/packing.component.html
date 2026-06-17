@@ -171,8 +171,8 @@
 
       <div class="item-list">
         @for (item of group.items; track item.id) {
-          <div class="packing-item" [class.packed]="item.isPacked">
-            <mat-checkbox [checked]="item.isPacked" (change)="togglePacked(item)"
+          <div class="packing-item" [class.packed]="packedByMe(item)">
+            <mat-checkbox [checked]="packedByMe(item)" (change)="togglePacked(item)"
                           color="primary">
             </mat-checkbox>
             <div class="item-info">
@@ -182,6 +182,12 @@
               }
               @if (item.assignedTo) {
                 <span class="item-assignee">{{ participantName(item.assignedTo) }}</span>
+              }
+              @if (packedCount(item) > 0) {
+                <span class="packed-by-count"
+                      [matTooltip]="packedCount(item) + ' member' + (packedCount(item) !== 1 ? 's' : '') + ' packed this'">
+                  <mat-icon>check_circle</mat-icon>{{ packedCount(item) }}
+                </span>
               }
             </div>
             <button mat-icon-button class="delete-btn" (click)="deleteItem(item)"

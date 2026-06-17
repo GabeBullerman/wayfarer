@@ -14,6 +14,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { from } from 'rxjs';
 import { PackingService } from '../../../core/services/packing.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ParticipantService } from '../../../core/services/participant.service';
 import { AiAdvisorService, PackingSuggestion } from '../../../core/services/ai-advisor.service';
 import { PackingItem, PackingCategory } from '../../../core/models/packing-item.model';
@@ -50,7 +51,10 @@ export class PackingComponent implements OnInit {
   @Input() trip!: Trip;
 
   private packingService = inject(PackingService);
+  private auth = inject(AuthService);
   private participantService = inject(ParticipantService);
+
+  readonly currentUserId = this.auth.currentUser?.uid ?? '';
   private aiService = inject(AiAdvisorService);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
@@ -88,18 +92,30 @@ export class PackingComponent implements OnInit {
     return this.items().filter(i => !i.assignedTo || i.assignedTo === id);
   });
 
+  packedByMe(item: PackingItem): boolean {
+    return (item.packedBy ?? []).includes(this.currentUserId);
+  }
+
+  packedCount(item: PackingItem): number {
+    return (item.packedBy ?? []).length;
+  }
+
   readonly groups = computed((): CategoryGroup[] => {
     const items = this.filteredItems();
+    const uid = this.currentUserId;
     return this.categories
       .map(meta => {
         const catItems = items.filter(i => i.category === meta.value);
-        return { meta, items: catItems, packed: catItems.filter(i => i.isPacked).length };
+        return { meta, items: catItems, packed: catItems.filter(i => (i.packedBy ?? []).includes(uid)).length };
       })
       .filter(g => g.items.length > 0);
   });
 
   readonly totalItems = computed(() => this.filteredItems().length);
-  readonly totalPacked = computed(() => this.filteredItems().filter(i => i.isPacked).length);
+  readonly totalPacked = computed(() => {
+    const uid = this.currentUserId;
+    return this.filteredItems().filter(i => (i.packedBy ?? []).includes(uid)).length;
+  });
   readonly progressPct = computed(() =>
     this.totalItems() > 0 ? Math.round((this.totalPacked() / this.totalItems()) * 100) : 0
   );
@@ -114,12 +130,18 @@ export class PackingComponent implements OnInit {
   }
 
   togglePacked(item: PackingItem) {
-    const newValue = !item.isPacked;
+    const uid = this.currentUserId;
+    const alreadyPacked = (item.packedBy ?? []).includes(uid);
     // Optimistic update so counts and styling reflect immediately
     this.items.update(list =>
-      list.map(i => i.id === item.id ? { ...i, isPacked: newValue } : i)
+      list.map(i => i.id === item.id ? {
+        ...i,
+        packedBy: alreadyPacked
+          ? (i.packedBy ?? []).filter(id => id !== uid)
+          : [...(i.packedBy ?? []), uid],
+      } : i)
     );
-    from(this.packingService.togglePacked(item.id!, newValue)).subscribe();
+    from(this.packingService.togglePacked(item.id!, uid, alreadyPacked)).subscribe();
   }
 
   deleteItem(item: PackingItem) {
@@ -136,7 +158,7 @@ export class PackingComponent implements OnInit {
       category: v.category! as PackingCategory,
       quantity: v.quantity!,
       assignedTo: v.assignedTo ?? null,
-      isPacked: false,
+      packedBy: [],
     })).subscribe(() => {
       this.saving.set(false);
       this.addForm.reset({ name: '', category: 'other', quantity: 1, assignedTo: null });
@@ -181,7 +203,7 @@ export class PackingComponent implements OnInit {
       category: s.category,
       quantity: s.quantity,
       assignedTo: null,
-      isPacked: false,
+      packedBy: [],
       createdAt: Timestamp.now(),
     }));
     this.items.update(list => [...list, ...optimistic]);
@@ -194,7 +216,7 @@ export class PackingComponent implements OnInit {
         category: s.category,
         quantity: s.quantity,
         assignedTo: null,
-        isPacked: false,
+        packedBy: [],
       })).subscribe()
     );
 
