@@ -75,7 +75,8 @@ Important: your knowledge has a training cutoff and you do not have access to li
 
     return res.status(400).json({ error: `Unknown type: ${type}` });
   } catch (err) {
-    console.error('[ai-advisor]', err?.message ?? err);
-    return res.status(500).json({ error: 'AI request failed. Check server logs.' });
+    const detail = err?.error?.message ?? err?.message ?? String(err);
+    console.error('[ai-advisor]', detail);
+    return res.status(500).json({ error: 'AI request failed.', detail });
   }
 };
