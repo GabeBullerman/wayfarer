@@ -52,40 +52,51 @@
         </button>
       </div>
 
-      <!-- Current collaborators list -->
+      <!-- Current members list (owner first, then collaborators) -->
       @if (collaborators$ | async; as collaborators) {
-        @if (collaborators.length > 0) {
-          <div class="collaborators-list">
-            @for (c of collaborators; track c.uid) {
-              <div class="collaborator-card">
-                <div class="participant-avatar collab-avatar">{{ initial(c.displayName) }}</div>
-                <div class="participant-info">
-                  <div class="participant-name">
-                    {{ c.displayName }}
-                    @if (c.uid === currentUserId) {
-                      <span class="badge badge-you">You</span>
-                    }
-                  </div>
+        <div class="collaborators-list">
+          @for (c of collaborators; track c.uid) {
+            <div class="collaborator-card">
+              <div class="participant-avatar collab-avatar">{{ initial(c.displayName) }}</div>
+              <div class="participant-info">
+                <div class="participant-name">
+                  {{ c.displayName }}
+                  @if (c.isOwner) {
+                    <span class="badge badge-owner">
+                      <mat-icon class="badge-crown">workspace_premium</mat-icon> Owner
+                    </span>
+                  }
+                  @if (c.uid === currentUserId) {
+                    <span class="badge badge-you">You</span>
+                  }
+                </div>
+                @if (c.email) {
                   <div class="participant-sub">
                     <span class="participant-email">
                       <mat-icon>mail_outline</mat-icon> {{ c.email }}
                     </span>
                   </div>
-                </div>
-                <div class="participant-actions">
-                  @if (c.uid !== currentUserId) {
-                    <button mat-icon-button
-                            matTooltip="Remove collaborator"
-                            (click)="removeCollaborator(c.uid, c.displayName)">
-                      <mat-icon>person_remove</mat-icon>
-                    </button>
-                  }
-                </div>
+                }
               </div>
-            }
-          </div>
-        } @else {
-          <p class="no-collabs-hint">No app collaborators yet — invite someone above.</p>
+              <div class="participant-actions">
+                @if (isOwner && !c.isOwner && c.uid !== currentUserId) {
+                  <button mat-icon-button
+                          matTooltip="Transfer ownership"
+                          (click)="transferOwnership(c.uid, c.displayName)">
+                    <mat-icon>workspace_premium</mat-icon>
+                  </button>
+                  <button mat-icon-button
+                          matTooltip="Remove collaborator"
+                          (click)="removeCollaborator(c.uid, c.displayName)">
+                    <mat-icon>person_remove</mat-icon>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+        @if (collaborators.length <= 1) {
+          <p class="no-collabs-hint">No collaborators yet — invite someone above.</p>
         }
       }
     </div>

@@ -48,8 +48,8 @@ export class PeopleComponent implements OnInit, OnChanges {
   readonly currentUserId = this.auth.currentUser?.uid ?? '';
 
   participants$!: Observable<TripParticipant[]>;
-  /** Observable of resolved collaborator profiles */
-  collaborators$!: Observable<(UserProfile & { uid: string })[]>;
+  /** Observable of resolved member profiles (owner first, then collaborators) */
+  collaborators$!: Observable<(UserProfile & { uid: string; isOwner: boolean })[]>;
 
   showAddForm = signal(false);
   saving = signal(false);
@@ -87,20 +87,33 @@ export class PeopleComponent implements OnInit, OnChanges {
   }
 
   private loadCollaborators() {
+    type Member = UserProfile & { uid: string; isOwner: boolean };
     this.collaborators$ = this.tripService.getTrip(this.tripId).pipe(
       switchMap((trip: Trip) => {
-        const ids = trip?.collaboratorIds ?? [];
-        if (ids.length === 0) return of([] as (UserProfile & { uid: string })[]);
-        return combineLatest(
-          ids.map(uid =>
+        const ownerUid = trip?.userId;
+        const collabIds = (trip?.collaboratorIds ?? []).filter(id => id !== ownerUid);
+
+        const owner$ = this.userService.getProfile(ownerUid).pipe(
+          map(profile => (profile
+            ? { ...profile, uid: ownerUid, isOwner: true }
+            : { uid: ownerUid, displayName: 'Trip Owner', email: '', homeCurrency: '', createdAt: null as any, isOwner: true }
+          ) as Member)
+        );
+
+        if (collabIds.length === 0) {
+          return owner$.pipe(map(owner => [owner]));
+        }
+
+        const collabs$ = combineLatest(
+          collabIds.map(uid =>
             this.userService.getProfile(uid).pipe(
-              map(profile => profile ? { ...profile, uid } : null)
+              map(profile => profile ? { ...profile, uid, isOwner: false } as Member : null)
             )
           )
-        ).pipe(
-          map(profiles =>
-            profiles.filter((p): p is UserProfile & { uid: string } => p !== null)
-          )
+        ).pipe(map(list => list.filter((p): p is Member => p !== null)));
+
+        return combineLatest([owner$, collabs$]).pipe(
+          map(([owner, collabs]) => [owner, ...collabs])
         );
       })
     );
@@ -138,6 +151,22 @@ export class PeopleComponent implements OnInit, OnChanges {
     } finally {
       this.inviteLoading.set(false);
     }
+  }
+
+  /** Transfer ownership to a collaborator */
+  transferOwnership(uid: string, name: string) {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Transfer Ownership',
+        message: `Make ${name} the new owner of this trip? You'll become a collaborator and lose owner privileges.`,
+      },
+    }).afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      from(this.tripService.transferOwnership(this.tripId, uid)).subscribe({
+        next: () => this.snackBar.open(`${name} is now the trip owner`, undefined, { duration: 3000 }),
+        error: () => this.snackBar.open('Transfer failed. Please try again.', undefined, { duration: 3000 }),
+      });
+    });
   }
 
   /** Remove a collaborator */

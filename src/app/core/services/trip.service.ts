@@ -149,6 +149,27 @@ export class TripService {
     return `${tripId}.${random}`;
   }
 
+  /** Transfer trip ownership to another collaborator. Old owner becomes a collaborator. */
+  async transferOwnership(tripId: string, newOwnerUid: string): Promise<void> {
+    const currentUid = this.auth.currentUser!.uid;
+    const tripRef = doc(this.firestore, 'trips', tripId);
+    const tripSnap = await this.run(() => getDoc(tripRef));
+    const trip = tripSnap.data() as Trip;
+    const existing = trip.collaboratorIds ?? [];
+    // New owner leaves collaborators; old owner joins collaborators (dedupe)
+    const newCollaboratorIds = [
+      ...existing.filter(id => id !== newOwnerUid),
+      currentUid,
+    ].filter((id, i, arr) => arr.indexOf(id) === i);
+    await this.run(() =>
+      updateDoc(tripRef, {
+        userId: newOwnerUid,
+        collaboratorIds: newCollaboratorIds,
+        updatedAt: serverTimestamp(),
+      })
+    );
+  }
+
   /** Accept an invite: token is {tripId}.{random}. Uses getDoc — no query needed. */
   async acceptInvite(slug: string): Promise<{ tripId: string; tripName: string; alreadyMember: boolean } | null> {
     const uid = this.auth.currentUser?.uid;

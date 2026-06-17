@@ -252,6 +252,11 @@
 .badge-you       { background: #e8f5e9; color: #2e7d32; }
 .badge-pending   { background: #fff8e1; color: #f57c00; }
 .badge-accepted  { background: #e8f5e9; color: #2e7d32; }
+.badge-owner     {
+  background: #fff8e1; color: #e65100;
+  display: inline-flex; align-items: center; gap: 2px;
+  .badge-crown { font-size: 13px; width: 13px; height: 13px; }
+}
 
 .participant-sub {
   display: flex;
