@@ -6,7 +6,7 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideHttpClient, withJsonpSupport } from '@angular/common/http';
 import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, provideFirestore } from '@angular/fire/firestore';
-import { getAuth, provideAuth } from '@angular/fire/auth';
+import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, provideAuth } from '@angular/fire/auth';
 import { getStorage, provideStorage } from '@angular/fire/storage';
 import { getMessaging, provideMessaging } from '@angular/fire/messaging';
 import { environment } from '../environments/environment';
@@ -23,7 +23,10 @@ export const appConfig: ApplicationConfig = {
     provideFirestore(() => initializeFirestore(getApp(), {
       localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
     })),
-    provideAuth(() => getAuth()),
+    provideAuth(() => initializeAuth(getApp(), {
+      persistence: browserLocalPersistence,
+      popupRedirectResolver: browserPopupRedirectResolver,
+    })),
     provideStorage(() => getStorage()),
     provideMessaging(() => getMessaging()),
     provideServiceWorker('ngsw-worker.js', {
