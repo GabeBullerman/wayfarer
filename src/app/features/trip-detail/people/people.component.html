@@ -1,17 +1,21 @@
 <div class="people-container">
 
-  <!-- ── App Collaborators (owner-only invite section) ─────────────────── -->
-  @if (isOwner) {
-    <div class="section-block">
-      <div class="section-heading">
-        <mat-icon class="section-icon">manage_accounts</mat-icon>
-        <h2>App Collaborators</h2>
-      </div>
-      <p class="section-desc">
-        Invite a registered Wayfarer user by email. They'll see this trip in their trips list and can view and edit all tabs.
-      </p>
+  <!-- ── App Members (always visible) ──────────────────────────────────── -->
+  <div class="section-block">
+    <div class="section-heading">
+      <mat-icon class="section-icon">manage_accounts</mat-icon>
+      <h2>App Members</h2>
+    </div>
+    <p class="section-desc">
+      @if (isOwner) {
+        Invite a registered Wayfarer user by email or share a link. They'll see this trip in their trips list.
+      } @else {
+        People with app access to this trip.
+      }
+    </p>
 
-      <!-- Invite link -->
+    <!-- Invite tools — owner only -->
+    @if (isOwner) {
       <div class="invite-link-row">
         <mat-icon class="invite-link-icon">link</mat-icon>
         <span class="invite-link-label">Share a link — anyone who opens it gets added to this trip.</span>
@@ -28,7 +32,6 @@
         </button>
       </div>
 
-      <!-- Invite form -->
       <div class="invite-row">
         <mat-form-field appearance="outline" class="invite-email-field">
           <mat-label>Email address</mat-label>
@@ -51,58 +54,58 @@
           }
         </button>
       </div>
+    }
 
-      <!-- Current members list (owner first, then collaborators) -->
-      @if (collaborators$ | async; as collaborators) {
-        <div class="collaborators-list">
-          @for (c of collaborators; track c.uid) {
-            <div class="collaborator-card">
-              <div class="participant-avatar collab-avatar">{{ initial(c.displayName) }}</div>
-              <div class="participant-info">
-                <div class="participant-name">
-                  {{ c.displayName }}
-                  @if (c.isOwner) {
-                    <span class="badge badge-owner">
-                      <mat-icon class="badge-crown">workspace_premium</mat-icon> Owner
-                    </span>
-                  }
-                  @if (c.uid === currentUserId) {
-                    <span class="badge badge-you">You</span>
-                  }
+    <!-- Members list — visible to all -->
+    @if (collaborators$ | async; as collaborators) {
+      <div class="collaborators-list">
+        @for (c of collaborators; track c.uid) {
+          <div class="collaborator-card">
+            <div class="participant-avatar collab-avatar">{{ initial(c.displayName) }}</div>
+            <div class="participant-info">
+              <div class="participant-name">
+                {{ c.displayName }}
+                @if (c.isOwner) {
+                  <span class="badge badge-owner">
+                    <mat-icon class="badge-crown">workspace_premium</mat-icon> Owner
+                  </span>
+                }
+                @if (c.uid === currentUserId) {
+                  <span class="badge badge-you">You</span>
+                }
+              </div>
+              @if (c.email) {
+                <div class="participant-sub">
+                  <span class="participant-email">
+                    <mat-icon>mail_outline</mat-icon> {{ c.email }}
+                  </span>
                 </div>
-                @if (c.email) {
-                  <div class="participant-sub">
-                    <span class="participant-email">
-                      <mat-icon>mail_outline</mat-icon> {{ c.email }}
-                    </span>
-                  </div>
-                }
-              </div>
-              <div class="participant-actions">
-                @if (isOwner && !c.isOwner && c.uid !== currentUserId) {
-                  <button mat-icon-button
-                          matTooltip="Transfer ownership"
-                          (click)="transferOwnership(c.uid, c.displayName)">
-                    <mat-icon>workspace_premium</mat-icon>
-                  </button>
-                  <button mat-icon-button
-                          matTooltip="Remove collaborator"
-                          (click)="removeCollaborator(c.uid, c.displayName)">
-                    <mat-icon>person_remove</mat-icon>
-                  </button>
-                }
-              </div>
+              }
             </div>
-          }
-        </div>
-        @if (collaborators.length <= 1) {
-          <p class="no-collabs-hint">No collaborators yet — invite someone above.</p>
+            <div class="participant-actions">
+              @if (isOwner && !c.isOwner && c.uid !== currentUserId) {
+                <button mat-icon-button
+                        matTooltip="Transfer ownership"
+                        (click)="transferOwnership(c.uid, c.displayName)">
+                  <mat-icon>workspace_premium</mat-icon>
+                </button>
+                <button mat-icon-button
+                        matTooltip="Remove collaborator"
+                        (click)="removeCollaborator(c.uid, c.displayName)">
+                  <mat-icon>person_remove</mat-icon>
+                </button>
+              }
+            </div>
+          </div>
         }
+      </div>
+      @if (collaborators.length <= 1) {
+        <p class="no-collabs-hint">No other members yet — invite someone above.</p>
       }
-    </div>
+    }
+  </div>
 
-    <div class="section-divider"></div>
-  }
+  <div class="section-divider"></div>
 
   <!-- ── Travel Companions ──────────────────────────────────────────────── -->
   <div class="people-header">
