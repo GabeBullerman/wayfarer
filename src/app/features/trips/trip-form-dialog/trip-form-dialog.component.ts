@@ -50,6 +50,7 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
 
   placeSuggestions = signal<google.maps.places.AutocompletePrediction[]>([]);
   selectedPhotoUrl = signal<string | null>(this.data?.trip?.coverPhotoUrl ?? null);
+  photoOptions = signal<string[]>([]);
   fetchingPhoto = signal(false);
   mapsReady = signal(false);
 
@@ -135,7 +136,9 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
         this.ngZone.run(() => {
           this.fetchingPhoto.set(false);
           if (status === 'OK' && place?.photos?.length) {
-            this.selectedPhotoUrl.set(place.photos[0].getUrl({ maxWidth: 1200, maxHeight: 800 }));
+            const urls = place.photos.slice(0, 5).map(p => p.getUrl({ maxWidth: 1200, maxHeight: 800 }));
+            this.photoOptions.set(urls);
+            this.selectedPhotoUrl.set(urls[0]);
           }
         });
       }

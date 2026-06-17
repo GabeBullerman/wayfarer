@@ -39,13 +39,26 @@
       }
     </mat-form-field>
 
-    @if (selectedPhotoUrl()) {
-      <div class="photo-preview">
-        <img [src]="selectedPhotoUrl()!" alt="Cover photo" />
-        <div class="photo-label">
-          <mat-icon>photo</mat-icon>
-          <span>Cover photo ready</span>
-        </div>
+    @if (photoOptions().length > 0) {
+      <div class="photo-strip">
+        @for (url of photoOptions(); track url; let i = $index) {
+          <button type="button" class="photo-option"
+                  [class.selected]="url === selectedPhotoUrl()"
+                  (click)="selectedPhotoUrl.set(url)"
+                  [attr.aria-label]="'Cover photo option ' + (i + 1)">
+            <img [src]="url" [alt]="'Location photo ' + (i + 1)" />
+            @if (url === selectedPhotoUrl()) {
+              <div class="photo-check"><mat-icon>check_circle</mat-icon></div>
+            }
+          </button>
+        }
+      </div>
+    } @else if (selectedPhotoUrl()) {
+      <div class="photo-strip">
+        <button type="button" class="photo-option selected">
+          <img [src]="selectedPhotoUrl()!" alt="Cover photo" />
+          <div class="photo-check"><mat-icon>check_circle</mat-icon></div>
+        </button>
       </div>
     }
 
