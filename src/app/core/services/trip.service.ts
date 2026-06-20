@@ -120,6 +120,7 @@ export class TripService {
 
     await updateDoc(doc(this.firestore, 'trips', tripId), {
       collaboratorIds: arrayUnion(uid),
+      collaboratorEmails: arrayUnion(normalizedEmail),
       updatedAt: serverTimestamp(),
     });
 
@@ -128,10 +129,32 @@ export class TripService {
     return { success: true, message: `${name} added as collaborator` };
   }
 
-  /** Remove a collaborator from the trip by UID. */
-  async removeCollaborator(tripId: string, uid: string): Promise<void> {
+  /** Grant trip access to an email that may not have an account yet. */
+  async addCollaboratorEmail(tripId: string, email: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return;
     await updateDoc(doc(this.firestore, 'trips', tripId), {
+      collaboratorEmails: arrayUnion(normalizedEmail),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  /** Remove a collaborator from the trip by UID (and optionally their email). */
+  async removeCollaborator(tripId: string, uid: string, email?: string): Promise<void> {
+    const changes: Record<string, unknown> = {
       collaboratorIds: arrayRemove(uid),
+      updatedAt: serverTimestamp(),
+    };
+    if (email) changes['collaboratorEmails'] = arrayRemove(email.trim().toLowerCase());
+    await updateDoc(doc(this.firestore, 'trips', tripId), changes);
+  }
+
+  /** Revoke an invited email's access (used when removing a not-yet-registered invitee). */
+  async removeCollaboratorEmail(tripId: string, email: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return;
+    await updateDoc(doc(this.firestore, 'trips', tripId), {
+      collaboratorEmails: arrayRemove(normalizedEmail),
       updatedAt: serverTimestamp(),
     });
   }
@@ -149,16 +172,17 @@ export class TripService {
     return `${tripId}.${random}`;
   }
 
-  /** Remove yourself from a trip's collaboratorIds (for non-owners). */
+  /** Remove yourself from a trip's collaborator lists (for non-owners). */
   async leaveTrip(tripId: string): Promise<void> {
     const uid = this.auth.currentUser?.uid;
     if (!uid) return;
-    await this.run(() =>
-      updateDoc(doc(this.firestore, 'trips', tripId), {
-        collaboratorIds: arrayRemove(uid),
-        updatedAt: serverTimestamp(),
-      })
-    );
+    const email = this.auth.currentUser?.email?.trim().toLowerCase();
+    const changes: Record<string, unknown> = {
+      collaboratorIds: arrayRemove(uid),
+      updatedAt: serverTimestamp(),
+    };
+    if (email) changes['collaboratorEmails'] = arrayRemove(email);
+    await this.run(() => updateDoc(doc(this.firestore, 'trips', tripId), changes));
   }
 
   /** Transfer trip ownership to another collaborator. Old owner becomes a collaborator. */

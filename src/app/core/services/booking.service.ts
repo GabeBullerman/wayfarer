@@ -28,7 +28,7 @@ export class BookingService {
   createBooking(booking: Omit<Booking, 'id' | 'createdAt'>) {
     return this.run(() =>
       addDoc(collection(this.firestore, 'bookings'), {
-        ...booking,
+        ...stripUndefined(booking),
         createdAt: serverTimestamp(),
       })
     );
@@ -36,11 +36,23 @@ export class BookingService {
 
   updateBooking(id: string, changes: Partial<Booking>) {
     return this.run(() =>
-      updateDoc(doc(this.firestore, 'bookings', id), changes)
+      updateDoc(doc(this.firestore, 'bookings', id), stripUndefined(changes))
     );
   }
 
   deleteBooking(id: string) {
     return this.run(() => deleteDoc(doc(this.firestore, 'bookings', id)));
   }
+}
+
+/**
+ * Firestore rejects `undefined` field values (ignoreUndefinedProperties is not
+ * enabled), so drop any top-level keys whose value is undefined before writing.
+ */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) out[k as keyof T] = v as T[keyof T];
+  }
+  return out;
 }

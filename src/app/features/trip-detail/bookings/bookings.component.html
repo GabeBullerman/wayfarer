@@ -62,6 +62,17 @@
                         </span>
                       </div>
                       <div class="booking-card-actions">
+                        @if (booking.type === 'flight' && booking.flightNumber) {
+                          <button mat-icon-button matTooltip="Refresh live flight status"
+                                  [disabled]="refreshing.has(booking.id!)"
+                                  (click)="refreshFlightStatus(booking)">
+                            @if (refreshing.has(booking.id!)) {
+                              <mat-spinner diameter="18"></mat-spinner>
+                            } @else {
+                              <mat-icon>radar</mat-icon>
+                            }
+                          </button>
+                        }
                         @if (booking.bookingUrl) {
                           <button mat-icon-button matTooltip="Open booking link"
                                   (click)="openBookingUrl(booking.bookingUrl)">
@@ -92,15 +103,48 @@
                         </div>
                       }
 
+                      @if (booking.flightNumber) {
+                        <div class="detail-item">
+                          <mat-icon>confirmation_number</mat-icon>
+                          <span>Flight <strong>{{ booking.flightNumber }}</strong>
+                            @if (booking.departureAirport || booking.arrivalAirport) {
+                              ({{ booking.departureAirport ?? '?' }} → {{ booking.arrivalAirport ?? '?' }})
+                            }
+                          </span>
+                        </div>
+                      }
+
                       @if (booking.checkIn) {
                         <div class="detail-item">
-                          <mat-icon>flight_takeoff</mat-icon>
-                          <span>{{ booking.checkIn.toDate() | date:'MMM d, y' }}</span>
+                          <mat-icon>{{ booking.type === 'flight' ? 'flight_takeoff' : 'login' }}</mat-icon>
+                          <span>{{ booking.checkIn.toDate() | date: (hasTime(booking.checkIn) ? 'MMM d, y · h:mm a' : 'MMM d, y') }}</span>
                           @if (booking.checkOut) {
                             <span class="date-arrow">→</span>
-                            <mat-icon>flight_land</mat-icon>
-                            <span>{{ booking.checkOut.toDate() | date:'MMM d, y' }}</span>
+                            <mat-icon>{{ booking.type === 'flight' ? 'flight_land' : 'logout' }}</mat-icon>
+                            <span>{{ booking.checkOut.toDate() | date: (hasTime(booking.checkOut) ? 'MMM d, y · h:mm a' : 'MMM d, y') }}</span>
                           }
+                        </div>
+                      }
+
+                      @if (booking.type === 'flight' && booking.flightStatus; as fs) {
+                        <div class="flight-status-line">
+                          <span class="flight-status-badge" [class]="'fs-' + (fs.flightStatus ?? 'unknown')">
+                            {{ fs.flightStatus | titlecase }}
+                          </span>
+                          @if (fs.departureDelayMinutes && fs.departureDelayMinutes > 0) {
+                            <span class="fs-delay">Departs +{{ fs.departureDelayMinutes }} min</span>
+                          }
+                          @if (fs.departureGate || fs.departureTerminal) {
+                            <span class="fs-gate">
+                              Dep @if (fs.departureTerminal) { T{{ fs.departureTerminal }} }@if (fs.departureGate) { · Gate {{ fs.departureGate }} }
+                            </span>
+                          }
+                          @if (fs.arrivalGate || fs.arrivalTerminal) {
+                            <span class="fs-gate">
+                              Arr @if (fs.arrivalTerminal) { T{{ fs.arrivalTerminal }} }@if (fs.arrivalGate) { · Gate {{ fs.arrivalGate }} }
+                            </span>
+                          }
+                          <span class="fs-updated">Updated {{ fs.updatedAt.toDate() | date:'MMM d, h:mm a' }}</span>
                         </div>
                       }
 

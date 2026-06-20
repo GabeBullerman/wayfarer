@@ -10,8 +10,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { BookingService } from '../../../core/services/booking.service';
+import { FlightService } from '../../../core/services/flight.service';
 import { ParticipantService } from '../../../core/services/participant.service';
-import { Booking, BookingType } from '../../../core/models/booking.model';
+import { Booking, BookingType, FlightStatus } from '../../../core/models/booking.model';
+import { Timestamp } from '@angular/fire/firestore';
 import { TripParticipant } from '../../../core/models/trip-participant.model';
 import { BookingDialogComponent } from './booking-dialog/booking-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -53,11 +55,15 @@ export class BookingsComponent implements OnInit {
   @Input() trip!: Trip;
 
   private bookingService = inject(BookingService);
+  private flightService = inject(FlightService);
   private participantService = inject(ParticipantService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
   data$!: Observable<BookingsData>;
+
+  /** Booking ids currently being refreshed, so we can show a spinner per card. */
+  refreshing = new Set<string>();
 
   ngOnInit() {
     this.data$ = combineLatest([
@@ -128,6 +134,48 @@ export class BookingsComponent implements OnInit {
   getPayerName(booking: Booking, participants: TripParticipant[]): string | null {
     if (booking.paidById == null) return null;
     return participants.find(p => p.id === booking.paidById)?.name ?? null;
+  }
+
+  /** True when a timestamp carries a meaningful time-of-day (not midnight). */
+  hasTime(ts?: Timestamp | null): boolean {
+    if (!ts) return false;
+    const d = ts.toDate();
+    return d.getHours() !== 0 || d.getMinutes() !== 0;
+  }
+
+  /** Pull fresh status for a flight booking and write it back to Firestore. */
+  refreshFlightStatus(booking: Booking) {
+    if (!booking.id || !booking.flightNumber) return;
+    this.refreshing.add(booking.id);
+    const date = booking.checkIn ? this.toDateStr(booking.checkIn.toDate()) : undefined;
+
+    this.flightService.getStatus(booking.flightNumber, date).subscribe(res => {
+      this.refreshing.delete(booking.id!);
+      if (res.error || res.configured === false) {
+        this.snackBar.open(res.message ?? res.error ?? 'Flight tracking unavailable', undefined, { duration: 3500 });
+        return;
+      }
+      if (!res.found || !res.status) {
+        this.snackBar.open(res.message ?? 'No live data for this flight', undefined, { duration: 3000 });
+        return;
+      }
+
+      const s = res.status;
+      const flightStatus: FlightStatus = { ...s, updatedAt: Timestamp.now() };
+      const bestDep = s.actualDeparture ?? s.estimatedDeparture ?? s.scheduledDeparture;
+      const bestArr = s.actualArrival ?? s.estimatedArrival ?? s.scheduledArrival;
+      const changes: Partial<Booking> = { flightStatus };
+      if (bestDep) changes.checkIn = Timestamp.fromDate(new Date(bestDep));
+      if (bestArr) changes.checkOut = Timestamp.fromDate(new Date(bestArr));
+
+      from(this.bookingService.updateBooking(booking.id!, changes)).subscribe(() =>
+        this.snackBar.open(`Updated: ${s.flightStatus ?? 'status'}`, undefined, { duration: 2500 })
+      );
+    });
+  }
+
+  private toDateStr(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   openAddBooking() {

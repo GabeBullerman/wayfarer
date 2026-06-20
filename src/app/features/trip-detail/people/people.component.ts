@@ -216,8 +216,8 @@ export class PeopleComponent implements OnInit, OnChanges {
     });
   }
 
-  /** Remove a collaborator */
-  removeCollaborator(uid: string, name: string) {
+  /** Remove a collaborator (revokes both their UID and any invited email). */
+  removeCollaborator(uid: string, name: string, email?: string) {
     this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Remove Collaborator',
@@ -225,7 +225,7 @@ export class PeopleComponent implements OnInit, OnChanges {
       },
     }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        from(this.tripService.removeCollaborator(this.tripId, uid)).subscribe(() =>
+        from(this.tripService.removeCollaborator(this.tripId, uid, email)).subscribe(() =>
           this.snackBar.open('Collaborator removed', undefined, { duration: 2500 })
         );
       }
@@ -255,7 +255,12 @@ export class PeopleComponent implements OnInit, OnChanges {
       inviteEmail: email,
       inviteStatus: email ? 'pending' : undefined,
     })).subscribe({
-      next: () => {
+      next: async () => {
+        // Grant trip access to the invited email so they can read/write trip
+        // content as soon as they log in — even before they have an account.
+        if (email) {
+          try { await this.tripService.addCollaboratorEmail(this.tripId, email); } catch { /* best effort */ }
+        }
         this.saving.set(false);
         this.showAddForm.set(false);
         const msg = email
@@ -293,12 +298,17 @@ export class PeopleComponent implements OnInit, OnChanges {
   remove(p: TripParticipant) {
     this.dialog.open(ConfirmDialogComponent, {
       data: { title: 'Remove Participant', message: `Remove ${p.name} from this trip?` },
-    }).afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        from(this.participantService.deleteParticipant(p.id!)).subscribe(() =>
-          this.snackBar.open('Participant removed', undefined, { duration: 2000 })
-        );
-      }
+    }).afterClosed().subscribe(async confirmed => {
+      if (!confirmed) return;
+      // Revoke any granted access first so the person loses the trip immediately,
+      // then delete the roster entry.
+      try {
+        if (p.inviteEmail) await this.tripService.removeCollaboratorEmail(this.tripId, p.inviteEmail);
+        if (p.userId) await this.tripService.removeCollaborator(this.tripId, p.userId, p.inviteEmail);
+      } catch { /* best effort — still remove the roster entry below */ }
+      from(this.participantService.deleteParticipant(p.id!)).subscribe(() =>
+        this.snackBar.open('Participant removed', undefined, { duration: 2000 })
+      );
     });
   }
 

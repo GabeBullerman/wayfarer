@@ -54,6 +54,24 @@ If you skip this, the map area shows a placeholder message — everything else s
 
 ---
 
+## 3b. Flight Tracking API Key (Optional)
+
+Flight bookings can pull **live status** (real-time / estimated times, delay, gate,
+terminal) via the `/api/flight-status` serverless function. Configure **one** of
+these provider keys as a Vercel environment variable (or in `.env.local` for local
+dev with `npm run dev:api`):
+
+| Env var | Provider | Notes |
+|---|---|---|
+| `AVIATIONSTACK_API_KEY` | [aviationstack.com](https://aviationstack.com) | Free tier available (HTTP only) |
+| `AERODATABOX_RAPIDAPI_KEY` | [AeroDataBox on RapidAPI](https://rapidapi.com/aedbx-aedbx/api/aerodatabox) | Fallback if AviationStack is unset |
+
+If neither key is set, the **Check live status** button shows a friendly
+"not set up" message and manual times still work normally. Lookups are keyed by
+the flight number (e.g. `DL123`) plus the departure date you enter.
+
+---
+
 ## 4. Firestore Security Rules
 
 In Firebase Console → Firestore → Rules, paste:
