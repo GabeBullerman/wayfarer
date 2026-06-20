@@ -26,6 +26,8 @@ const findPlans         = require('../api/find-plans');
 const plaidLink         = require('../api/plaid-link');
 const plaidExchange     = require('../api/plaid-exchange');
 const plaidTransactions = require('../api/plaid-transactions');
+const transport         = require('../api/transport');
+const flightStatus      = require('../api/flight-status');
 
 const routes = {
   '/api/ai-advisor':         aiAdvisor,
@@ -34,6 +36,8 @@ const routes = {
   '/api/plaid-link':         plaidLink,
   '/api/plaid-exchange':     plaidExchange,
   '/api/plaid-transactions': plaidTransactions,
+  '/api/transport':          transport,
+  '/api/flight-status':      flightStatus,
 };
 
 // Wrap Node's ServerResponse with Vercel-compatible helpers

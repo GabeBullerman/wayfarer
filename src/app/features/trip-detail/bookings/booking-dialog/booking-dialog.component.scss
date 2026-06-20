@@ -5,6 +5,124 @@
   mat-form-field { width: 100%; }
 }
 
+.three-col {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 16px;
+  mat-form-field { width: 100%; }
+}
+
+/* Date + time pair on one row */
+.datetime-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  mat-form-field { width: 100%; }
+}
+
+/* ── Type-first picker ─────────────────────────────────────────── */
+.type-picker-intro {
+  margin: 4px 0 16px;
+  color: #616161;
+  font-size: 0.9rem;
+}
+
+.type-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: #fafafa;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, transform 0.05s;
+
+  &:hover { border-color: #1976d2; background: #f0f6ff; }
+  &:active { transform: scale(0.99); }
+
+  mat-icon {
+    color: #1976d2;
+    width: 28px; height: 28px; font-size: 28px;
+  }
+  .type-card-label { font-weight: 600; font-size: 0.95rem; }
+  .type-card-hint  { color: #757575; font-size: 0.78rem; line-height: 1.2; }
+}
+
+/* ── Flight status lookup ──────────────────────────────────────── */
+.status-lookup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+
+  button { display: inline-flex; align-items: center; }
+  .status-msg { color: #b26a00; font-size: 0.82rem; }
+}
+
+.status-card {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid #d6e4ff;
+  border-radius: 12px;
+  background: #f4f8ff;
+}
+
+.status-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  .status-airline { font-weight: 600; font-size: 0.9rem; }
+}
+
+.flight-status-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: #e0e0e0;
+  color: #424242;
+
+  &.fs-active, &.fs-en-route { background: #1976d2; color: #fff; }
+  &.fs-landed              { background: #2e7d32; color: #fff; }
+  &.fs-scheduled           { background: #ede7f6; color: #5e35b1; }
+  &.fs-cancelled           { background: #c62828; color: #fff; }
+  &.fs-delayed, &.fs-diverted, &.fs-incident { background: #ef6c00; color: #fff; }
+}
+
+.status-legs {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .status-leg { flex: 1; }
+  .leg-airport { font-size: 1.2rem; font-weight: 700; }
+  .leg-time    { font-size: 0.88rem; color: #333; }
+  .leg-delay   { font-size: 0.78rem; color: #c62828; font-weight: 600; }
+  .leg-gate    { font-size: 0.76rem; color: #616161; }
+  .leg-arrow   { color: #90a4ae; }
+}
+
+.status-foot {
+  margin: 10px 0 0;
+  font-size: 0.74rem;
+  color: #78909c;
+}
+
+.actions-spacer { flex: 1; }
+
 mat-dialog-content {
   min-width: 360px;
   max-width: 580px;
