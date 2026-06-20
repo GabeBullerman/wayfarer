@@ -14,5 +14,7 @@ export interface Trip {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   collaboratorIds?: string[];
+  /** Lowercased emails granted access — covers invitees who haven't signed up yet. */
+  collaboratorEmails?: string[];
   inviteToken?: string;
 }
