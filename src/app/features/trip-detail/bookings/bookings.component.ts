@@ -86,16 +86,43 @@ export class BookingsComponent implements OnInit {
     other: { label: 'Other Bookings', icon: 'bookmark' },
   };
 
+  /** Home airport = where the trip starts: the departure airport of the
+   *  earliest flight. Used to label outbound (arrival) vs return (departure). */
+  private homeAirport: string | null = null;
+
   private groupBookings(bookings: Booking[]): BookingGroup[] {
+    const flights = bookings.filter(b => b.type === 'flight' && b.departureAirport);
+    this.homeAirport = [...flights].sort(byDate)[0]?.departureAirport ?? null;
+
     const types: BookingType[] = ['flight', 'hotel', 'airbnb', 'car-rental', 'other'];
     return types
       .map(type => ({
         type,
         label: this.typeConfig[type].label,
         icon: this.typeConfig[type].icon,
-        bookings: bookings.filter(b => b.type === type).sort(byDate),
+        bookings: bookings
+          .filter(b => b.type === type)
+          .sort(type === 'flight' ? (a, b) => this.compareFlights(a, b) : byDate),
       }))
       .filter(g => g.bookings.length > 0);
+  }
+
+  /** 'arrival' = heading to the destination (departs home); 'departure' =
+   *  heading home (arrives home). Null when it can't be determined. */
+  flightDirection(b: Booking): 'arrival' | 'departure' | null {
+    if (b.type !== 'flight' || !this.homeAirport) return null;
+    if (b.departureAirport === this.homeAirport) return 'arrival';
+    if (b.arrivalAirport === this.homeAirport) return 'departure';
+    return null;
+  }
+
+  /** Order flights arrival-first, then departure, then undetermined; by date within. */
+  private compareFlights(a: Booking, b: Booking): number {
+    const rank = (x: Booking) => {
+      const d = this.flightDirection(x);
+      return d === 'arrival' ? 0 : d === 'departure' ? 1 : 2;
+    };
+    return rank(a) - rank(b) || byDate(a, b);
   }
 
   getTravelHints(groups: BookingGroup[]): TravelHint[] {

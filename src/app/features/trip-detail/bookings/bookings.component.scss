@@ -301,3 +301,21 @@ mat-accordion {
   .ticket-rows { display: flex; flex-direction: column; gap: 2px; }
   .ticket-row strong { color: #263238; }
 }
+
+/* ── Arrival / Departure direction badge ───────────────────────────── */
+.direction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 9px 2px 6px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+
+  &.dir-arrival   { background: #e3f2fd; color: #1565c0; }
+  &.dir-departure { background: #fff3e0; color: #e65100; }
+}

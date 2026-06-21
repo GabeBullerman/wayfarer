@@ -57,6 +57,13 @@
                     <div class="booking-card-header">
                       <div class="booking-title-row">
                         <h3>{{ booking.title }}</h3>
+                        @if (flightDirection(booking); as dir) {
+                          <span class="direction-badge" [class]="'dir-' + dir"
+                                [matTooltip]="dir === 'arrival' ? 'Outbound flight to your destination' : 'Return flight back home'">
+                            <mat-icon>{{ dir === 'arrival' ? 'flight_takeoff' : 'home' }}</mat-icon>
+                            {{ dir === 'arrival' ? 'To Destination' : 'Back Home' }}
+                          </span>
+                        }
                         <span class="status-badge" [class]="'status-' + booking.status">
                           {{ booking.status === 'suggested' ? 'Suggestion' : (booking.status | titlecase) }}
                         </span>

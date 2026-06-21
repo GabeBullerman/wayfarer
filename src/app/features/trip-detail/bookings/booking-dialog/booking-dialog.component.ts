@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -39,6 +40,7 @@ interface TypeLabels {
   imports: [
     ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule,
+    MatAutocompleteModule,
     MatIconModule, MatProgressSpinnerModule, MatSnackBarModule, MatTooltipModule, DatePipe, TitleCasePipe,
   ],
   templateUrl: './booking-dialog.component.html',
@@ -94,6 +96,11 @@ export class BookingDialogComponent implements OnInit {
   });
 
   isFlight = computed(() => this.selectedType() === 'flight');
+
+  /** Names suggested in the passenger dropdown: trip members / invited people. */
+  passengerOptions = computed(() =>
+    [...new Set(this.participants().map(p => p.name).filter(Boolean))]
+  );
 
   form = this.fb.group({
     type: [this.data.booking?.type ?? 'flight' as BookingType, Validators.required],
