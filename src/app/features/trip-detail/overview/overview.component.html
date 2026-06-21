@@ -268,13 +268,22 @@
           </mat-card-header>
           <mat-card-content>
             <div class="booking-preview-list">
-              @for (booking of bookings; track booking.id) {
+              @for (booking of bookingsByDate(bookings); track booking.id) {
                 <div class="booking-preview-item">
                   <div class="booking-type-icon" [class]="'type-' + booking.type">
                     <mat-icon>{{ booking.type === 'flight' ? 'flight' : booking.type === 'hotel' ? 'hotel' : booking.type === 'airbnb' ? 'home' : booking.type === 'car-rental' ? 'directions_car' : 'bookmark' }}</mat-icon>
                   </div>
                   <div class="booking-info">
                     <strong>{{ booking.title }}</strong>
+                    @if (booking.checkIn) {
+                      <small class="booking-when">
+                        <mat-icon>schedule</mat-icon>
+                        {{ booking.checkIn.toDate() | date: (hasTime(booking.checkIn) ? 'MMM d · h:mm a' : 'MMM d') }}
+                        @if (booking.checkOut) {
+                          – {{ booking.checkOut.toDate() | date: (hasTime(booking.checkOut) ? 'MMM d · h:mm a' : 'MMM d') }}
+                        }
+                      </small>
+                    }
                     <small>{{ booking.confirmationNumber ? '#' + booking.confirmationNumber : booking.provider }}</small>
                   </div>
                   <div class="booking-status" [class]="'status-' + booking.status">

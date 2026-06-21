@@ -467,3 +467,13 @@
     padding-top: 6px;
   }
 }
+
+/* Date/time line in the "Bookings at a Glance" overview rows */
+.booking-when {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #1565c0;
+  font-weight: 500;
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+}

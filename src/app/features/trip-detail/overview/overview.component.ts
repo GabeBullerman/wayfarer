@@ -277,6 +277,20 @@ export class OverviewComponent implements OnInit {
     return b + i;
   }
 
+  /** Bookings ordered by their start date+time; undated ones sink to the end. */
+  bookingsByDate(bookings: Booking[]): Booking[] {
+    return [...bookings].sort((a, b) =>
+      (a.checkIn?.toMillis() ?? Number.POSITIVE_INFINITY) - (b.checkIn?.toMillis() ?? Number.POSITIVE_INFINITY)
+    );
+  }
+
+  /** True when a timestamp carries a meaningful time-of-day (not midnight). */
+  hasTime(ts?: { toDate(): Date } | null): boolean {
+    if (!ts) return false;
+    const d = ts.toDate();
+    return d.getHours() !== 0 || d.getMinutes() !== 0;
+  }
+
   activeModeIcon(): string {
     return this.travelModes.find(m => m.value === this.travelMode())?.icon ?? 'directions_walk';
   }
