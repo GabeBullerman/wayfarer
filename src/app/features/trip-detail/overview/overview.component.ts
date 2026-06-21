@@ -100,6 +100,12 @@ export class OverviewComponent implements OnInit {
 
   mapCenter = signal<google.maps.LatLngLiteral>({ lat: 0, lng: 0 });
 
+  // ── Accommodation / located bookings on the map ──────────────────
+  allBookings = signal<Booking[]>([]);
+  bookingPins = signal<{ position: google.maps.LatLngLiteral; booking: Booking }[]>([]);
+  activeBookingPin = signal<Booking | null>(null);
+  private bookingGeocodeCache = new Map<string, google.maps.LatLngLiteral>();
+
   constructor() {
     effect(() => {
       const loaded = this.mapsLoaded();
@@ -113,6 +119,14 @@ export class OverviewComponent implements OnInit {
       }
       if (!dayIso) return;
       untracked(() => this.computeRoute(this.getDayRoute(dayIso, items), mode));
+    });
+
+    // Geocode located bookings (hotels/rentals/etc.) for map markers.
+    effect(() => {
+      const loaded = this.mapsLoaded();
+      const bookings = this.allBookings();
+      if (!loaded) return;
+      untracked(() => this.geocodeBookings(bookings));
     });
   }
 
@@ -129,7 +143,10 @@ export class OverviewComponent implements OnInit {
         }
       })
     );
-    this.bookings$ = this.bookingService.getBookings(this.tripId).pipe(catchError(() => of([])));
+    this.bookings$ = this.bookingService.getBookings(this.tripId).pipe(
+      catchError(() => of([])),
+      tap(bookings => this.allBookings.set(bookings)),
+    );
     this.mapApiLoaded$ = this.mapsLoader.load().pipe(
       tap(loaded => { if (loaded) this.mapsLoaded.set(true); })
     );
@@ -216,6 +233,65 @@ export class OverviewComponent implements OnInit {
         this.mapCenter.set({ lat: loc.lat(), lng: loc.lng() });
       }
     });
+  }
+
+  /** Geocode located bookings (accommodations etc.) so they show as map pins.
+   *  Uses the booking's address, falling back to "title, destination". */
+  private geocodeBookings(bookings: Booking[]): void {
+    const located = bookings.filter(b =>
+      b.type !== 'flight' && b.status !== 'cancelled' &&
+      (!!b.address?.trim() || b.type === 'hotel' || b.type === 'airbnb'));
+    if (!located.length) { this.bookingPins.set([]); return; }
+
+    const geocoder = new google.maps.Geocoder();
+    const pins: { position: google.maps.LatLngLiteral; booking: Booking }[] = [];
+    let pending = located.length;
+    const finish = () => { if (--pending === 0) this.bookingPins.set([...pins]); };
+
+    for (const b of located) {
+      const query = b.address?.trim() || `${b.title}, ${this.trip.destination}`;
+      const cached = this.bookingGeocodeCache.get(query);
+      if (cached) { pins.push({ position: cached, booking: b }); finish(); continue; }
+      geocoder.geocode({ address: query }, (results, status) => {
+        if (status === 'OK' && results?.[0]?.geometry?.location) {
+          const loc = results[0].geometry.location;
+          const pos = { lat: loc.lat(), lng: loc.lng() };
+          this.bookingGeocodeCache.set(query, pos);
+          pins.push({ position: pos, booking: b });
+        }
+        finish();
+      });
+    }
+  }
+
+  /** A teardrop pin with a type glyph (hotel/house/car) for a booking marker. */
+  bookingMarkerOptions(booking: Booking): google.maps.MarkerOptions {
+    const glyph =
+      booking.type === 'hotel'       ? '🏨' :
+      booking.type === 'airbnb'      ? '🏠' :
+      booking.type === 'car-rental'  ? '🚗' : '📍';
+    const color =
+      booking.type === 'hotel'       ? '#00897b' :
+      booking.type === 'airbnb'      ? '#5e35b1' :
+      booking.type === 'car-rental'  ? '#1565c0' : '#546e7a';
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48">' +
+      `<path d="M20 0C9 0 0 9 0 20c0 14 20 28 20 28s20-14 20-28C40 9 31 0 20 0z" fill="${color}"/>` +
+      '<circle cx="20" cy="19" r="13" fill="#ffffff"/>' +
+      `<text x="20" y="25" font-size="16" text-anchor="middle">${glyph}</text></svg>`;
+    return {
+      title: booking.title,
+      icon: {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+        scaledSize: new google.maps.Size(40, 48),
+        anchor: new google.maps.Point(20, 48),
+      },
+    };
+  }
+
+  openBookingInfo(infoWindow: MapInfoWindow, marker: MapMarker, booking: Booking) {
+    this.activeBookingPin.set(booking);
+    infoWindow.open(marker);
   }
 
   private computeRoute(stops: ItineraryItem[], mode: string) {

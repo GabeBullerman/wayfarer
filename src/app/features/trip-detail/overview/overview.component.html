@@ -133,6 +133,13 @@
                   [title]="pin.item.title"
                   (mapClick)="openInfo(infoWindow, marker, pin.item)" />
               }
+              @for (bpin of bookingPins(); track bpin.booking.id) {
+                <map-marker
+                  #bmarker="mapMarker"
+                  [position]="bpin.position"
+                  [options]="bookingMarkerOptions(bpin.booking)"
+                  (mapClick)="openBookingInfo(bookingInfoWindow, bmarker, bpin.booking)" />
+              }
               @if (directionsResult()) {
                 <map-directions-renderer [directions]="directionsResult()!" [options]="rendererOptions" />
               }
@@ -155,6 +162,26 @@
                     }
                     @if (activePin()!.description) {
                       <div class="info-description">{{ activePin()!.description }}</div>
+                    }
+                  </div>
+                }
+              </map-info-window>
+
+              <map-info-window #bookingInfoWindow="mapInfoWindow">
+                @if (activeBookingPin(); as b) {
+                  <div class="info-window">
+                    <div class="info-title">{{ b.title }}</div>
+                    @if (b.provider) {
+                      <div class="info-row"><span class="info-icon">🏷️</span>{{ b.provider }}</div>
+                    }
+                    @if (b.address) {
+                      <div class="info-row"><span class="info-icon">📍</span>{{ b.address }}</div>
+                    }
+                    @if (b.checkIn) {
+                      <div class="info-row">
+                        <span class="info-icon">📅</span>
+                        {{ b.checkIn.toDate() | date:'MMM d' }}{{ b.checkOut ? ' – ' + (b.checkOut.toDate() | date:'MMM d') : '' }}
+                      </div>
                     }
                   </div>
                 }

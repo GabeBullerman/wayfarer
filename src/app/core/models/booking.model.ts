@@ -47,6 +47,9 @@ export interface Booking {
   notes?: string;
   passengerIds?: string[];
   paidById?: string | null;
+  /** Street address / place name for accommodations & other located bookings,
+   *  geocoded to show a marker on the trip map. */
+  address?: string;
 
   // ── Flight-specific ────────────────────────────────────────────
   /** e.g. "DL123" or "BA 256" — IATA flight number, used for status lookups. */

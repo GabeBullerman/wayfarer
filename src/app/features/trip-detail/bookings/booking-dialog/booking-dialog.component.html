@@ -204,6 +204,16 @@
         }
       }
 
+      @if (!isFlight()) {
+        <mat-form-field appearance="outline" class="full-width mt-16">
+          <mat-label>Address (shown on map)</mat-label>
+          <input matInput formControlName="address"
+                 placeholder="e.g. Rua Augusta 100, Lisbon" />
+          <mat-icon matPrefix>place</mat-icon>
+          <mat-hint>Pins this booking on the trip map</mat-hint>
+        </mat-form-field>
+      }
+
       <mat-form-field appearance="outline" class="full-width mt-16">
         <mat-label>Booking URL</mat-label>
         <input matInput formControlName="bookingUrl" type="url" placeholder="https://..." />
