@@ -71,6 +71,21 @@
       <mat-datepicker #picker></mat-datepicker>
     </mat-form-field>
 
+    <div class="row-two">
+      <mat-form-field appearance="outline">
+        <mat-label>Points used (optional)</mat-label>
+        <input matInput type="number" formControlName="pointsUsed" min="0" step="1"
+               placeholder="e.g. 45000">
+        <mat-icon matPrefix>loyalty</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Points from</mat-label>
+        <input matInput formControlName="pointsProgram"
+               placeholder="e.g. Chase UR, Amex MR, Delta">
+      </mat-form-field>
+    </div>
+
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Notes (optional)</mat-label>
       <textarea matInput formControlName="notes" rows="2"></textarea>

@@ -172,7 +172,7 @@
                       <span class="item-location"><mat-icon>place</mat-icon>{{ item.location }}</span>
                     }
                     @if (item.cost) {
-                      <span class="item-cost"><mat-icon>attach_money</mat-icon>{{ item.cost | number:'1.2-2' }} {{ item.currency }}</span>
+                      <span class="item-cost"><mat-icon>attach_money</mat-icon>{{ item.cost | number:'1.2-2' }} {{ item.currency }} <span class="cost-type">{{ item.costType === 'per-person' ? '/ person' : 'total' }}</span></span>
                     }
                   </div>
 

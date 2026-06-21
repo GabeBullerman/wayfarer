@@ -61,6 +61,7 @@ export class ItineraryItemDialogComponent {
     longitude: [this.data.item?.longitude ?? null],
     cost: [this.data.item?.cost ?? null],
     currency: [this.data.item?.currency ?? 'USD'],
+    costType: [this.data.item?.costType ?? 'total' as 'total' | 'per-person'],
     description: [this.data.item?.description ?? ''],
     notes: [this.data.item?.notes ?? ''],
   });
@@ -81,6 +82,7 @@ export class ItineraryItemDialogComponent {
       longitude: v.longitude ? Number(v.longitude) : undefined,
       cost: v.cost ? Number(v.cost) : undefined,
       currency: v.currency ?? undefined,
+      costType: v.cost ? (v.costType ?? 'total') : undefined,
       description: v.description ?? undefined,
       notes: v.notes ?? undefined,
       order: this.data.item?.order ?? this.data.existingCount,

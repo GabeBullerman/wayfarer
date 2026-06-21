@@ -13,5 +13,9 @@ export interface Expense {
   participantIds?: string[];
   date?: Timestamp;
   notes?: string;
+  /** Loyalty/credit-card points redeemed toward this expense. */
+  pointsUsed?: number;
+  /** Where the points came from, e.g. "Chase Ultimate Rewards", "Amex MR". */
+  pointsProgram?: string;
   createdAt: Timestamp;
 }

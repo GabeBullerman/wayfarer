@@ -378,6 +378,12 @@
                         <span class="expense-date">· {{ expense.date.toDate() | date:'MMM d' }}</span>
                       }
                     </div>
+                    @if (expense.pointsUsed) {
+                      <div class="expense-points">
+                        <mat-icon>loyalty</mat-icon>
+                        {{ expense.pointsUsed | number }} pts{{ expense.pointsProgram ? ' · ' + expense.pointsProgram : '' }}
+                      </div>
+                    }
                     @if (expense.notes) {
                       <div class="expense-notes">{{ expense.notes }}</div>
                     }

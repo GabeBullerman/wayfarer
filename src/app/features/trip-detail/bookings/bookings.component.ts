@@ -93,7 +93,7 @@ export class BookingsComponent implements OnInit {
         type,
         label: this.typeConfig[type].label,
         icon: this.typeConfig[type].icon,
-        bookings: bookings.filter(b => b.type === type),
+        bookings: bookings.filter(b => b.type === type).sort(byDate),
       }))
       .filter(g => g.bookings.length > 0);
   }
@@ -232,4 +232,11 @@ export class BookingsComponent implements OnInit {
   openBookingUrl(url: string) {
     window.open(url, '_blank', 'noopener');
   }
+}
+
+/** Sort bookings chronologically by start date; undated ones sink to the bottom. */
+function byDate(a: Booking, b: Booking): number {
+  const ta = a.checkIn?.toMillis() ?? Number.POSITIVE_INFINITY;
+  const tb = b.checkIn?.toMillis() ?? Number.POSITIVE_INFINITY;
+  return ta - tb;
 }

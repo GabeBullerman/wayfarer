@@ -75,6 +75,17 @@
       </mat-form-field>
     </div>
 
+    @if (form.value.cost) {
+      <mat-form-field appearance="outline" class="full-width mt-16">
+        <mat-label>Cost is</mat-label>
+        <mat-select formControlName="costType">
+          <mat-option value="total">Total for the group</mat-option>
+          <mat-option value="per-person">Per person</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>groups</mat-icon>
+      </mat-form-field>
+    }
+
     <mat-form-field appearance="outline" class="full-width mt-16">
       <mat-label>Description</mat-label>
       <textarea matInput formControlName="description" rows="2"

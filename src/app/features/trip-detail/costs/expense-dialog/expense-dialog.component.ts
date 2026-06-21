@@ -61,6 +61,8 @@ export class ExpenseDialogComponent implements OnInit {
     participantIds: [this.data.expense?.participantIds ?? [] as string[]],
     date:           [this.data.expense?.date ? this.data.expense.date.toDate() : null as Date | null],
     notes:          [this.data.expense?.notes ?? ''],
+    pointsUsed:     [this.data.expense?.pointsUsed ?? null as number | null],
+    pointsProgram:  [this.data.expense?.pointsProgram ?? ''],
   });
 
   ngOnInit() {
@@ -83,6 +85,8 @@ export class ExpenseDialogComponent implements OnInit {
       participantIds: v.participantIds?.length ? v.participantIds : undefined,
       notes:          v.notes ?? undefined,
       date:           v.date ? Timestamp.fromDate(v.date) : undefined,
+      pointsUsed:     v.pointsUsed ? Number(v.pointsUsed) : undefined,
+      pointsProgram:  v.pointsProgram?.trim() || undefined,
     };
     this.dialogRef.close(result);
   }
