@@ -258,21 +258,25 @@ export class BookingDialogComponent implements OnInit {
       flightStatus: isFlight && this.statusResult() ? toFlightStatus(this.statusResult()!) : undefined,
     };
 
-    const op: Observable<void> = this.isEdit
-      ? from(this.bookingService.updateBooking(this.data.booking!.id!, payload))
-      : from(this.bookingService.createBooking(payload)).pipe(map(() => undefined));
+    const onError = (err: { message?: string }) => {
+      this.loading.set(false);
+      this.snackBar.open(
+        err?.message ? `Couldn't save: ${err.message}` : 'Couldn\'t save booking. Please try again.',
+        'Dismiss',
+        { duration: 6000 },
+      );
+    };
 
-    op.subscribe({
-      next: () => this.dialogRef.close(true),
-      error: (err) => {
-        this.loading.set(false);
-        this.snackBar.open(
-          err?.message ? `Couldn't save: ${err.message}` : 'Couldn\'t save booking. Please try again.',
-          'Dismiss',
-          { duration: 6000 },
-        );
-      },
-    });
+    // Wrap so a synchronous Firestore validation error can't leave the spinner stuck.
+    try {
+      const op: Observable<void> = this.isEdit
+        ? from(this.bookingService.updateBooking(this.data.booking!.id!, payload))
+        : from(this.bookingService.createBooking(payload)).pipe(map(() => undefined));
+
+      op.subscribe({ next: () => this.dialogRef.close(true), error: onError });
+    } catch (err) {
+      onError(err as { message?: string });
+    }
   }
 }
 
@@ -289,14 +293,19 @@ function toDateStr(d: Date): string {
 
 interface ConnectionRow { airport?: string; flightNumber?: string; departTime?: string }
 
-/** Keep connection rows that have a layover airport; trim/uppercase; undefined if none. */
+/** Keep connection rows that have a layover airport; omit empty optional fields
+ *  entirely (Firestore rejects `undefined`, even nested inside an array). */
 function cleanConnections(rows: ConnectionRow[]): { airport: string; flightNumber?: string; departTime?: string }[] | undefined {
   const out = rows
-    .map(r => ({
-      airport: (r.airport ?? '').trim().toUpperCase(),
-      flightNumber: (r.flightNumber ?? '').trim().toUpperCase() || undefined,
-      departTime: (r.departTime ?? '').trim() || undefined,
-    }))
+    .map(r => {
+      const airport = (r.airport ?? '').trim().toUpperCase();
+      const flightNumber = (r.flightNumber ?? '').trim().toUpperCase();
+      const departTime = (r.departTime ?? '').trim();
+      const conn: { airport: string; flightNumber?: string; departTime?: string } = { airport };
+      if (flightNumber) conn.flightNumber = flightNumber;
+      if (departTime) conn.departTime = departTime;
+      return conn;
+    })
     .filter(r => r.airport);
   return out.length ? out : undefined;
 }
