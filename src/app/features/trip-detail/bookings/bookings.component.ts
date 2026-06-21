@@ -136,6 +136,15 @@ export class BookingsComponent implements OnInit {
     return participants.find(p => p.id === booking.paidById)?.name ?? null;
   }
 
+  /** Resolve per-passenger ticket numbers to [name, ticket] pairs for display. */
+  getTicketEntries(booking: Booking, participants: TripParticipant[]): { name: string; ticket: string }[] {
+    if (!booking.ticketNumbers) return [];
+    return Object.entries(booking.ticketNumbers).map(([id, ticket]) => ({
+      name: participants.find(p => p.id === id)?.name ?? 'Passenger',
+      ticket,
+    }));
+  }
+
   /** True when a timestamp carries a meaningful time-of-day (not midnight). */
   hasTime(ts?: Timestamp | null): boolean {
     if (!ts) return false;
@@ -156,7 +165,13 @@ export class BookingsComponent implements OnInit {
         return;
       }
       if (!res.found || !res.status) {
-        this.snackBar.open(res.message ?? 'No live data for this flight', undefined, { duration: 3000 });
+        const days = booking.checkIn
+          ? Math.ceil((booking.checkIn.toDate().getTime() - Date.now()) / 86400000)
+          : null;
+        const msg = days != null && days > 3
+          ? `No live status yet — departs in ${days} days. Airlines post tracking ~1–3 days out.`
+          : (res.message ?? 'No live data for this flight yet');
+        this.snackBar.open(msg, undefined, { duration: 4000 });
         return;
       }
 

@@ -51,6 +51,8 @@ export interface Booking {
   // ── Flight-specific ────────────────────────────────────────────
   /** e.g. "DL123" or "BA 256" — IATA flight number, used for status lookups. */
   flightNumber?: string;
+  /** Per-passenger ticket / e-ticket numbers, keyed by TripParticipant id. */
+  ticketNumbers?: Record<string, string>;
   /** Departure airport IATA code, e.g. "JFK". */
   departureAirport?: string;
   /** Arrival airport IATA code, e.g. "LAX". */

@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DatePipe, TitleCasePipe } from '@angular/common';
-import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormRecord, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -92,6 +92,17 @@ export class BookingDialogComponent implements OnInit {
 
   isFlight = computed(() => this.selectedType() === 'flight');
 
+  /** Passenger ids currently selected, mirrored so the template can render
+   *  one ticket-number field per assigned person. */
+  selectedPassengerIds = signal<string[]>(this.data.booking?.passengerIds ?? []);
+
+  /** The participant objects for the selected passengers (id + name). */
+  selectedPassengers = computed(() =>
+    this.selectedPassengerIds()
+      .map(id => this.participants().find(p => p.id === id))
+      .filter((p): p is TripParticipant => !!p)
+  );
+
   form = this.fb.group({
     type: [this.data.booking?.type ?? 'flight' as BookingType, Validators.required],
     title: [this.data.booking?.title ?? '', Validators.required],
@@ -111,11 +122,36 @@ export class BookingDialogComponent implements OnInit {
     notes: [this.data.booking?.notes ?? ''],
     passengerIds: [this.data.booking?.passengerIds ?? [] as string[]],
     paidById: [this.data.booking?.paidById ?? null as string | null],
+    ticketNumbers: new FormRecord<FormControl<string>>({}),
   });
 
   ngOnInit() {
+    // Seed ticket-number controls for any passengers already assigned.
+    this.syncTicketControls(this.selectedPassengerIds());
+
     this.participantService.getParticipants(this.data.tripId).subscribe(p => {
       this.participants.set(p);
+    });
+
+    // Keep the per-passenger ticket fields in sync with the assignment select.
+    this.form.get('passengerIds')!.valueChanges.subscribe(ids => {
+      const list = (ids as string[]) ?? [];
+      this.selectedPassengerIds.set(list);
+      this.syncTicketControls(list);
+    });
+  }
+
+  /** Add a ticket-number control for each assigned passenger, drop the rest. */
+  private syncTicketControls(ids: string[]) {
+    const group = this.form.controls.ticketNumbers as FormRecord<FormControl<string>>;
+    const existing = this.data.booking?.ticketNumbers ?? {};
+    // Remove controls for passengers no longer assigned.
+    Object.keys(group.controls).forEach(key => {
+      if (!ids.includes(key)) group.removeControl(key);
+    });
+    // Add controls for newly assigned passengers, preserving any saved value.
+    ids.forEach(id => {
+      if (!group.get(id)) group.addControl(id, new FormControl(existing[id] ?? '', { nonNullable: true }));
     });
   }
 
@@ -152,7 +188,7 @@ export class BookingDialogComponent implements OnInit {
       this.statusLoading.set(false);
       if (res.error) { this.statusMessage.set(res.error); return; }
       if (res.configured === false) { this.statusMessage.set(res.message ?? 'Flight tracking is not configured.'); return; }
-      if (!res.found || !res.status) { this.statusMessage.set(res.message ?? 'No live data found for this flight.'); return; }
+      if (!res.found || !res.status) { this.statusMessage.set(notFoundMessage(dep ?? null)); return; }
 
       const s = res.status;
       this.statusResult.set(s);
@@ -195,6 +231,7 @@ export class BookingDialogComponent implements OnInit {
       passengerIds: (v.passengerIds as string[])?.length ? (v.passengerIds as string[]) : undefined,
       paidById: v.paidById ?? null,
       flightNumber: isFlight && v.flightNumber ? v.flightNumber.trim().toUpperCase() : undefined,
+      ticketNumbers: isFlight ? cleanTicketNumbers(v.ticketNumbers as Record<string, string> | undefined) : undefined,
       departureAirport: isFlight && v.departureAirport ? v.departureAirport.trim().toUpperCase() : undefined,
       arrivalAirport: isFlight && v.arrivalAirport ? v.arrivalAirport.trim().toUpperCase() : undefined,
       flightStatus: isFlight && this.statusResult() ? toFlightStatus(this.statusResult()!) : undefined,
@@ -220,6 +257,31 @@ function toTimeStr(d?: Date | null): string {
 
 function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Drop blank ticket numbers; return undefined if none remain. */
+function cleanTicketNumbers(map: Record<string, string> | undefined): Record<string, string> | undefined {
+  if (!map) return undefined;
+  const out: Record<string, string> = {};
+  for (const [id, val] of Object.entries(map)) {
+    const trimmed = (val ?? '').trim();
+    if (trimmed) out[id] = trimmed;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+/** A friendlier "no status" message that accounts for flights too far out to track. */
+function notFoundMessage(departure: Date | null): string {
+  if (departure) {
+    const days = Math.ceil((departure.getTime() - Date.now()) / 86400000);
+    if (days > 3) {
+      return `Flight status not available yet — departure is ${days} days out. Airlines usually publish live tracking 1–3 days before the flight, so check back closer to the date.`;
+    }
+    if (days < -1) {
+      return 'No live status — this flight has already departed and is no longer tracked.';
+    }
+  }
+  return 'Flight not found — double-check the flight number and departure date.';
 }
 
 /** Merge a date and an "HH:mm" string into a single Date. */

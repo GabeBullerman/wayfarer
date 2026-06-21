@@ -287,3 +287,17 @@ mat-accordion {
   &.fs-cancelled           { background: #c62828; color: #fff; }
   &.fs-delayed, &.fs-diverted, &.fs-incident { background: #ef6c00; color: #fff; }
 }
+
+/* ── Per-passenger ticket numbers on a booking card ────────────────── */
+.ticket-list {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: #455a64;
+
+  .people-icon { color: #607d8b; flex-shrink: 0; }
+  .ticket-rows { display: flex; flex-direction: column; gap: 2px; }
+  .ticket-row strong { color: #263238; }
+}

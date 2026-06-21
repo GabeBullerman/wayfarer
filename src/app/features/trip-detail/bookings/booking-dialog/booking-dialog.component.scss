@@ -148,3 +148,20 @@ mat-dialog-content {
     background: #e0e0e0;
   }
 }
+
+/* ── Per-passenger ticket numbers ──────────────────────────────── */
+.ticket-section {
+  margin-top: 16px;
+  mat-form-field { width: 100%; }
+}
+.ticket-section-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #455a64;
+  margin-bottom: 8px;
+}
+.ticket-hint {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: #78909c;
+}

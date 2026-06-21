@@ -126,6 +126,13 @@
                         </div>
                       }
 
+                      @if (booking.type === 'flight' && booking.flightNumber && !booking.flightStatus) {
+                        <div class="flight-status-line">
+                          <span class="flight-status-badge fs-unknown">Status not set yet</span>
+                          <span class="fs-updated">Tap the radar icon to check closer to departure</span>
+                        </div>
+                      }
+
                       @if (booking.type === 'flight' && booking.flightStatus; as fs) {
                         <div class="flight-status-line">
                           <span class="flight-status-badge" [class]="'fs-' + (fs.flightStatus ?? 'unknown')">
@@ -177,6 +184,19 @@
                             <span class="payer-label">Paid by <strong>{{ payerName }}</strong></span>
                           </div>
                         }
+                      </div>
+                    }
+
+                    <!-- Per-passenger ticket numbers (flights) -->
+                    @let ticketEntries = getTicketEntries(booking, data.participants);
+                    @if (ticketEntries.length > 0) {
+                      <div class="ticket-list">
+                        <mat-icon class="people-icon">airplane_ticket</mat-icon>
+                        <div class="ticket-rows">
+                          @for (t of ticketEntries; track t.name) {
+                            <span class="ticket-row"><strong>{{ t.name }}</strong>: {{ t.ticket }}</span>
+                          }
+                        </div>
                       </div>
                     }
 

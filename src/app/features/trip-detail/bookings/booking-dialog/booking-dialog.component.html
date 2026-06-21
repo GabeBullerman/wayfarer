@@ -215,6 +215,22 @@
             </mat-select>
           </mat-form-field>
         </div>
+
+        <!-- One ticket-number field per assigned passenger (flights only) -->
+        @if (isFlight() && selectedPassengers().length > 0) {
+          <div class="ticket-section" formGroupName="ticketNumbers">
+            <div class="ticket-section-label">Ticket / e-ticket numbers</div>
+            @for (p of selectedPassengers(); track p.id) {
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ p.name }}'s ticket #</mat-label>
+                <input matInput [formControlName]="p.id!" placeholder="e.g. 0062357891234" />
+                <mat-icon matPrefix>airplane_ticket</mat-icon>
+              </mat-form-field>
+            }
+          </div>
+        } @else if (isFlight()) {
+          <p class="ticket-hint">Tip: choose who this flight is for above to add a ticket number for each person.</p>
+        }
       }
 
       <mat-form-field appearance="outline" class="full-width mt-16">
