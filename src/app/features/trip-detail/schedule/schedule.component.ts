@@ -114,7 +114,9 @@ export class ScheduleComponent implements OnInit {
   }
 
   hasTransport(day: DayGroup): boolean {
-    return day.items.some(i => i.category === 'transport');
+    // A transport activity, or a flight/car-rental booking on this day, counts.
+    return day.items.some(i => i.category === 'transport')
+      || day.bookingEntries.some(e => e.booking.type === 'flight' || e.booking.type === 'car-rental');
   }
 
   isFirstDay(day: DayGroup): boolean {
