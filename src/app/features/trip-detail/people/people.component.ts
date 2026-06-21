@@ -49,7 +49,7 @@ export class PeopleComponent implements OnInit, OnChanges {
 
   participants$!: Observable<TripParticipant[]>;
   /** Observable of resolved member profiles (owner first, then collaborators) */
-  collaborators$!: Observable<(UserProfile & { uid: string; isOwner: boolean; photoURL?: string })[]>;
+  collaborators$!: Observable<(UserProfile & { uid: string; isOwner: boolean; isCoOwner: boolean; photoURL?: string })[]>;
 
   showAddForm = signal(false);
   saving = signal(false);
@@ -87,7 +87,7 @@ export class PeopleComponent implements OnInit, OnChanges {
   }
 
   private loadCollaborators() {
-    type Member = UserProfile & { uid: string; isOwner: boolean };
+    type Member = UserProfile & { uid: string; isOwner: boolean; isCoOwner: boolean };
 
     const authUser = this.auth.currentUser;
 
@@ -106,6 +106,7 @@ export class PeopleComponent implements OnInit, OnChanges {
         const ownerUid = trip?.userId;
         if (!ownerUid) return of([] as Member[]);
 
+        const coOwnerIds = trip?.ownerIds ?? [];
         const collabIds = (trip?.collaboratorIds ?? []).filter(id => id !== ownerUid);
 
         const owner$ = this.userService.getProfile(ownerUid).pipe(
@@ -118,6 +119,7 @@ export class PeopleComponent implements OnInit, OnChanges {
               homeCurrency: profile?.homeCurrency ?? '',
               createdAt: profile?.createdAt ?? null as any,
               isOwner: true,
+              isCoOwner: false,
             } as Member;
           })
         );
@@ -134,7 +136,9 @@ export class PeopleComponent implements OnInit, OnChanges {
                 ...resolve(uid, profile),
                 homeCurrency: profile?.homeCurrency ?? '',
                 createdAt: profile?.createdAt ?? null as any,
-                isOwner: false,
+                // Co-owners get the Owner badge + owner privileges.
+                isOwner: coOwnerIds.includes(uid),
+                isCoOwner: coOwnerIds.includes(uid),
               } as Member))
             )
           )
@@ -212,6 +216,38 @@ export class PeopleComponent implements OnInit, OnChanges {
       from(this.tripService.transferOwnership(this.tripId, uid)).subscribe({
         next: () => this.snackBar.open(`${name} is now the trip owner`, undefined, { duration: 3000 }),
         error: () => this.snackBar.open('Transfer failed. Please try again.', undefined, { duration: 3000 }),
+      });
+    });
+  }
+
+  /** Promote a collaborator to co-owner (shares full owner privileges). */
+  makeCoOwner(uid: string, name: string) {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Make Co-Owner',
+        message: `Give ${name} co-owner privileges? They'll have the same control over this trip as you, but you remain the primary owner.`,
+      },
+    }).afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      from(this.tripService.addCoOwner(this.tripId, uid)).subscribe({
+        next: () => this.snackBar.open(`${name} is now a co-owner`, undefined, { duration: 3000 }),
+        error: () => this.snackBar.open('Could not update co-owner. Try again.', undefined, { duration: 3000 }),
+      });
+    });
+  }
+
+  /** Demote a co-owner back to a regular collaborator. */
+  removeCoOwner(uid: string, name: string) {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Remove Co-Owner',
+        message: `Remove ${name}'s co-owner privileges? They'll stay on the trip as a collaborator.`,
+      },
+    }).afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      from(this.tripService.removeCoOwner(this.tripId, uid)).subscribe({
+        next: () => this.snackBar.open(`${name} is no longer a co-owner`, undefined, { duration: 3000 }),
+        error: () => this.snackBar.open('Could not update co-owner. Try again.', undefined, { duration: 3000 }),
       });
     });
   }

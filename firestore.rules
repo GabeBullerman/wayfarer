@@ -32,6 +32,14 @@ service cloud.firestore {
       return isMemberOfTrip(tripData(tripId));
     }
 
+    // The primary owner or any co-owner (ownerIds) has owner privileges.
+    function isOwnerOfTrip(trip) {
+      return isSignedIn() && (
+        trip.userId == request.auth.uid ||
+        (trip.ownerIds != null && request.auth.uid in trip.ownerIds)
+      );
+    }
+
     // ── Trips ───────────────────────────────────────────────────────────────
     // Owner has full control. Members can read and update. A bearer of a live
     // invite token can read (to verify the token) and add themselves as a member.
@@ -42,13 +50,19 @@ service cloud.firestore {
       );
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if isSignedIn() && (
-        isMemberOfTrip(resource.data) ||
+        // Members can edit the trip, but only owners may change ownership fields
+        // (ownerIds / userId) — this prevents a collaborator self-promoting.
+        ( isMemberOfTrip(resource.data) && (
+            isOwnerOfTrip(resource.data) ||
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['ownerIds', 'userId'])
+          )
+        ) ||
         // Invite-token acceptance: token bearer may add only themselves.
         (resource.data.inviteToken != null &&
          request.resource.data.collaboratorIds != null &&
          request.auth.uid in request.resource.data.collaboratorIds)
       );
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isOwnerOfTrip(resource.data);
     }
 
     // ── Trip-scoped content — members only ──────────────────────────────────

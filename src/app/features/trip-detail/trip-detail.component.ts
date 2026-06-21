@@ -58,7 +58,9 @@ export class TripDetailComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
 
   readonly currentUserId = this.auth.currentUser?.uid ?? '';
-  isOwner(trip: Trip): boolean { return trip.userId === this.currentUserId; }
+  isOwner(trip: Trip): boolean {
+    return trip.userId === this.currentUserId || (trip.ownerIds ?? []).includes(this.currentUserId);
+  }
 
   trip$!: ReturnType<TripService['getTrip']>;
 

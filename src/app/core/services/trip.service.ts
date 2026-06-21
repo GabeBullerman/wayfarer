@@ -159,6 +159,24 @@ export class TripService {
     });
   }
 
+  /** Promote a collaborator to co-owner (full owner privileges). Also ensures
+   *  they're in collaboratorIds so the trip stays in their list. */
+  async addCoOwner(tripId: string, uid: string): Promise<void> {
+    await updateDoc(doc(this.firestore, 'trips', tripId), {
+      ownerIds: arrayUnion(uid),
+      collaboratorIds: arrayUnion(uid),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  /** Demote a co-owner back to a regular collaborator (keeps trip access). */
+  async removeCoOwner(tripId: string, uid: string): Promise<void> {
+    await updateDoc(doc(this.firestore, 'trips', tripId), {
+      ownerIds: arrayRemove(uid),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
   /** Generate an invite token and return the full shareable slug ({tripId}.{random}). */
   async generateInviteToken(tripId: string): Promise<string> {
     const random = Array.from(crypto.getRandomValues(new Uint8Array(12)))

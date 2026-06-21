@@ -69,7 +69,11 @@
             <div class="participant-info">
               <div class="participant-name">
                 {{ c.displayName }}
-                @if (c.isOwner) {
+                @if (c.isCoOwner) {
+                  <span class="badge badge-owner">
+                    <mat-icon class="badge-crown">workspace_premium</mat-icon> Co-Owner
+                  </span>
+                } @else if (c.isOwner) {
                   <span class="badge badge-owner">
                     <mat-icon class="badge-crown">workspace_premium</mat-icon> Owner
                   </span>
@@ -89,12 +93,29 @@
             <div class="participant-actions">
               @if (isOwner && !c.isOwner && c.uid !== currentUserId) {
                 <button mat-icon-button
+                        matTooltip="Make co-owner"
+                        (click)="makeCoOwner(c.uid, c.displayName)">
+                  <mat-icon>shield_person</mat-icon>
+                </button>
+                <button mat-icon-button
                         matTooltip="Transfer ownership"
                         (click)="transferOwnership(c.uid, c.displayName)">
                   <mat-icon>workspace_premium</mat-icon>
                 </button>
                 <button mat-icon-button
                         matTooltip="Remove collaborator"
+                        (click)="removeCollaborator(c.uid, c.displayName, c.email)">
+                  <mat-icon>person_remove</mat-icon>
+                </button>
+              }
+              @if (isOwner && c.isCoOwner && c.uid !== currentUserId) {
+                <button mat-icon-button
+                        matTooltip="Remove co-owner (keep as collaborator)"
+                        (click)="removeCoOwner(c.uid, c.displayName)">
+                  <mat-icon>remove_moderator</mat-icon>
+                </button>
+                <button mat-icon-button
+                        matTooltip="Remove from trip"
                         (click)="removeCollaborator(c.uid, c.displayName, c.email)">
                   <mat-icon>person_remove</mat-icon>
                 </button>
