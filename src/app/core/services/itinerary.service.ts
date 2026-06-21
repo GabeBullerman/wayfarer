@@ -26,16 +26,29 @@ export class ItineraryService {
   }
 
   createItem(item: Omit<ItineraryItem, 'id'>) {
-    return this.run(() => addDoc(collection(this.firestore, 'itinerary'), item));
+    return this.run(() => addDoc(collection(this.firestore, 'itinerary'), stripUndefined(item)));
   }
 
   updateItem(id: string, changes: Partial<ItineraryItem>) {
     return this.run(() =>
-      updateDoc(doc(this.firestore, 'itinerary', id), changes as Record<string, unknown>)
+      updateDoc(doc(this.firestore, 'itinerary', id), stripUndefined(changes))
     );
   }
 
   deleteItem(id: string) {
     return this.run(() => deleteDoc(doc(this.firestore, 'itinerary', id)));
   }
+}
+
+/**
+ * Firestore rejects `undefined` field values (ignoreUndefinedProperties is off),
+ * and addDoc throws synchronously when it sees one — which left the "add
+ * activity" dialog spinning forever. Drop undefined keys before writing.
+ */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) out[k as keyof T] = v as T[keyof T];
+  }
+  return out;
 }

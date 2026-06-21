@@ -29,7 +29,7 @@ export class ExpenseService {
   createExpense(expense: Omit<Expense, 'id' | 'createdAt'>) {
     return this.run(() =>
       addDoc(collection(this.firestore, 'expenses'), {
-        ...expense,
+        ...stripUndefined(expense),
         createdAt: serverTimestamp(),
       })
     );
@@ -37,11 +37,20 @@ export class ExpenseService {
 
   updateExpense(id: string, changes: Partial<Expense>) {
     return this.run(() =>
-      updateDoc(doc(this.firestore, 'expenses', id), changes)
+      updateDoc(doc(this.firestore, 'expenses', id), stripUndefined(changes))
     );
   }
 
   deleteExpense(id: string) {
     return this.run(() => deleteDoc(doc(this.firestore, 'expenses', id)));
   }
+}
+
+/** Drop undefined keys — Firestore's addDoc throws synchronously on them. */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== undefined) out[k as keyof T] = v as T[keyof T];
+  }
+  return out;
 }

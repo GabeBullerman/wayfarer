@@ -10,6 +10,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookingService } from '../../../../core/services/booking.service';
 import { FlightService, FlightStatusResult } from '../../../../core/services/flight.service';
 import { Booking, BookingType, BookingStatus, FlightStatus } from '../../../../core/models/booking.model';
@@ -37,7 +38,7 @@ interface TypeLabels {
   imports: [
     ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule,
-    MatIconModule, MatProgressSpinnerModule, DatePipe, TitleCasePipe,
+    MatIconModule, MatProgressSpinnerModule, MatSnackBarModule, DatePipe, TitleCasePipe,
   ],
   templateUrl: './booking-dialog.component.html',
   styleUrl: './booking-dialog.component.scss',
@@ -48,6 +49,7 @@ export class BookingDialogComponent implements OnInit {
   private flightService = inject(FlightService);
   private participantService = inject(ParticipantService);
   private dialogRef = inject(MatDialogRef<BookingDialogComponent>);
+  private snackBar = inject(MatSnackBar);
   data = inject<BookingDialogData>(MAT_DIALOG_DATA);
 
   loading = signal(false);
@@ -243,7 +245,14 @@ export class BookingDialogComponent implements OnInit {
 
     op.subscribe({
       next: () => this.dialogRef.close(true),
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.loading.set(false);
+        this.snackBar.open(
+          err?.message ? `Couldn't save: ${err.message}` : 'Couldn\'t save booking. Please try again.',
+          'Dismiss',
+          { duration: 6000 },
+        );
+      },
     });
   }
 }
