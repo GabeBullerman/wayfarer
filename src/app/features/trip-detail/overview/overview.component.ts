@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, signal, effect, untracked } from '@angular/core';
+import { Component, Input, OnInit, inject, signal, effect, untracked, viewChild } from '@angular/core';
 import { AsyncPipe, DatePipe, CurrencyPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -99,6 +99,7 @@ export class OverviewComponent implements OnInit {
   };
 
   mapCenter = signal<google.maps.LatLngLiteral>({ lat: 0, lng: 0 });
+  private mapRef = viewChild(GoogleMap);
 
   // ── Accommodation / located bookings on the map ──────────────────
   allBookings = signal<Booking[]>([]);
@@ -113,7 +114,8 @@ export class OverviewComponent implements OnInit {
       const items = this.allItems();
       const mode = this.travelMode();
       if (!loaded) return;
-      if (!this.geocodeAttempted && items.filter(i => i.latitude && i.longitude).length === 0) {
+      if (!this.geocodeAttempted && items.filter(i => i.latitude && i.longitude).length === 0
+          && this.bookingPins().length === 0) {
         this.geocodeAttempted = true;
         untracked(() => this.geocodeDestination());
       }
@@ -128,6 +130,38 @@ export class OverviewComponent implements OnInit {
       if (!loaded) return;
       untracked(() => this.geocodeBookings(bookings));
     });
+
+    // Auto-fit the map to contain every pin (itinerary + bookings).
+    // Reading these signals registers them as dependencies so the map
+    // re-frames whenever the pins or selected day change.
+    effect(() => {
+      const map = this.mapRef();
+      this.allItems();
+      this.bookingPins();
+      this.selectedDayIso();
+      if (!map) return;
+      untracked(() => this.fitMapToPins());
+    });
+  }
+
+  /** Frame the map to all currently visible pins; falls back to a single
+   *  centred pin, or leaves the destination center when there are none. */
+  private fitMapToPins(): void {
+    const gmap = this.mapRef()?.googleMap;
+    if (!gmap) return;
+    const positions = [
+      ...this.getVisiblePins(this.allItems()).map(p => p.position),
+      ...this.bookingPins().map(p => p.position),
+    ];
+    if (positions.length === 0) return;
+    if (positions.length === 1) {
+      gmap.setCenter(positions[0]);
+      gmap.setZoom(13);
+      return;
+    }
+    const bounds = new google.maps.LatLngBounds();
+    positions.forEach(p => bounds.extend(p));
+    gmap.fitBounds(bounds, 48);
   }
 
   ngOnInit() {
