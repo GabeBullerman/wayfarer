@@ -84,4 +84,13 @@ export class PhotoService {
     await deleteObject(ref(this.storage, photo.storagePath));
     return this.run(() => deleteDoc(doc(this.firestore, 'photos', photo.id!)));
   }
+
+  /** Remove a Firestore doc whose underlying Storage object is gone. We don't
+   *  try to delete the Storage object — it's already missing — and we swallow
+   *  any error so a transient network blip doesn't propagate to the UI. */
+  async purgeOrphanDoc(photoId: string): Promise<void> {
+    try {
+      await this.run(() => deleteDoc(doc(this.firestore, 'photos', photoId)));
+    } catch { /* ignore */ }
+  }
 }

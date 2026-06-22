@@ -38,7 +38,8 @@
         <div class="photo-grid">
           @for (photo of photos; track photo.id) {
             <div class="photo-tile" (click)="openLightbox(photo)">
-              <img [src]="photo.url" [alt]="photo.caption || 'Trip photo'" loading="lazy" />
+              <img [src]="photo.url" [alt]="photo.caption || 'Trip photo'" loading="lazy"
+                   (error)="onImageLoadError($event, photo)" />
 
               <div class="photo-overlay">
                 @if (photo.userId === currentUserId) {

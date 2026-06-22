@@ -95,6 +95,15 @@ export class PhotosComponent implements OnInit {
     this.lightboxPhoto.set(null);
   }
 
+  /** Image failed to load — the underlying Storage object is missing.
+   *  Hide the tile immediately and purge the orphan Firestore doc so the
+   *  photo is gone for everyone on the next query. */
+  onImageLoadError(event: Event, photo: Photo) {
+    const tile = (event.target as HTMLElement).closest('.photo-tile') as HTMLElement | null;
+    if (tile) tile.style.display = 'none';
+    if (photo.id) this.photoService.purgeOrphanDoc(photo.id);
+  }
+
   deletePhoto(photo: Photo) {
     this.dialog.open(ConfirmDialogComponent, {
       data: { title: 'Delete Photo', message: 'Delete this photo? This cannot be undone.' },
