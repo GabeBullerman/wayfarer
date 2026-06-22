@@ -10,7 +10,7 @@
   <rect width="680" height="300" fill="#f0f2fb"/>
   <!-- toolbar -->
   <rect width="680" height="50" fill="#1a237e"/>
-  <text x="20" y="32" fill="white" font-size="15" font-weight="700" letter-spacing=".5">Sortrek</text>
+  <text x="20" y="32" fill="white" font-size="15" font-weight="700" letter-spacing=".5">SorTrek</text>
   <text x="620" y="32" fill="#c5cae9" font-size="12">My Trips</text>
   <!-- section label -->
   <text x="20" y="80" fill="#5c6bc0" font-size="11" font-weight="700" letter-spacing="1">UPCOMING</text>

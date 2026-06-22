@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
     const { userId } = req.body ?? {};
     const response = await plaid.linkTokenCreate({
       user: { client_user_id: userId ?? 'user' },
-      client_name: 'Sortrek',
+      client_name: 'SorTrek',
       products: [Products.Transactions],
       country_codes: [CountryCode.Us],
       language: 'en',

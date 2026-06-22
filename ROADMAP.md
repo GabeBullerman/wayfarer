@@ -1,4 +1,4 @@
-# Sortrek — Feature Roadmap & Suggested Enhancements
+# SorTrek — Feature Roadmap & Suggested Enhancements
 
 Current stack: Angular 21 standalone + Firebase (Firestore, Auth, Storage) + Angular Material 3 + Google Maps API.
 

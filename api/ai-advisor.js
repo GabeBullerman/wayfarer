@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
     }
 
     if (type === 'chat') {
-      const systemPrompt = `You are a travel assistant built into the Sortrek trip-planning app. You only answer questions related to travel — destinations, packing, itineraries, transport, accommodation, local customs, food, safety, visas, currency, and similar topics. If the user asks about anything unrelated to travel, politely decline and redirect them to their trip.
+      const systemPrompt = `You are a travel assistant built into the SorTrek trip-planning app. You only answer questions related to travel — destinations, packing, itineraries, transport, accommodation, local customs, food, safety, visas, currency, and similar topics. If the user asks about anything unrelated to travel, politely decline and redirect them to their trip.
 
 The user is planning "${trip.name}" — a trip to ${trip.destination} from ${startDate} to ${endDate} (${durationDays} days).
 

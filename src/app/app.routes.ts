@@ -14,6 +14,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'trips',
+        title: 'Trips',
         loadComponent: () => import('./features/trips/trips.component').then(m => m.TripsComponent),
       },
       {
@@ -23,11 +24,13 @@ export const routes: Routes = [
       },
       {
         path: 'past-trips',
+        title: 'Past Trips',
         loadComponent: () =>
           import('./features/past-trips/past-trips.component').then(m => m.PastTripsComponent),
       },
       {
         path: 'profile',
+        title: 'Profile',
         loadComponent: () =>
           import('./features/profile/profile.component').then(m => m.ProfileComponent),
       },
@@ -35,6 +38,7 @@ export const routes: Routes = [
   },
   {
     path: 'invite/:token',
+    title: 'Invite',
     loadComponent: () => import('./features/invite/invite.component').then(m => m.InviteComponent),
   },
   { path: '**', redirectTo: 'trips' },

@@ -1,5 +1,7 @@
-import { Component, ElementRef, inject, Input, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, inject, Input, OnInit, signal, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Title } from '@angular/platform-browser';
+import { APP_NAME } from '../../core/sortrek-title.strategy';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -56,6 +58,14 @@ export class TripDetailComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackBar = inject(MatSnackBar);
+  private titleService = inject(Title);
+
+  constructor() {
+    effect(() => {
+      const tab = this.tabs[this.selectedTab()]?.label;
+      this.titleService.setTitle(tab ? `${APP_NAME} | ${tab}` : APP_NAME);
+    });
+  }
 
   readonly currentUserId = this.auth.currentUser?.uid ?? '';
   isOwner(trip: Trip): boolean {

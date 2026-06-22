@@ -13,7 +13,7 @@ const DISMISSED_KEY = 'pwa-install-prompt-dismissed';
     @if (showBanner) {
       <div class="pwa-banner" role="banner" aria-label="Install app banner">
         <mat-icon class="pwa-icon">install_mobile</mat-icon>
-        <span class="pwa-message">Install Sortrek for offline access</span>
+        <span class="pwa-message">Install SorTrek for offline access</span>
         <div class="pwa-actions">
           <button mat-flat-button color="primary" (click)="install()">Install</button>
           <button mat-icon-button (click)="dismiss()" aria-label="Dismiss install prompt">

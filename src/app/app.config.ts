@@ -1,6 +1,7 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
 import { provideServiceWorker } from '@angular/service-worker';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideRouter, withComponentInputBinding, TitleStrategy } from '@angular/router';
+import { SortrekTitleStrategy } from './core/sortrek-title.strategy';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideHttpClient, withJsonpSupport } from '@angular/common/http';
@@ -16,6 +17,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
+    { provide: TitleStrategy, useClass: SortrekTitleStrategy },
     provideAnimationsAsync(),
     provideNativeDateAdapter(),
     provideHttpClient(withJsonpSupport()),

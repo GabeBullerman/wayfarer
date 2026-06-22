@@ -1,6 +1,6 @@
 {
-  "name": "Sortrek",
-  "short_name": "Sortrek",
+  "name": "SorTrek",
+  "short_name": "SorTrek",
   "description": "AI-powered travel organizer",
   "start_url": "/",
   "display": "standalone",
