@@ -10,7 +10,7 @@
     }
   ],
   "hosting": {
-    "public": "dist/wayfarer/browser",
+    "public": "dist/sortrek/browser",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       { "source": "**", "destination": "/index.html" }

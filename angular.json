@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "wayfarer": {
+    "sortrek": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -69,10 +69,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "wayfarer:build:production"
+              "buildTarget": "sortrek:build:production"
             },
             "development": {
-              "buildTarget": "wayfarer:build:development"
+              "buildTarget": "sortrek:build:development"
             }
           },
           "defaultConfiguration": "development"

@@ -1,6 +1,6 @@
 {
-  "name": "Wayfarer",
-  "short_name": "Wayfarer",
+  "name": "Sortrek",
+  "short_name": "Sortrek",
   "description": "AI-powered travel organizer",
   "start_url": "/",
   "display": "standalone",

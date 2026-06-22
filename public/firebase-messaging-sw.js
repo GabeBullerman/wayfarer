@@ -14,7 +14,7 @@ self.addEventListener('message', event => {
 
     messaging.onBackgroundMessage(payload => {
       const { title, body, icon } = payload.notification ?? {};
-      self.registration.showNotification(title ?? 'Wayfarer', {
+      self.registration.showNotification(title ?? 'Sortrek', {
         body: body ?? '',
         icon: icon ?? '/Logo.png',
         badge: '/Logo.png',

@@ -145,7 +145,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 
   testNotification() {
     this.pushService.send(
-      'Wayfarer Test',
+      'Sortrek Test',
       'Push notifications are working correctly 🎉',
     );
   }

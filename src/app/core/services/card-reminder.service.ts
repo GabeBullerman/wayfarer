@@ -4,7 +4,7 @@ import { PushNotificationService } from './push-notification.service';
 
 @Injectable({ providedIn: 'root' })
 export class CardReminderService {
-  private readonly STORAGE_KEY = 'wayfarer_card_reminders_dismissed';
+  private readonly STORAGE_KEY = 'sortrek_card_reminders_dismissed';
 
   getDismissed(): Set<string> {
     try {

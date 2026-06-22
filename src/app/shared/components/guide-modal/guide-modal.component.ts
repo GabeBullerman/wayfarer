@@ -34,7 +34,7 @@ const PAGES: GuidePage[] = [
     icon: 'event_note',
     status: 'implemented',
     statusLabel: 'Fully Implemented',
-    description: 'Build a day-by-day itinerary for your trip. Wayfarer warns you when a day has no transport planned, and AI can suggest things to do.',
+    description: 'Build a day-by-day itinerary for your trip. Sortrek warns you when a day has no transport planned, and AI can suggest things to do.',
     bullets: [
       'Add activities, transport, food, and accommodation per day',
       'Colour-coded timeline view per day',
@@ -105,12 +105,12 @@ const PAGES: GuidePage[] = [
     icon: 'group',
     status: 'implemented',
     statusLabel: 'Fully Implemented',
-    description: 'Invite other Wayfarer users to collaborate on a trip by email. Collaborators can view and edit all tabs in real time.',
+    description: 'Invite other Sortrek users to collaborate on a trip by email. Collaborators can view and edit all tabs in real time.',
     bullets: [
-      'Invite any registered Wayfarer user by email from the People tab',
+      'Invite any registered Sortrek user by email from the People tab',
       'Shared trips appear in collaborators\' trip lists with a badge',
       'Trip owner can remove collaborators at any time',
-      'Separate from Travel Companions — those don\'t need Wayfarer accounts',
+      'Separate from Travel Companions — those don\'t need Sortrek accounts',
     ],
     gifPath: 'guide/collab.svg',
   },
@@ -147,7 +147,7 @@ const PAGES: GuidePage[] = [
     icon: 'offline_bolt',
     status: 'implemented',
     statusLabel: 'Fully Implemented (production only)',
-    description: 'Install Wayfarer to your home screen and access your trips without an internet connection — perfect for airports and international roaming.',
+    description: 'Install Sortrek to your home screen and access your trips without an internet connection — perfect for airports and international roaming.',
     bullets: [
       'Install prompt appears automatically in supported browsers',
       'Trip data, itinerary, and bookings available offline via IndexedDB',
