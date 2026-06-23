@@ -189,6 +189,14 @@
   padding: 80px;
 }
 
+// Spinner shown while a deferred tab's JS chunk loads.
+.tab-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px;
+}
+
 /* ── Mobile responsiveness ───────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .trip-hero {

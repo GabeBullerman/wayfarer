@@ -3,9 +3,11 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // ── Trip cover photos (public read, owner write) ───────────────────────
+    // ── Trip cover photos (signed-in read, owner write) ────────────────────
+    // Note: in-app <img> uses tokenized download URLs which work regardless;
+    // requiring auth here just blocks unauthenticated enumeration.
     match /coverPhotos/{userId}/{allPaths=**} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 

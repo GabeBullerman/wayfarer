@@ -55,16 +55,46 @@
     <!-- Tab content -->
     <div class="tab-body">
       @switch (selectedTab()) {
-        @case (0) { <app-overview [trip]="trip" [tripId]="id" /> }
-        @case (1) { <app-schedule [tripId]="id" [trip]="trip" /> }
-        @case (2) { <app-transport [trip]="trip" [tripId]="id" /> }
-        @case (3) { <app-photos [tripId]="id" /> }
-        @case (4) { <app-costs [tripId]="id" [trip]="trip" /> }
-        @case (5) { <app-bookings [tripId]="id" [trip]="trip" /> }
-        @case (6) { <app-people [tripId]="id" [isOwner]="isOwner(trip)" /> }
-        @case (7) { <app-packing [tripId]="id" [trip]="trip" /> }
-        @case (8) { <app-documents [tripId]="id" [trip]="trip" /> }
-        @case (9) { <app-ai-assistant [trip]="trip" /> }
+        @case (0) {
+          @defer (when true) { <app-overview [trip]="trip" [tripId]="id" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
+        @case (1) {
+          @defer (when true) { <app-schedule [tripId]="id" [trip]="trip" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
+        @case (2) {
+          @defer (when true) { <app-transport [trip]="trip" [tripId]="id" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
+        @case (3) {
+          @defer (when true) { <app-photos [tripId]="id" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
+        @case (4) {
+          @defer (when true) { <app-costs [tripId]="id" [trip]="trip" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
+        @case (5) {
+          @defer (when true) { <app-bookings [tripId]="id" [trip]="trip" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
+        @case (6) {
+          @defer (when true) { <app-people [tripId]="id" [isOwner]="isOwner(trip)" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
+        @case (7) {
+          @defer (when true) { <app-packing [tripId]="id" [trip]="trip" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
+        @case (8) {
+          @defer (when true) { <app-documents [tripId]="id" [trip]="trip" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
+        @case (9) {
+          @defer (when true) { <app-ai-assistant [trip]="trip" /> }
+          @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
+        }
       }
     </div>
 

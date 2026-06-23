@@ -24,7 +24,8 @@ Risk legend: 🟢 safe/low-risk · 🟡 needs judgement · 🔴 discuss first (d
       added (NOTE: utility created but not yet applied to shell — follow-up). ✅ partial
 - [ ] 🟡 **Sidenav**: confirm `over` mode + backdrop on mobile feels right; add a
       persistent top app-bar with hamburger if the logo header is hard to reach.
-- [ ] 🟡 **Currency converter & AI chat**: input/keyboard sizing on mobile.
+- [x] 🟡 **Currency converter & AI chat**: mobile input/sizing fixed (converter
+      width + stacked fields; AI chat input row + scroll height). ✅
 
 ## 2. In-app Guide gaps
 
@@ -48,7 +49,8 @@ Risk legend: 🟢 safe/low-risk · 🟡 needs judgement · 🔴 discuss first (d
       options…" line while Maps initializes (trip-form-dialog, copy/UI only). ✅
 - [ ] 🟡 **AI "Find Plans" → Schedule**: make "add to schedule" from a suggestion
       obvious and one-tap.
-- [ ] 🔴 **BUG — "Find Plans" returns date-invalid events**: suggestions include
+- [x] ✅ **BUG FIXED — "Find Plans" returns date-invalid events** (api/find-plans.js,
+      unit-tested, deployed 6b697ae): suggestions included
       events that aren't actually available on the selected day. Repro: Portugal trip,
       Aug 25 (day 1) returned items whose own descriptions said "on August 9th, 2026"
       and "from August 8–15, 2026" — impossible to attend. Fix in `api/find-plans.js`
@@ -102,17 +104,19 @@ Risk legend: 🟢 safe/low-risk · 🟡 needs judgement · 🔴 discuss first (d
 
 - [x] 🟢 Set Firestore `ignoreUndefinedProperties: true` globally in app.config.ts
       (kept the stripUndefined helpers as belt-and-suspenders). ✅
-- [ ] 🟡 Verify **Storage security rules** for `photos/` and `tripDocuments/` are hardened
-      like Firestore (member-scoped read, uploader-scoped write).
-- [ ] 🟡 **Bundle budget**: initial bundle 909 kB vs 500 kB budget — lazy-load heavy
-      routes (maps, AI) or raise the budget consciously.
+- [x] 🟡 **Storage security rules** verified — writes/deletes already UID-scoped;
+      tightened cover-photo read to signed-in. (Membership-scoped read isn't possible
+      in Storage rules; tokenized URLs bypass read rules anyway.) Needs `firebase
+      deploy --only storage`. ✅
+- [x] 🟡 **Bundle**: @defer all 10 trip-detail tabs — chunk 487.77 kB → 14.77 kB,
+      each tab now its own on-demand lazy chunk (Overview/maps, AI, etc.). ✅
 - [x] 🟢 **A11y pass**: ~26 aria-labels on icon buttons, ~5 aria-hidden on decorative
       icons, improved gallery img alt across high-traffic templates. ✅
       (dialog focus-trap audit still TODO — Material handles most by default)
 
 ## 6. Pending manual steps (Gabe — outside the code)
 
-- [ ] Deploy Firestore rules so photo orphan-cleanup delete works:
+- [x] Deploy Firestore rules so photo orphan-cleanup delete works: (DONE — Gabe deployed)
       `firebase deploy --only firestore:rules`
 - [ ] One-time: remove pre-existing orphan photo docs in Firebase console.
 - [ ] Vercel project rename + Firebase display-name / Auth public-facing name = SorTrek.

@@ -39,6 +39,8 @@ export interface TabDef {
   imports: [
     AsyncPipe, DatePipe, MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatTooltipModule,
+    // Tab components are referenced ONLY inside @defer blocks in the template,
+    // so Angular code-splits each into its own lazy chunk automatically.
     ScheduleComponent, BookingsComponent, PhotosComponent, CostsComponent,
     OverviewComponent, PeopleComponent, PackingComponent, AiAssistantComponent,
     TransportComponent, DocumentsComponent,

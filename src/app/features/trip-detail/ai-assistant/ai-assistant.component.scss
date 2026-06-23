@@ -176,3 +176,32 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 600px) {
+  .ai-container {
+    padding: 16px 12px;
+    gap: 16px;
+  }
+
+  .messages {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .msg-bubble {
+    max-width: 85%;
+  }
+
+  .input-row {
+    width: 100%;
+
+    .input-field {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .send-btn {
+      flex-shrink: 0;
+    }
+  }
+}

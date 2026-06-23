@@ -60,3 +60,30 @@
   .result-rate { font-size: 0.78rem; color: var(--st-primary-soft); }
   .result-note { font-size: 0.68rem; color: #9e9e9e; margin-top: 2px; }
 }
+
+@media (max-width: 600px) {
+  .converter {
+    width: min(92vw, 360px);
+    padding: 14px 16px 12px;
+  }
+
+  .currency-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .currency-field {
+    width: 100%;
+    flex: none;
+  }
+
+  .swap-btn {
+    align-self: center;
+    margin-bottom: 0;
+  }
+
+  .convert-btn {
+    min-height: 44px;
+  }
+}
