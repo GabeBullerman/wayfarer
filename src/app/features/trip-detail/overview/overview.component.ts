@@ -168,6 +168,13 @@ export class OverviewComponent implements OnInit {
     gmap.fitBounds(bounds, 48);
   }
 
+  /** Fired when the Google map instance finishes initializing. With lazy-loaded
+   *  (@defer) tabs the fit-effect can run before `.googleMap` exists and then
+   *  never retries; this guarantees the initial fit-to-pins after the map is ready. */
+  onMapReady(): void {
+    this.fitMapToPins();
+  }
+
   ngOnInit() {
     this.items$ = this.itineraryService.getItems(this.tripId).pipe(
       catchError(() => of([])),

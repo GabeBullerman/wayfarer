@@ -17,6 +17,13 @@
           <span matListItemTitle>{{ item.label }}</span>
         </a>
       }
+      <!-- Theme toggle for mobile (toolbar version is hidden on small screens). -->
+      @if (isMobile$ | async) {
+        <a mat-list-item (click)="theme.toggle()">
+          <mat-icon matListItemIcon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+          <span matListItemTitle>{{ theme.isDark() ? 'Light mode' : 'Dark mode' }}</span>
+        </a>
+      }
     </mat-nav-list>
 
     <div class="sidenav-footer">
@@ -35,8 +42,11 @@
         <mat-icon>menu</mat-icon>
       </button>
       <span class="toolbar-spacer"></span>
-      <!-- Animated dark / light theme toggle (Within) -->
-      <app-theme-toggle />
+      <!-- Animated theme toggle (Within) — desktop toolbar only; on mobile it
+           moves into the sidenav menu so the toolbar isn't overcrowded. -->
+      @if (!(isMobile$ | async)) {
+        <app-theme-toggle />
+      }
 
       <!-- Guide -->
       <button mat-icon-button (click)="openGuide()" matTooltip="Feature guide" aria-label="Feature guide">

@@ -176,7 +176,8 @@
         </mat-card-header>
         <mat-card-content>
           @if (mapApiLoaded$ | async) {
-            <google-map height="400px" width="100%" [options]="mapOptions" [center]="mapCenter()">
+            <google-map height="400px" width="100%" [options]="mapOptions" [center]="mapCenter()"
+                        (mapInitialized)="onMapReady()">
               @for (pin of getVisiblePins(items); track pin.item.id) {
                 <map-marker
                   #marker="mapMarker"
