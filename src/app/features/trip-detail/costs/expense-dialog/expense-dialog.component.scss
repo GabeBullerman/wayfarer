@@ -37,3 +37,19 @@
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+
+.conversion-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 10px 2px;
+  font-size: 0.85rem;
+  color: var(--st-text-muted, rgba(0, 0, 0, 0.6));
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--st-primary);
+  }
+}

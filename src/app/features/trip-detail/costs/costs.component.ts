@@ -39,7 +39,7 @@ interface CostBreakdown {
   icon: string;
   amount: number;
   color: string;
-  items: { name: string; cost: number; currency: string }[];
+  items: { name: string; cost: number; currency: string; nativeAmount?: number; nativeCurrency?: string }[];
 }
 
 interface PersonShare {
@@ -363,7 +363,7 @@ export class CostsComponent implements OnInit {
           ...bookings.filter(b => (b.type === 'hotel' || b.type === 'airbnb') && b.cost)
             .map(b => ({ name: b.title, cost: b.cost!, currency: b.currency ?? this.trip.currency })),
           ...expenses.filter(e => e.category === 'accommodation')
-            .map(e => ({ name: e.title, cost: e.amount, currency: e.currency })),
+            .map(e => this.expenseItem(e)),
         ],
       },
       {
@@ -374,7 +374,7 @@ export class CostsComponent implements OnInit {
           ...items.filter(i => i.category === 'transport' && i.cost)
             .map(i => ({ name: i.title, cost: i.cost!, currency: i.currency ?? this.trip.currency })),
           ...expenses.filter(e => e.category === 'transport')
-            .map(e => ({ name: e.title, cost: e.amount, currency: e.currency })),
+            .map(e => this.expenseItem(e)),
         ],
       },
       {
@@ -383,7 +383,7 @@ export class CostsComponent implements OnInit {
           ...items.filter(i => i.category === 'activity' && i.cost)
             .map(i => ({ name: i.title, cost: i.cost!, currency: i.currency ?? this.trip.currency })),
           ...expenses.filter(e => e.category === 'activity')
-            .map(e => ({ name: e.title, cost: e.amount, currency: e.currency })),
+            .map(e => this.expenseItem(e)),
         ],
       },
       {
@@ -392,13 +392,13 @@ export class CostsComponent implements OnInit {
           ...items.filter(i => i.category === 'food' && i.cost)
             .map(i => ({ name: i.title, cost: i.cost!, currency: i.currency ?? this.trip.currency })),
           ...expenses.filter(e => e.category === 'food')
-            .map(e => ({ name: e.title, cost: e.amount, currency: e.currency })),
+            .map(e => this.expenseItem(e)),
         ],
       },
       {
         category: 'shopping', label: 'Shopping', icon: 'shopping_bag', color: '#ad1457', amount: 0,
         items: expenses.filter(e => e.category === 'shopping')
-          .map(e => ({ name: e.title, cost: e.amount, currency: e.currency })),
+          .map(e => this.expenseItem(e)),
       },
       {
         category: 'other', label: 'Other', icon: 'more_horiz', color: '#455a64', amount: 0,
@@ -408,7 +408,7 @@ export class CostsComponent implements OnInit {
           ...items.filter(i => i.category === 'other' && i.cost)
             .map(i => ({ name: i.title, cost: i.cost!, currency: i.currency ?? this.trip.currency })),
           ...expenses.filter(e => e.category === 'other')
-            .map(e => ({ name: e.title, cost: e.amount, currency: e.currency })),
+            .map(e => this.expenseItem(e)),
         ],
       },
     ];
@@ -457,12 +457,13 @@ export class CostsComponent implements OnInit {
     }
 
     for (const expense of expenses) {
-      if (!expense.amount) continue;
+      const tripAmount = expense.amountInTripCurrency ?? expense.amount;
+      if (!tripAmount) continue;
       const applicable = expense.participantIds?.length
         ? expense.participantIds.filter(id => shares.has(id))
         : participants.map(p => p.id!);
       if (applicable.length === 0) continue;
-      const perPerson = expense.amount / applicable.length;
+      const perPerson = tripAmount / applicable.length;
       for (const id of applicable) {
         const s = shares.get(id);
         if (s) {
@@ -539,5 +540,19 @@ export class CostsComponent implements OnInit {
 
   pct(amount: number, total: number): number {
     return total > 0 ? Math.round((amount / total) * 100) : 0;
+  }
+
+  /** Build a breakdown item from an expense, using its trip-currency converted
+   *  amount for the figure and keeping the native paid amount as a side note. */
+  private expenseItem(e: Expense): CostBreakdown['items'][number] {
+    const tripAmount = e.amountInTripCurrency ?? e.amount;
+    const isForeign = e.currency !== this.trip.currency;
+    return {
+      name: e.title,
+      cost: tripAmount,
+      currency: this.trip.currency,
+      nativeAmount: isForeign ? e.amount : undefined,
+      nativeCurrency: isForeign ? e.currency : undefined,
+    };
   }
 }

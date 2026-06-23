@@ -409,7 +409,10 @@
                     }
                   </div>
                   <div class="expense-amount">
-                    {{ expense.amount | currency: expense.currency }}
+                    {{ (expense.amountInTripCurrency ?? expense.amount) | currency: trip.currency }}
+                    @if (expense.currency !== trip.currency) {
+                      <span class="expense-native">({{ expense.amount | currency: expense.currency }})</span>
+                    }
                   </div>
                   <div class="expense-actions">
                     <button mat-icon-button (click)="openEditExpense(expense)" matTooltip="Edit">
@@ -445,6 +448,9 @@
                       <span class="item-name">{{ item.name }}</span>
                       <div class="item-cost-group">
                         <span class="item-cost">{{ item.cost | currency: item.currency }}</span>
+                        @if (item.nativeCurrency) {
+                          <span class="item-cost-native">({{ item.nativeAmount | currency: item.nativeCurrency }})</span>
+                        }
                         @if (showConverted() && rateResult() && homeCurrency() !== trip.currency) {
                           <span class="item-cost-converted">
                             ≈ {{ convertWithFee(item.cost) | currency: homeCurrency()! }}

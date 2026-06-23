@@ -170,6 +170,14 @@
   font-weight: 700;
   color: var(--st-primary);
   white-space: nowrap;
+  text-align: right;
+
+  .expense-native {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--st-on-surface-muted);
+  }
 }
 
 .expense-actions {
@@ -502,6 +510,11 @@
 .item-cost-converted {
   font-size: 0.75rem;
   color: var(--st-on-surface-muted);
+}
+
+.item-cost-native {
+  font-size: 0.72rem;
+  color: var(--st-on-surface-faint);
 }
 
 .disclaimer {

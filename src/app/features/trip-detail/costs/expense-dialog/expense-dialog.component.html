@@ -24,6 +24,18 @@
       </mat-form-field>
     </div>
 
+    @if (form.get('currency')!.value !== data.tripCurrency) {
+      <div class="conversion-preview">
+        @if (loadingPreview()) {
+          <mat-spinner diameter="14"></mat-spinner>
+          <span>Converting…</span>
+        } @else if (convertedPreview() !== null) {
+          <mat-icon>currency_exchange</mat-icon>
+          <span>≈ {{ data.tripCurrency }} {{ convertedPreview() | number:'1.2-2' }}</span>
+        }
+      </div>
+    }
+
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Category</mat-label>
       <mat-select formControlName="category">

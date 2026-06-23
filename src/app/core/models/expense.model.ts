@@ -8,6 +8,10 @@ export interface Expense {
   title: string;
   amount: number;
   currency: string;
+  /** The native `amount` converted to the trip's home currency. Equals `amount` when `currency` is already the trip currency. */
+  amountInTripCurrency?: number;
+  /** FX rate used for the conversion (1 when same currency). Undefined if conversion failed. */
+  conversionRate?: number;
   category: ExpenseCategory;
   paidById?: string | null;
   participantIds?: string[];
