@@ -6,7 +6,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { Timestamp } from '@angular/fire/firestore';
 import { from } from 'rxjs';
 import { Trip } from '../../../../core/models/trip.model';
@@ -41,7 +41,7 @@ function parseDate(iso: string | undefined): Timestamp | undefined {
   imports: [
     MatDialogModule, MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatCheckboxModule, MatChipsModule,
-    CurrencyPipe, DatePipe,
+    CurrencyPipe,
   ],
   templateUrl: './email-scan-dialog.component.html',
   styleUrl: './email-scan-dialog.component.scss',

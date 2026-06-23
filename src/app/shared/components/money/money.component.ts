@@ -1,11 +1,10 @@
 import { Component, Input, inject, computed } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { UserCurrencyService } from '../../../core/services/user-currency.service';
 
 @Component({
   selector: 'app-money',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [],
   template: `
     <span class="money-primary">{{ formatted() }}</span>
     @if (converted() !== null) {

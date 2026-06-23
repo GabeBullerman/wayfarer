@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
-import { AsyncPipe, TitleCasePipe, DecimalPipe } from '@angular/common';
+import { TitleCasePipe, DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
@@ -76,7 +76,7 @@ interface TransportGapOption {
   selector: 'app-schedule',
   standalone: true,
   imports: [
-    AsyncPipe, TitleCasePipe, DecimalPipe, MatButtonModule, MatIconModule,
+    TitleCasePipe, DecimalPipe, MatButtonModule, MatIconModule,
     MatChipsModule, MatMenuModule, MatTooltipModule, MatProgressSpinnerModule,
   ],
   templateUrl: './schedule.component.html',

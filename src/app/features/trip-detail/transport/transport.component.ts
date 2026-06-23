@@ -1,6 +1,5 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -30,7 +29,7 @@ export interface SearchSite {
   selector: 'app-transport',
   standalone: true,
   imports: [
-    FormsModule, DatePipe, TitleCasePipe,
+    FormsModule,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatProgressSpinnerModule, MatChipsModule, MatTooltipModule, MatButtonToggleModule,
   ],
