@@ -53,3 +53,12 @@
     color: var(--st-primary);
   }
 }
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  // 440px min-width forces horizontal scroll on a ~340px screen
+  .expense-form { min-width: 0; }
+
+  // amount/currency and points/program pairs stack instead of cramming
+  .row-two { grid-template-columns: 1fr; gap: 4px; }
+}

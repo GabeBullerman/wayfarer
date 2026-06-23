@@ -11,3 +11,12 @@ mat-dialog-content {
   max-height: 75vh;
   padding-top: 8px !important;
 }
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  // 360px min-width forces horizontal scroll on a ~340px screen
+  mat-dialog-content { min-width: 0; }
+
+  // Side-by-side rows (time fields, cost + type) stack on a narrow screen
+  .two-col { grid-template-columns: 1fr; gap: 4px; }
+}

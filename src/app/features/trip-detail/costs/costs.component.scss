@@ -811,4 +811,43 @@
     width: 44px;
     height: 44px;
   }
+
+  // Quick converter controls — let amount/currency fields use full width instead of capped widths
+  .converter-controls {
+    gap: 8px;
+
+    .amount-field { flex: 1 1 100%; max-width: none; min-width: 0; }
+    .ccy-field    { flex: 1 1 calc(50% - 4px); width: auto; }
+    .go-btn       { flex: 1 1 100%; justify-content: center; }
+  }
+
+  // FX converter result amount can overflow at 2rem — shrink it
+  .converter-result .cr-amount { font-size: 1.6rem; }
+
+  // Home-currency conversion banner: stack info + button so the button doesn't squeeze
+  .conversion-card .conversion-row {
+    flex-direction: column;
+    align-items: stretch;
+
+    button { width: 100%; }
+  }
+
+  // Per-person split rows: stack the owes/outlay badge under the details
+  .person-row {
+    flex-wrap: wrap;
+
+    .owes-badge,
+    .organizer-outlay {
+      margin-left: 48px; // align under details past the avatar
+    }
+  }
+
+  // Category breakdown item: allow long names to wrap instead of forcing overflow
+  .breakdown-item {
+    gap: 8px;
+    .item-name { white-space: normal; }
+  }
+
+  // Bank transaction rows: keep amount + add button tidy on narrow screens
+  .tx-row { flex-wrap: wrap; }
 }

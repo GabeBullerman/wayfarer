@@ -584,3 +584,36 @@
   mat-icon { font-size: 14px; width: 14px; height: 14px; flex-shrink: 0; }
   strong { color: var(--st-on-surface-muted); }
 }
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  // Tighter section padding to reclaim horizontal space
+  .transport-section { padding: 16px 14px; }
+
+  // Stack the origin / destination / date fields and the search button
+  .search-form {
+    flex-direction: column;
+    align-items: stretch;
+
+    .form-field {
+      width: 100%;
+      min-width: 0;
+
+      &.form-field--date { max-width: none; }
+    }
+
+    // The inline "→" arrow between origin/destination makes no sense stacked
+    .arrow-icon {
+      align-self: center;
+      transform: rotate(90deg);
+    }
+
+    .search-btn { width: 100%; justify-content: center; }
+  }
+
+  // Single-column site search grid (cards have minmax(180px) which crams two-up)
+  .site-grid { grid-template-columns: 1fr; }
+
+  // Single-column local transport grid (minmax(240px) overflows ~340px)
+  .local-grid { grid-template-columns: 1fr; }
+}

@@ -243,3 +243,40 @@ mat-dialog-content {
     }
   }
 }
+
+/* ── Mobile responsiveness ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  // 360px min-width forces horizontal scroll on a ~340px screen
+  mat-dialog-content { min-width: 0; }
+
+  // All multi-column field rows collapse to a single column
+  .two-col,
+  .three-col,
+  .four-col,
+  .datetime-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  // Booking type picker cards stack one per row
+  .type-picker { grid-template-columns: 1fr; }
+
+  // Per-passenger ticket rows: fields stack, remove button spans full width below
+  .ticket-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+
+    .ticket-remove { justify-self: end; }
+  }
+
+  // Layover / connection rows: fields stack, remove button spans full width below
+  .connection-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+
+    .ticket-remove { justify-self: end; }
+  }
+
+  // Flight status leg layout: let the airport blocks wrap rather than overflow
+  .status-legs { flex-wrap: wrap; }
+}
