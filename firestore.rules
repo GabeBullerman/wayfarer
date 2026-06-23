@@ -63,7 +63,7 @@ service cloud.firestore {
         // (ownerIds / userId) — this prevents a collaborator self-promoting.
         ( isMemberOfTrip(resource.data) && (
             isOwnerOfTrip(resource.data) ||
-            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['ownerIds', 'userId', 'scheduleEditorIds'])
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['ownerIds', 'userId', 'scheduleEditorIds', 'shareToken', 'shareEnabled'])
           )
         ) ||
         // Invite-token acceptance: token bearer may add only themselves.

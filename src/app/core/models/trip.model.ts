@@ -23,4 +23,9 @@ export interface Trip {
    *  directly. Everyone else can only propose items for an owner to approve. */
   scheduleEditorIds?: string[];
   inviteToken?: string;
+  /** Read-only public sharing: a random token + on/off flag. When enabled,
+   *  anyone with /s/<shareToken> can view a sanitized itinerary (no costs,
+   *  confirmations, passengers, or unapproved items). Served by api/public-itinerary. */
+  shareToken?: string;
+  shareEnabled?: boolean;
 }

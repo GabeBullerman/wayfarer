@@ -28,6 +28,7 @@
     "@angular/service-worker": "^21.2.15",
     "browser-image-compression": "^2.0.2",
     "firebase": "^11.10.0",
+    "firebase-admin": "^14.0.0",
     "groq-sdk": "^0.15.0",
     "plaid": "^42.2.0",
     "rxjs": "~7.8.0",

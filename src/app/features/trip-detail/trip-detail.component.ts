@@ -6,6 +6,8 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -38,7 +40,7 @@ export interface TabDef {
   standalone: true,
   imports: [
     AsyncPipe, DatePipe, MatButtonModule, MatIconModule,
-    MatProgressSpinnerModule, MatTooltipModule,
+    MatProgressSpinnerModule, MatTooltipModule, MatMenuModule, MatSlideToggleModule,
     // Tab components are referenced ONLY inside @defer blocks in the template,
     // so Angular code-splits each into its own lazy chunk automatically.
     ScheduleComponent, BookingsComponent, PhotosComponent, CostsComponent,
@@ -147,6 +149,38 @@ export class TripDetailComponent implements OnInit {
 
   back() {
     this.router.navigate(['/trips']);
+  }
+
+  readonly shareBusy = signal(false);
+
+  shareUrl(trip: Trip): string {
+    return trip.shareToken ? `${location.origin}/s/${trip.shareToken}` : '';
+  }
+
+  togglePublicShare(trip: Trip, enabled: boolean) {
+    this.shareBusy.set(true);
+    const action = enabled
+      ? this.tripService.enablePublicShare(trip.id!, trip.shareToken)
+      : this.tripService.disablePublicShare(trip.id!);
+    from(action).subscribe({
+      next: () => {
+        this.shareBusy.set(false);
+        this.snackBar.open(enabled ? 'Public link enabled' : 'Public link disabled', undefined, { duration: 2500 });
+      },
+      error: () => {
+        this.shareBusy.set(false);
+        this.snackBar.open('Could not update sharing', undefined, { duration: 3000 });
+      },
+    });
+  }
+
+  copyShareLink(trip: Trip) {
+    const url = this.shareUrl(trip);
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(
+      () => this.snackBar.open('Link copied', undefined, { duration: 2000 }),
+      () => this.snackBar.open('Could not copy link', undefined, { duration: 2500 }),
+    );
   }
 
   tripDuration(trip: Trip): number {

@@ -27,6 +27,36 @@
           </div>
           @if (isOwner(trip)) {
             <div class="hero-actions">
+              <button mat-icon-button matTooltip="Share trip" aria-label="Share trip"
+                      [matMenuTriggerFor]="shareMenu">
+                <mat-icon>ios_share</mat-icon>
+              </button>
+              <mat-menu #shareMenu="matMenu" class="share-menu">
+                <div class="share-panel" (click)="$event.stopPropagation()">
+                  <div class="share-toggle-row">
+                    <mat-slide-toggle
+                      [checked]="!!trip.shareEnabled"
+                      [disabled]="shareBusy()"
+                      (change)="togglePublicShare(trip, $event.checked)">
+                      Public link
+                    </mat-slide-toggle>
+                  </div>
+                  @if (trip.shareEnabled && trip.shareToken) {
+                    <div class="share-url-row">
+                      <input class="share-url" type="text" readonly [value]="shareUrl(trip)"
+                             (click)="$any($event.target).select()" aria-label="Public itinerary link" />
+                      <button mat-icon-button matTooltip="Copy link" aria-label="Copy link"
+                              (click)="copyShareLink(trip)">
+                        <mat-icon>content_copy</mat-icon>
+                      </button>
+                    </div>
+                  }
+                  <p class="share-note">
+                    Anyone with this link can view a read-only itinerary
+                    (no costs, confirmations, or personal details).
+                  </p>
+                </div>
+              </mat-menu>
               <button mat-icon-button matTooltip="Edit trip" aria-label="Edit trip" (click)="editTrip(trip)">
                 <mat-icon>edit</mat-icon>
               </button>

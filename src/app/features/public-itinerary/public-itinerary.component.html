@@ -1,0 +1,126 @@
+@switch (state()) {
+  @case ('loading') {
+    <div class="pub-center">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+  }
+
+  @case ('error') {
+    <div class="pub-center">
+      <div class="pub-card">
+        <mat-icon class="pub-card-icon">link_off</mat-icon>
+        <h2>This itinerary link isn't available</h2>
+        <p>The link may have been disabled or no longer exists.</p>
+        <a class="pub-home-link" href="/">Go to SorTrek</a>
+      </div>
+    </div>
+  }
+
+  @case ('loaded') {
+    @if (trip(); as t) {
+      <div class="pub-page">
+
+        <header class="pub-hero" [class.has-cover]="!!t.coverPhotoUrl">
+          @if (t.coverPhotoUrl) {
+            <img class="pub-hero-img" [src]="t.coverPhotoUrl" alt=""
+                 (error)="$any($event.target).style.display='none'" />
+          }
+          <div class="pub-hero-overlay">
+            <h1>{{ t.name }}</h1>
+            <p class="pub-destination">
+              <mat-icon aria-hidden="true">location_on</mat-icon>
+              {{ t.destination }}
+            </p>
+            <p class="pub-dates">
+              <mat-icon aria-hidden="true">calendar_today</mat-icon>
+              {{ t.startDate | date:'MMM d' }} – {{ t.endDate | date:'MMM d, y' }}
+            </p>
+          </div>
+        </header>
+
+        <main class="pub-content">
+
+          <section class="pub-section">
+            <h2 class="pub-section-title">Itinerary</h2>
+            @if (days().length) {
+              @for (day of days(); track day.date) {
+                <div class="pub-day">
+                  <div class="pub-day-head">
+                    <span class="pub-weekday">{{ day.date | date:'EEEE' }}</span>
+                    <span class="pub-day-date">{{ day.date | date:'MMM d, y' }}</span>
+                  </div>
+                  <div class="pub-items">
+                    @for (item of day.items; track $index) {
+                      <div class="pub-item">
+                        <div class="pub-item-time">
+                          @if (item.startTime) {
+                            <span>{{ item.startTime }}</span>
+                            @if (item.endTime) { <span class="pub-time-end">{{ item.endTime }}</span> }
+                          } @else {
+                            <span class="pub-time-allday">All day</span>
+                          }
+                        </div>
+                        <div class="pub-item-icon" [class]="categoryClass(item.category)">
+                          <mat-icon>{{ categoryIcon(item.category) }}</mat-icon>
+                        </div>
+                        <div class="pub-item-body">
+                          <p class="pub-item-title">{{ item.title }}</p>
+                          @if (item.location) {
+                            <p class="pub-item-loc">
+                              <mat-icon aria-hidden="true">place</mat-icon>{{ item.location }}
+                            </p>
+                          }
+                          @if (item.description) {
+                            <p class="pub-item-desc">{{ item.description }}</p>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            } @else {
+              <p class="pub-empty">No itinerary items yet.</p>
+            }
+          </section>
+
+          @if (hasBookings()) {
+            <section class="pub-section">
+              <h2 class="pub-section-title">Bookings</h2>
+              <div class="pub-bookings">
+                @for (b of bookings(); track $index) {
+                  <div class="pub-booking">
+                    <div class="pub-booking-icon">
+                      <mat-icon>{{ bookingIcon(b.type) }}</mat-icon>
+                    </div>
+                    <div class="pub-booking-body">
+                      <p class="pub-booking-title">{{ b.title }}</p>
+                      @if (b.departureAirport && b.arrivalAirport) {
+                        <p class="pub-booking-route">
+                          {{ b.departureAirport }} → {{ b.arrivalAirport }}
+                          @if (b.flightNumber) { <span class="pub-flight-no">· {{ b.flightNumber }}</span> }
+                        </p>
+                      }
+                      @if (b.checkIn) {
+                        <p class="pub-booking-dates">
+                          {{ b.checkIn | date:'MMM d, y' }}
+                          @if (b.checkOut) { – {{ b.checkOut | date:'MMM d, y' }} }
+                        </p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </section>
+          }
+
+        </main>
+
+        <footer class="pub-footer">
+          <a href="/">Shared with SorTrek</a>
+        </footer>
+
+      </div>
+    }
+  }
+}

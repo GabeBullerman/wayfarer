@@ -41,5 +41,11 @@ export const routes: Routes = [
     title: 'Invite',
     loadComponent: () => import('./features/invite/invite.component').then(m => m.InviteComponent),
   },
+  {
+    path: 's/:token',
+    title: 'Shared itinerary',
+    loadComponent: () =>
+      import('./features/public-itinerary/public-itinerary.component').then(m => m.PublicItineraryComponent),
+  },
   { path: '**', redirectTo: 'trips' },
 ];

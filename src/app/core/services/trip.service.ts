@@ -210,6 +210,30 @@ export class TripService {
     return `${tripId}.${random}`;
   }
 
+  /** Turn on the read-only public link. Generates a URL-safe token the first
+   *  time (reused on re-enable), flips shareEnabled on, and returns the token. */
+  async enablePublicShare(tripId: string, existingToken?: string): Promise<string> {
+    const token = existingToken || crypto.randomUUID().replace(/-/g, '');
+    await this.run(() =>
+      updateDoc(doc(this.firestore, 'trips', tripId), {
+        shareToken: token,
+        shareEnabled: true,
+        updatedAt: serverTimestamp(),
+      })
+    );
+    return token;
+  }
+
+  /** Turn off the public link. Keeps shareToken so re-enabling reuses the link. */
+  async disablePublicShare(tripId: string): Promise<void> {
+    await this.run(() =>
+      updateDoc(doc(this.firestore, 'trips', tripId), {
+        shareEnabled: false,
+        updatedAt: serverTimestamp(),
+      })
+    );
+  }
+
   /** Remove yourself from a trip's collaborator lists (for non-owners). */
   async leaveTrip(tripId: string): Promise<void> {
     const uid = this.auth.currentUser?.uid;

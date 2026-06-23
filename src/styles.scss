@@ -134,6 +134,40 @@ html.dark .auth-logo--dark { display: block; }
   background: linear-gradient(to bottom, transparent 40%, var(--st-scrim) 100%);
 }
 
+/* Public-share menu panel (rendered in an overlay, so styled globally) */
+.share-menu .share-panel {
+  padding: 12px 14px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.share-menu .share-toggle-row {
+  font-weight: 600;
+  color: var(--st-on-surface);
+}
+.share-menu .share-url-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.share-menu .share-url {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  border: 1px solid var(--st-border);
+  border-radius: 6px;
+  background: var(--st-bg);
+  color: var(--st-on-surface);
+}
+.share-menu .share-note {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--st-on-surface-muted);
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
