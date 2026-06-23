@@ -1,0 +1,56 @@
+# SorTrek — Changelog
+
+## 2026-06 — Rebrand, dark mode, and feature wave
+
+### Branding
+- Rebrand Wayfarer → **SorTrek** across the app (title, PWA manifest, copy,
+  Angular project + build paths, package name).
+- New logo set (clear-on-circle / white / black), theme-aware login & register
+  logos, theme-aware favicon (light/dark), per-page browser tab titles
+  (`SorTrek | <Page>`).
+
+### Dark mode & theming
+- CSS design-token system (`src/styles/_tokens.scss`) — light + dark sets.
+- Material dark theme + `ThemeService` (persists choice, follows OS by default).
+- Animated "Within" theme toggle (desktop toolbar; sidenav menu on mobile).
+- ~190 hardcoded colors migrated to tokens + dark-mode contrast passes.
+
+### Features
+- **Timezone-aware flight times** — labels each flight time with its airport
+  zone (e.g. MST/CEST) when a flight crosses zones (`TimezoneService` + a
+  ~140-airport dataset). Shown in Bookings, Schedule, Overview.
+- **Calendar export (.ics)** — "Add to Calendar" on Overview.
+- **Search/filter** on Bookings, Costs, Documents.
+- **Countdown badge** on upcoming trip cards; trips sorted soonest-first.
+- **Guide** — added Overview/Map, Photos, Packing, Profile pages.
+- **Packing templates** — one-tap starter lists (Beach/Ski/City/Camping/Essentials).
+- **Status-colored booking borders** (confirmed/pending/cancelled/suggestion).
+- **Schedule propose → approve** — collaborators propose items; owners approve/
+  reject; owners grant per-collaborator "can edit schedule" in the People tab.
+- **Today card** on Overview when currently on the trip.
+- **Multi-currency expenses** — foreign amounts convert to the trip's home
+  currency for totals; native amount still shown.
+- **Booking file attachments** — boarding passes / confirmations (PDF/image).
+- **Read-only public itinerary link** (`/s/<token>`) — sanitized, served by an
+  Admin-SDK API (no public client reads).
+- **Flight check-in reminders** — daily Vercel cron sends FCM push to trip
+  members (works with the app closed).
+
+### Fixes & quality
+- Find Plans now only suggests events available on the selected day
+  (date-targeted search + structured dates + server-side date filter).
+- Photo reliability: purge orphaned photo docs, fix broken-image flicker,
+  correct the visible count.
+- Bundle: `@defer` all 10 trip-detail tabs (chunk 488 kB → 15 kB; per-tab
+  on-demand loading).
+- Firestore `ignoreUndefinedProperties` (prevents undefined-field save hangs).
+- Storage rule: cover-photo read now requires sign-in.
+- Mobile: responsive pass across the app; theme toggle in sidenav; guide
+  illustrations fit (aspect-ratio); "Bookings at a Glance" reflow; map
+  re-fits to pins under lazy-loaded tabs.
+- Accessibility: aria-labels / alt text across high-traffic screens.
+
+### Deploy/setup notes
+- Admin-backed features (public link, push cron) need `FIREBASE_SERVICE_ACCOUNT`
+  and `CRON_SECRET` in Vercel env.
+- Security rules: `firebase deploy --only firestore:rules,storage`.
