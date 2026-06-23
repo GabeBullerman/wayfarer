@@ -5,6 +5,7 @@
     <div class="section-heading">
       <mat-icon class="section-icon">manage_accounts</mat-icon>
       <h2>App Members</h2>
+      <span class="role-tag role-tag--account">Has account</span>
     </div>
     <p class="section-desc">
       Registered SorTrek users who can <strong>see &amp; edit this trip</strong> in real time (a SorTrek account is required).
@@ -153,6 +154,7 @@
     <div class="section-heading">
       <mat-icon class="section-icon">group</mat-icon>
       <h2>Travel Companions</h2>
+      <span class="role-tag role-tag--noaccount">No account</span>
     </div>
     @if (isOwner && !showAddForm()) {
       <button mat-flat-button color="primary" (click)="openAdd()">
@@ -162,7 +164,7 @@
   </div>
 
   <p class="section-desc companions-desc">
-    Everyone on the trip — <strong>for splitting costs &amp; assigning bookings</strong>. No SorTrek account needed; add an email later only if you want to invite them in.
+    Tracked people (no account) — <strong>for splitting costs &amp; assigning bookings</strong>. Add an email later only if you want to invite them as an App Member.
   </p>
 
   @if (showAddForm()) {

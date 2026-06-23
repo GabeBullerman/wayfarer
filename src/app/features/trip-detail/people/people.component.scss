@@ -30,6 +30,19 @@
   height: 22px;
 }
 
+/* At-a-glance "accounts vs no-account" distinction next to each section heading */
+.role-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+.role-tag--account   { background: var(--st-success-bg); color: var(--st-success-fg); }
+.role-tag--noaccount { background: var(--st-surface-2); color: var(--st-on-surface-muted); border: 1px solid var(--st-border); }
+
 .section-desc {
   margin: 0 0 14px;
   font-size: 0.85rem;
