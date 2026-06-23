@@ -81,5 +81,9 @@ export interface Booking {
   /** Uploaded files (boarding passes, hotel confirmations, etc.). */
   attachments?: BookingAttachment[];
 
+  /** Set true by the flight-reminder cron once a check-in push has been sent,
+   *  so the daily job doesn't re-notify for the same flight. */
+  checkInReminderSent?: boolean;
+
   createdAt: Timestamp;
 }

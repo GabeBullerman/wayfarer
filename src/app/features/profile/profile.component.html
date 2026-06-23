@@ -64,7 +64,7 @@
         } @else if (notifPerm() === 'granted') {
           <div class="notif-granted">
             <mat-icon class="check-icon">check_circle</mat-icon>
-            <span>Notifications enabled — you'll receive departure reminders and bank alerts.</span>
+            <span>Notifications enabled — you'll get flight check-in and departure reminders.</span>
           </div>
           <button mat-stroked-button class="test-btn" (click)="testNotification()">
             <mat-icon>notification_add</mat-icon> Send Test Notification
@@ -76,7 +76,7 @@
           </p>
         } @else {
           <p class="notif-desc">
-            Enable push notifications to get reminders before your trips, bank card alerts, and day-of weather updates.
+            Enable push notifications to get flight check-in and departure reminders — even when the app is closed.
           </p>
           <button mat-flat-button color="primary" (click)="enableNotifications()">
             <mat-icon>notifications_active</mat-icon> Enable Notifications
