@@ -41,8 +41,14 @@ export class BookingService {
   }
 
   updateBooking(id: string, changes: Partial<Booking>) {
+    // If the departure/check-in time changed, re-arm the check-in reminder so
+    // the cron sends a fresh one for the new time.
+    const next: Partial<Booking> = { ...changes };
+    if (Object.prototype.hasOwnProperty.call(changes, 'checkIn')) {
+      next.checkInReminderSent = false;
+    }
     return this.run(() =>
-      updateDoc(doc(this.firestore, 'bookings', id), stripUndefined(changes))
+      updateDoc(doc(this.firestore, 'bookings', id), stripUndefined(next))
     );
   }
 

@@ -224,6 +224,20 @@ export class TripService {
     return token;
   }
 
+  /** Rotate the public-share token — invalidates the existing link and keeps
+   *  sharing enabled. Use if a shared link leaks. */
+  async regeneratePublicShareToken(tripId: string): Promise<string> {
+    const token = crypto.randomUUID().replace(/-/g, '');
+    await this.run(() =>
+      updateDoc(doc(this.firestore, 'trips', tripId), {
+        shareToken: token,
+        shareEnabled: true,
+        updatedAt: serverTimestamp(),
+      })
+    );
+    return token;
+  }
+
   /** Turn off the public link. Keeps shareToken so re-enabling reuses the link. */
   async disablePublicShare(tripId: string): Promise<void> {
     await this.run(() =>

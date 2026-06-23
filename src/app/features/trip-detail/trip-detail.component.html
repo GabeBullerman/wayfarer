@@ -50,6 +50,10 @@
                         <mat-icon>content_copy</mat-icon>
                       </button>
                     </div>
+                    <button mat-button class="share-regen" [disabled]="shareBusy()"
+                            (click)="regenerateShareLink(trip)">
+                      <mat-icon>autorenew</mat-icon> Regenerate link
+                    </button>
                   }
                   <p class="share-note">
                     Anyone with this link can view a read-only itinerary

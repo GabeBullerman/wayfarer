@@ -183,6 +183,21 @@ export class TripDetailComponent implements OnInit {
     );
   }
 
+  /** Rotate the share token — the previous link stops working immediately. */
+  regenerateShareLink(trip: Trip) {
+    this.shareBusy.set(true);
+    from(this.tripService.regeneratePublicShareToken(trip.id!)).subscribe({
+      next: () => {
+        this.shareBusy.set(false);
+        this.snackBar.open('New link generated — the old one no longer works', undefined, { duration: 3500 });
+      },
+      error: () => {
+        this.shareBusy.set(false);
+        this.snackBar.open('Could not regenerate link', undefined, { duration: 3000 });
+      },
+    });
+  }
+
   tripDuration(trip: Trip): number {
     const ms = trip.endDate.toDate().getTime() - trip.startDate.toDate().getTime();
     return Math.ceil(ms / (1000 * 60 * 60 * 24)) + 1;
