@@ -241,6 +241,18 @@
                         <span>{{ booking.notes }}</span>
                       </div>
                     }
+
+                    @if (booking.attachments?.length) {
+                      <div class="attachment-chips">
+                        @for (att of booking.attachments; track att.storagePath) {
+                          <a class="attachment-chip" [href]="att.url"
+                             target="_blank" rel="noopener" [matTooltip]="att.name">
+                            <mat-icon>attach_file</mat-icon>
+                            <span>{{ att.name }}</span>
+                          </a>
+                        }
+                      </div>
+                    }
                   </div>
                 </div>
               }

@@ -192,3 +192,54 @@ mat-dialog-content {
   mat-form-field { width: 100%; }
   .ticket-remove { color: #b0455a; }
 }
+
+/* ── Attachments ─────────────────────────────────────────────────────── */
+.attachments-section {
+  margin-top: 12px;
+
+  .attachment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 10px;
+  }
+
+  .attachment-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: var(--st-surface-2);
+    border: 1px solid var(--st-border);
+    border-radius: 6px;
+    font-size: 0.85rem;
+
+    .attachment-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--st-on-surface-muted);
+      flex-shrink: 0;
+    }
+
+    .attachment-name {
+      flex: 1;
+      color: var(--st-primary);
+      text-decoration: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &:hover { text-decoration: underline; }
+    }
+
+    .attachment-remove {
+      flex-shrink: 0;
+      color: #b0455a;
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+  }
+}

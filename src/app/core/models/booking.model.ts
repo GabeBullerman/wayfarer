@@ -29,6 +29,14 @@ export interface FlightStatus {
   updatedAt: Timestamp;               // when we last fetched this status
 }
 
+export interface BookingAttachment {
+  name: string;
+  url: string;
+  storagePath: string;
+  fileType?: string;
+  fileSize?: number;
+}
+
 export interface Booking {
   id?: string;
   tripId: string;
@@ -69,6 +77,9 @@ export interface Booking {
   connections?: { airport: string; flightNumber?: string; departTime?: string }[];
   /** Last live status pulled from the flight-tracking API. */
   flightStatus?: FlightStatus;
+
+  /** Uploaded files (boarding passes, hotel confirmations, etc.). */
+  attachments?: BookingAttachment[];
 
   createdAt: Timestamp;
 }

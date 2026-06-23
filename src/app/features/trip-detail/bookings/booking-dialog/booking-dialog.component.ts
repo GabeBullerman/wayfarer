@@ -15,7 +15,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookingService } from '../../../../core/services/booking.service';
 import { FlightService, FlightStatusResult } from '../../../../core/services/flight.service';
-import { Booking, BookingType, BookingStatus, FlightStatus } from '../../../../core/models/booking.model';
+import { Booking, BookingType, BookingStatus, FlightStatus, BookingAttachment } from '../../../../core/models/booking.model';
 import { ParticipantService } from '../../../../core/services/participant.service';
 import { TripParticipant } from '../../../../core/models/trip-participant.model';
 import { Timestamp } from '@angular/fire/firestore';
@@ -63,6 +63,10 @@ export class BookingDialogComponent implements OnInit {
   typeChosen = signal(this.isEdit);
   /** Mirrors the form's `type` so the template can react (labels, flight fields). */
   selectedType = signal<BookingType>(this.data.booking?.type ?? 'flight');
+
+  // Attachments (boarding passes, hotel confirmations, etc.)
+  attachments = signal<BookingAttachment[]>(this.data.booking?.attachments ?? []);
+  uploadingAttachment = signal(false);
 
   // Flight status lookup state
   statusLoading = signal(false);
@@ -191,6 +195,38 @@ export class BookingDialogComponent implements OnInit {
     this.selectedType.set(type);
   }
 
+  /** Upload one or more selected files, appending each to the attachments signal. */
+  async onAttachmentsSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const files = input.files ? Array.from(input.files) : [];
+    if (!files.length) return;
+
+    this.uploadingAttachment.set(true);
+    try {
+      for (const file of files) {
+        try {
+          const att = await this.bookingService.uploadAttachment(this.data.tripId, file);
+          this.attachments.update(list => [...list, att]);
+        } catch (err) {
+          this.snackBar.open(
+            `Couldn't upload ${file.name}. Please try again.`,
+            'Dismiss',
+            { duration: 5000 },
+          );
+        }
+      }
+    } finally {
+      this.uploadingAttachment.set(false);
+      input.value = ''; // allow re-selecting the same file
+    }
+  }
+
+  /** Remove an attachment: delete the Storage object and drop it from the signal. */
+  async removeAttachment(att: BookingAttachment) {
+    await this.bookingService.deleteAttachment(att.storagePath);
+    this.attachments.update(list => list.filter(a => a.storagePath !== att.storagePath));
+  }
+
   /** Look up live flight status and fold the times back into the form. */
   checkFlightStatus() {
     const flightNumber = (this.form.value.flightNumber ?? '').trim();
@@ -258,6 +294,7 @@ export class BookingDialogComponent implements OnInit {
       connections: isFlight ? cleanConnections(this.connections.value) : undefined,
       layovers: isFlight ? deriveLayovers(this.connections.value) : undefined,
       flightStatus: isFlight && this.statusResult() ? toFlightStatus(this.statusResult()!) : undefined,
+      attachments: this.attachments().length ? this.attachments() : undefined,
     };
 
     const onError = (err: { message?: string }) => {

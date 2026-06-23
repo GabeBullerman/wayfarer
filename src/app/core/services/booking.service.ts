@@ -3,12 +3,18 @@ import {
   Firestore, collection, collectionData, doc,
   addDoc, updateDoc, deleteDoc, query, where, serverTimestamp,
 } from '@angular/fire/firestore';
+import {
+  Storage, ref, uploadBytes, getDownloadURL, deleteObject,
+} from '@angular/fire/storage';
 import { Observable } from 'rxjs';
-import { Booking } from '../models/booking.model';
+import { Booking, BookingAttachment } from '../models/booking.model';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class BookingService {
   private firestore = inject(Firestore);
+  private storage = inject(Storage);
+  private auth = inject(AuthService);
   private injector = inject(Injector);
 
   private run<T>(fn: () => T): T {
@@ -42,6 +48,31 @@ export class BookingService {
 
   deleteBooking(id: string) {
     return this.run(() => deleteDoc(doc(this.firestore, 'bookings', id)));
+  }
+
+  /** Upload a file attachment to Storage and return its metadata. */
+  async uploadAttachment(tripId: string, file: File): Promise<BookingAttachment> {
+    const uid = this.auth.currentUser!.uid;
+    const storagePath = `documents/${uid}/${tripId}/${Date.now()}_${file.name}`;
+    const storageRef = ref(this.storage, storagePath);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    return {
+      name: file.name,
+      url,
+      storagePath,
+      fileType: file.type,
+      fileSize: file.size,
+    };
+  }
+
+  /** Delete an attachment file from Storage; swallow errors (e.g. already gone). */
+  async deleteAttachment(storagePath: string): Promise<void> {
+    try {
+      await deleteObject(ref(this.storage, storagePath));
+    } catch {
+      /* ignore — best-effort cleanup */
+    }
   }
 }
 

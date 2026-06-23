@@ -291,6 +291,41 @@
 
       }
 
+      <!-- ── Attachments (boarding passes, confirmations, etc.) ──────────── -->
+      <div class="section-divider"><span>Attachments</span></div>
+
+      <div class="attachments-section">
+        <input #fileInput type="file" hidden
+               accept="application/pdf,image/*" multiple
+               (change)="onAttachmentsSelected($event)" />
+
+        <button mat-stroked-button type="button"
+                (click)="fileInput.click()" [disabled]="uploadingAttachment()">
+          @if (uploadingAttachment()) {
+            <mat-spinner diameter="16"></mat-spinner> &nbsp;Uploading…
+          } @else {
+            <mat-icon>attach_file</mat-icon> Add file
+          }
+        </button>
+
+        @if (attachments().length) {
+          <div class="attachment-list">
+            @for (att of attachments(); track att.storagePath) {
+              <div class="attachment-row">
+                <mat-icon class="attachment-icon">description</mat-icon>
+                <a [href]="att.url" target="_blank" rel="noopener" class="attachment-name">
+                  {{ att.name }}
+                </a>
+                <button mat-icon-button type="button" class="attachment-remove"
+                        (click)="removeAttachment(att)" matTooltip="Remove">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
       <mat-form-field appearance="outline" class="full-width mt-16">
         <mat-label>Notes</mat-label>
         <textarea matInput formControlName="notes" rows="3"
