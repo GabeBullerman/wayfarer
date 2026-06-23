@@ -370,12 +370,13 @@
   .booking-type-icon {
     width: 36px;
     height: 36px;
+    flex-shrink: 0;            // never squish into an oval
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #e3f2fd;
-    mat-icon { font-size: 18px; width: 18px; height: 18px; color: #1565c0; }
+    background: var(--st-primary-tint-bg);
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--st-accent); }
   }
 
   .booking-info {
@@ -404,6 +405,21 @@
     color: var(--st-primary);
     font-size: 0.9rem;
   }
+}
+
+/* Bookings at a Glance — reflow on mobile so the icon doesn't squish, the title
+   gets full width, dates wrap, and the price stays inside the card. */
+@media (max-width: 600px) {
+  .booking-preview-item {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    row-gap: 8px;
+
+    .booking-info { flex: 1 1 70%; min-width: 0; }   // takes line 1; forces status/price to line 2
+    .booking-status { order: 2; }
+    .booking-cost { order: 3; margin-left: auto; white-space: nowrap; }
+  }
+  .booking-when { flex-wrap: wrap; }
 }
 
 .route-card {
