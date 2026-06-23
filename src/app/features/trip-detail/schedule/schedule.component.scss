@@ -674,3 +674,29 @@
     border-radius: 999px;
   }
 }
+
+// Proposed (awaiting approval) itinerary items
+.timeline-item.is-proposed .timeline-content {
+  border: 1px dashed var(--st-warn, #d97706);
+  border-radius: 12px;
+  background: var(--st-warn-bg, rgba(217, 119, 6, 0.06));
+}
+
+.proposed-chip {
+  background: var(--st-warn-bg, rgba(217, 119, 6, 0.12)) !important;
+  color: var(--st-warn, #b45309) !important;
+  font-weight: 600;
+}
+
+.pending-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--st-text-muted, #64748b);
+  font-style: italic;
+}
+
+.approve-btn {
+  color: var(--st-success, #16a34a);
+}

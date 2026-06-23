@@ -177,6 +177,26 @@ export class TripService {
     });
   }
 
+  /** Allow a collaborator to edit the schedule directly (no proposal needed). */
+  async grantScheduleEdit(tripId: string, uid: string): Promise<void> {
+    await this.run(() =>
+      updateDoc(doc(this.firestore, 'trips', tripId), {
+        scheduleEditorIds: arrayUnion(uid),
+        updatedAt: serverTimestamp(),
+      })
+    );
+  }
+
+  /** Revoke a collaborator's direct schedule-edit rights (back to propose-only). */
+  async revokeScheduleEdit(tripId: string, uid: string): Promise<void> {
+    await this.run(() =>
+      updateDoc(doc(this.firestore, 'trips', tripId), {
+        scheduleEditorIds: arrayRemove(uid),
+        updatedAt: serverTimestamp(),
+      })
+    );
+  }
+
   /** Generate an invite token and return the full shareable slug ({tripId}.{random}). */
   async generateInviteToken(tripId: string): Promise<string> {
     const random = Array.from(crypto.getRandomValues(new Uint8Array(12)))

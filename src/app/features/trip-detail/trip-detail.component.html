@@ -80,7 +80,7 @@
           @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
         }
         @case (6) {
-          @defer (when true) { <app-people [tripId]="id" [isOwner]="isOwner(trip)" /> }
+          @defer (when true) { <app-people [tripId]="id" [trip]="trip" [isOwner]="isOwner(trip)" /> }
           @placeholder { <div class="tab-loading"><mat-spinner diameter="32"></mat-spinner></div> }
         }
         @case (7) {

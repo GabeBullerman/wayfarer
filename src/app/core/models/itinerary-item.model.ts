@@ -20,4 +20,9 @@ export interface ItineraryItem {
   costType?: 'total' | 'per-person';
   notes?: string;
   order: number;
+  /** True while this item is awaiting owner approval — created by a member who
+   *  doesn't have direct schedule-edit rights. Approved items omit this/false. */
+  proposed?: boolean;
+  /** UID of the member who proposed this item (for attribution + rules). */
+  proposedBy?: string;
 }

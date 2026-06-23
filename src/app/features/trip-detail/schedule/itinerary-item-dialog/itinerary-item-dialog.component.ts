@@ -9,7 +9,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ItineraryService } from '../../../../core/services/itinerary.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ItineraryItem, ItemCategory } from '../../../../core/models/itinerary-item.model';
 import { Timestamp } from '@angular/fire/firestore';
 import { from, Observable } from 'rxjs';
@@ -20,6 +22,8 @@ export interface ItineraryItemDialogData {
   item?: ItineraryItem;
   defaultDate?: Date;
   existingCount: number;
+  /** When true, the creator lacks direct edit rights — create as a proposal. */
+  propose?: boolean;
 }
 
 @Component({
@@ -37,6 +41,8 @@ export class ItineraryItemDialogComponent {
   private fb = inject(FormBuilder);
   private itineraryService = inject(ItineraryService);
   private dialogRef = inject(MatDialogRef<ItineraryItemDialogComponent>);
+  private auth = inject(AuthService);
+  private snackBar = inject(MatSnackBar);
   data = inject<ItineraryItemDialogData>(MAT_DIALOG_DATA);
 
   loading = signal(false);
@@ -86,6 +92,10 @@ export class ItineraryItemDialogComponent {
       description: v.description ?? undefined,
       notes: v.notes ?? undefined,
       order: this.data.item?.order ?? this.data.existingCount,
+      // Editing existing items is unaffected; only new items can be proposals.
+      ...(!this.isEdit && this.data.propose
+        ? { proposed: true, proposedBy: this.auth.currentUser?.uid }
+        : {}),
     };
 
     const op: Observable<void> = this.isEdit
@@ -93,7 +103,12 @@ export class ItineraryItemDialogComponent {
       : from(this.itineraryService.createItem(payload)).pipe(map(() => undefined));
 
     op.subscribe({
-      next: () => this.dialogRef.close(true),
+      next: () => {
+        if (!this.isEdit && this.data.propose) {
+          this.snackBar.open('Proposed — sent to the trip owner for approval.', undefined, { duration: 3500 });
+        }
+        this.dialogRef.close(true);
+      },
       error: () => this.loading.set(false),
     });
   }

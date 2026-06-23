@@ -45,7 +45,7 @@
           </div>
           <button mat-stroked-button class="add-activity-btn"
                   (click)="openAddItem(day.date, day.items.length)">
-            <mat-icon>add</mat-icon> Add Activity
+            <mat-icon>add</mat-icon> {{ canEditSchedule() ? 'Add Activity' : 'Propose Activity' }}
           </button>
         </div>
 
@@ -159,7 +159,7 @@
           <!-- Timeline -->
           <div class="timeline">
             @for (item of day.items; track item.id; let last = $last) {
-              <div class="timeline-item">
+              <div class="timeline-item" [class.is-proposed]="item.proposed">
                 <div class="timeline-connector">
                   <div class="timeline-dot" [class]="'dot-' + item.category"></div>
                   @if (!last) { <div class="timeline-line"></div> }
@@ -175,18 +175,37 @@
                       }
                     </div>
                     <div class="item-actions">
-                      <button mat-icon-button (click)="openEditItem(item, day.items)" matTooltip="Edit">
-                        <mat-icon>edit</mat-icon>
-                      </button>
-                      <button mat-icon-button (click)="deleteItem(item)" matTooltip="Remove">
-                        <mat-icon>delete</mat-icon>
-                      </button>
+                      @if (item.proposed && canEditSchedule()) {
+                        <button mat-stroked-button class="approve-btn" (click)="approveItem(item)" matTooltip="Approve this proposal">
+                          <mat-icon>check</mat-icon> Approve
+                        </button>
+                        <button mat-icon-button (click)="rejectItem(item)" matTooltip="Reject proposal">
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      } @else if (item.proposed && isMyProposal(item)) {
+                        <span class="pending-label">
+                          <mat-icon>hourglass_empty</mat-icon> Pending approval
+                        </span>
+                      } @else if (!item.proposed) {
+                        <button mat-icon-button (click)="openEditItem(item, day.items)" matTooltip="Edit">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="deleteItem(item)" matTooltip="Remove">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      }
                     </div>
                   </div>
 
                   <h3 class="item-title">{{ item.title }}</h3>
 
                   <div class="item-meta">
+                    @if (item.proposed) {
+                      <mat-chip class="proposed-chip">
+                        <mat-icon>schedule_send</mat-icon>
+                        {{ proposerLabel(item) }}
+                      </mat-chip>
+                    }
                     <mat-chip class="category-chip" [class]="'category-' + item.category">
                       <mat-icon>{{ categoryIcon(item.category) }}</mat-icon>
                       {{ item.category | titlecase }}

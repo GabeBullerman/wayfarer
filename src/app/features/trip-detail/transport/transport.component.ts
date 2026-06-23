@@ -17,6 +17,7 @@ import { TransportService, Journey, LocalOption, NearbyStop } from '../../../cor
 import { ItineraryService } from '../../../core/services/itinerary.service';
 import { BookingService } from '../../../core/services/booking.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 export interface SearchSite {
   name: string;
@@ -45,6 +46,16 @@ export class TransportComponent implements OnInit {
   private bookingService   = inject(BookingService);
   private mapsLoader       = inject(GoogleMapsLoaderService);
   private snackBar         = inject(MatSnackBar);
+  private auth             = inject(AuthService);
+
+  /** Whether the current user may edit the schedule directly (vs. propose). */
+  private canEditSchedule(): boolean {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid || !this.trip) return false;
+    return this.trip.userId === uid
+      || (this.trip.ownerIds ?? []).includes(uid)
+      || (this.trip.scheduleEditorIds ?? []).includes(uid);
+  }
 
   // ── Mode toggle ───────────────────────────────────────────
   searchMode = signal<'trains' | 'flights' | 'hotels'>('trains');
@@ -219,8 +230,14 @@ export class TransportComponent implements OnInit {
       endTime:   endStr,
       description: `${j.duration ?? ''} · ${j.changes} change${j.changes !== 1 ? 's' : ''}. ${label}`,
       order: 0,
+      // Non-editors can only create proposed items (Firestore rules enforce this).
+      ...(this.canEditSchedule()
+        ? {}
+        : { proposed: true, proposedBy: this.auth.currentUser?.uid }),
     })).subscribe(() =>
-      this.snackBar.open('Train journey added to schedule', undefined, { duration: 2500 })
+      this.snackBar.open(
+        this.canEditSchedule() ? 'Train journey added to schedule' : 'Train journey proposed — sent for approval',
+        undefined, { duration: 2500 })
     );
   }
 

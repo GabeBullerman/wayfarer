@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { Observable, from, combineLatest, of } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
@@ -27,13 +28,14 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
   imports: [
     AsyncPipe, ReactiveFormsModule,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
-    MatProgressSpinnerModule, MatTooltipModule,
+    MatProgressSpinnerModule, MatTooltipModule, MatSlideToggleModule,
   ],
   templateUrl: './people.component.html',
   styleUrl: './people.component.scss',
 })
 export class PeopleComponent implements OnInit, OnChanges {
   @Input() tripId!: string;
+  @Input() trip?: Trip;
   @Input() isOwner = false;
 
   private participantService = inject(ParticipantService);
@@ -361,6 +363,24 @@ export class PeopleComponent implements OnInit, OnChanges {
           this.router.navigate(['/trips']);
         });
       }
+    });
+  }
+
+  /** Whether a member currently has direct schedule-edit rights. */
+  canEditSchedule(uid: string): boolean {
+    return (this.trip?.scheduleEditorIds ?? []).includes(uid);
+  }
+
+  /** Owner-only toggle: grant/revoke a collaborator's schedule-edit rights. */
+  toggleScheduleEdit(uid: string, name: string, allow: boolean) {
+    const op = allow
+      ? this.tripService.grantScheduleEdit(this.tripId, uid)
+      : this.tripService.revokeScheduleEdit(this.tripId, uid);
+    from(op).subscribe({
+      next: () => this.snackBar.open(
+        allow ? `${name} can now edit the schedule` : `${name} can no longer edit the schedule`,
+        undefined, { duration: 2500 }),
+      error: () => this.snackBar.open('Could not update permission. Try again.', undefined, { duration: 3000 }),
     });
   }
 

@@ -40,6 +40,15 @@ service cloud.firestore {
       );
     }
 
+    // Owners, plus collaborators the owner granted direct schedule-edit rights.
+    function canEditSchedule(trip) {
+      return isOwnerOfTrip(trip) ||
+        (trip.scheduleEditorIds != null && request.auth.uid in trip.scheduleEditorIds);
+    }
+    function tripCanEditSchedule(tripId) {
+      return canEditSchedule(tripData(tripId));
+    }
+
     // ── Trips ───────────────────────────────────────────────────────────────
     // Owner has full control. Members can read and update. A bearer of a live
     // invite token can read (to verify the token) and add themselves as a member.
@@ -54,7 +63,7 @@ service cloud.firestore {
         // (ownerIds / userId) — this prevents a collaborator self-promoting.
         ( isMemberOfTrip(resource.data) && (
             isOwnerOfTrip(resource.data) ||
-            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['ownerIds', 'userId'])
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['ownerIds', 'userId', 'scheduleEditorIds'])
           )
         ) ||
         // Invite-token acceptance: token bearer may add only themselves.
@@ -76,10 +85,30 @@ service cloud.firestore {
     }
 
     match /itinerary/{itemId} {
-      allow read, delete: if isTripMember(resource.data.tripId);
-      allow create: if isTripMember(request.resource.data.tripId);
+      allow read: if isTripMember(resource.data.tripId);
+
+      // Schedule editors (owners + granted collaborators) create directly.
+      // Other members may only create a PROPOSED item attributed to themselves.
+      allow create: if isTripMember(request.resource.data.tripId) && (
+        tripCanEditSchedule(request.resource.data.tripId) ||
+        ( request.resource.data.proposed == true
+          && request.resource.data.proposedBy == request.auth.uid )
+      );
+
+      // Editors update anything (incl. approving: proposed -> false). A proposer
+      // may edit their own proposal but cannot approve it (must stay proposed).
       allow update: if isTripMember(resource.data.tripId)
-                    && isTripMember(request.resource.data.tripId);
+                    && isTripMember(request.resource.data.tripId) && (
+        tripCanEditSchedule(resource.data.tripId) ||
+        ( resource.data.proposedBy == request.auth.uid
+          && request.resource.data.proposed == true )
+      );
+
+      // Editors delete anything (reject); a proposer may withdraw their own proposal.
+      allow delete: if isTripMember(resource.data.tripId) && (
+        tripCanEditSchedule(resource.data.tripId) ||
+        resource.data.proposedBy == request.auth.uid
+      );
     }
 
     match /expenses/{expenseId} {

@@ -23,6 +23,9 @@ import { Trip } from '../../../core/models/trip.model';
 import { ItineraryItemDialogComponent } from './itinerary-item-dialog/itinerary-item-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { TimezoneService } from '../../../core/services/timezone.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { ParticipantService } from '../../../core/services/participant.service';
+import { TripParticipant } from '../../../core/models/trip-participant.model';
 
 interface DayGroup {
   date: Date;
@@ -92,6 +95,11 @@ export class ScheduleComponent implements OnInit {
   private http             = inject(HttpClient);
   private destroyRef       = inject(DestroyRef);
   private tz               = inject(TimezoneService);
+  private auth             = inject(AuthService);
+  private participantService = inject(ParticipantService);
+
+  /** Map of uid → display name for resolving proposer attribution. */
+  private participantsByUid = signal<Record<string, string>>({});
 
   allDays          = signal<DayGroup[]>([]);
   selectedDayIndex = signal(0);
@@ -117,6 +125,57 @@ export class ScheduleComponent implements OnInit {
         this.bookings.set(bookings);
         this.allDays.set(this.groupByDay(items, bookings));
       });
+
+    // Resolve proposer names for the "Proposed by …" chip.
+    this.participantService.getParticipants(this.tripId)
+      .pipe(catchError(() => of([] as TripParticipant[])), takeUntilDestroyed(this.destroyRef))
+      .subscribe((participants) => {
+        const map: Record<string, string> = {};
+        for (const p of participants) {
+          if (p.userId) map[p.userId] = p.name;
+        }
+        this.participantsByUid.set(map);
+      });
+  }
+
+  /** Whether the current user may edit the schedule directly (vs. propose). */
+  canEditSchedule(): boolean {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid || !this.trip) return false;
+    return this.trip.userId === uid
+      || (this.trip.ownerIds ?? []).includes(uid)
+      || (this.trip.scheduleEditorIds ?? []).includes(uid);
+  }
+
+  /** True if the proposed item was proposed by the current user. */
+  isMyProposal(item: ItineraryItem): boolean {
+    return !!item.proposed && item.proposedBy === this.auth.currentUser?.uid;
+  }
+
+  /** Resolve a label for a proposed item's proposer; falls back to "Proposed". */
+  proposerLabel(item: ItineraryItem): string {
+    const name = item.proposedBy ? this.participantsByUid()[item.proposedBy] : undefined;
+    return name ? `Proposed by ${name}` : 'Proposed';
+  }
+
+  /** Approve a proposed item (editors only) — clears the proposed flag. */
+  approveItem(item: ItineraryItem) {
+    from(this.itineraryService.updateItem(item.id!, { proposed: false })).subscribe(() =>
+      this.snackBar.open(`"${item.title}" approved`, undefined, { duration: 2000 })
+    );
+  }
+
+  /** Reject a proposed item (editors only) — deletes it after confirmation. */
+  rejectItem(item: ItineraryItem) {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Reject Proposal', message: `Reject and remove "${item.title}"?` },
+    }).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        from(this.itineraryService.deleteItem(item.id!)).subscribe(() =>
+          this.snackBar.open('Proposal rejected', undefined, { duration: 2000 })
+        );
+      }
+    });
   }
 
   hasTransport(day: DayGroup): boolean {
@@ -412,6 +471,10 @@ export class ScheduleComponent implements OnInit {
       ...(s.time       ? { startTime: s.time }         : {}),
       ...(s.location   ? { location: s.location }       : {}),
       ...(s.description ? { description: s.description } : {}),
+      // Non-editors can only create proposed items (Firestore rules enforce this).
+      ...(this.canEditSchedule()
+        ? {}
+        : { proposed: true, proposedBy: this.auth.currentUser?.uid }),
     };
 
     from(this.itineraryService.createItem(newItem)).subscribe(() => {
@@ -424,7 +487,7 @@ export class ScheduleComponent implements OnInit {
 
   openAddItem(date: Date, existingCount: number) {
     this.dialog.open(ItineraryItemDialogComponent, {
-      data: { tripId: this.tripId, defaultDate: date, existingCount },
+      data: { tripId: this.tripId, defaultDate: date, existingCount, propose: !this.canEditSchedule() },
       width: '600px', maxHeight: '90vh',
     });
   }

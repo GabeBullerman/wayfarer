@@ -91,6 +91,12 @@
             </div>
             <div class="participant-actions">
               @if (isOwner && !c.isOwner && c.uid !== currentUserId) {
+                <mat-slide-toggle class="schedule-edit-toggle"
+                        [checked]="canEditSchedule(c.uid)"
+                        (change)="toggleScheduleEdit(c.uid, c.displayName, $event.checked)"
+                        matTooltip="Allow this member to add schedule items directly (otherwise they propose for your approval)">
+                  Can edit schedule
+                </mat-slide-toggle>
                 <button mat-icon-button
                         matTooltip="Make co-owner"
                         aria-label="Make co-owner"
