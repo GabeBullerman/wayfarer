@@ -71,7 +71,10 @@
 /* ── Media ── */
 .guide-media {
   flex-shrink: 0;
-  height: 300px;
+  // Keep the illustration's 680x300 aspect at any width so it scales down on
+  // mobile instead of being cropped by a fixed height.
+  aspect-ratio: 680 / 300;
+  width: 100%;
   background: var(--st-surface-2);
   border-bottom: 1px solid var(--st-border);
   display: flex;
@@ -83,7 +86,7 @@
 .feature-gif {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;  // show the whole illustration, never crop
   display: block;
 }
 
@@ -212,4 +215,11 @@
   color: var(--st-on-surface-faint);
   padding: 4px 0 14px;
   flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .guide-header { padding: 14px 16px 12px; }
+  .feature-title { font-size: 1.05rem; }
+  .guide-body { padding: 16px; }
+  .guide-footer { padding: 10px 12px 4px; }
 }
