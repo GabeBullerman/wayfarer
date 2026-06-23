@@ -5,7 +5,7 @@
 const admin = require('firebase-admin');
 
 function getAdmin() {
-  if (admin.apps.length) return admin;
+  if (admin.apps && admin.apps.length) return admin;
 
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!raw) return null;

@@ -19,9 +19,10 @@ module.exports = async (req, res) => {
 
   try {
     const db = admin.firestore();
+    // Single-field equality query (auto-indexed) — avoids needing a composite
+    // index; the shareEnabled check is done in code below.
     const snap = await db.collection('trips')
       .where('shareToken', '==', token)
-      .where('shareEnabled', '==', true)
       .limit(1)
       .get();
 
@@ -30,6 +31,10 @@ module.exports = async (req, res) => {
     const tripDoc = snap.docs[0];
     const trip = tripDoc.data();
     const tripId = tripDoc.id;
+
+    if (trip.shareEnabled !== true) {
+      return res.status(404).json({ error: 'This itinerary link is not available.' });
+    }
 
     const [itinSnap, bookSnap] = await Promise.all([
       db.collection('itinerary').where('tripId', '==', tripId).get(),
