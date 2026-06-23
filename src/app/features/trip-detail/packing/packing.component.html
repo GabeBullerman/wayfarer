@@ -34,6 +34,18 @@
     </div>
   </div>
 
+  <!-- Templates -->
+  <div class="templates-row">
+    <span class="templates-label">Start from a template:</span>
+    <div class="templates-chips">
+      @for (name of templateNames; track name) {
+        <button mat-stroked-button class="template-chip" (click)="applyTemplate(name)">
+          {{ name }}
+        </button>
+      }
+    </div>
+  </div>
+
   <!-- AI Suggestions Panel -->
   @if (showAiPanel()) {
     <div class="ai-panel">

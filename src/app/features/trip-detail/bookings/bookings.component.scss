@@ -66,7 +66,13 @@ mat-accordion {
   background: var(--st-surface-2);
   border-radius: 10px;
   padding: 16px;
-  border-left: 4px solid var(--st-primary);
+  border: 2px solid var(--st-border);
+
+  // Full colored border keyed to booking status (set via [data-status]).
+  &[data-status="confirmed"] { border-color: var(--st-status-confirmed-fg); }
+  &[data-status="pending"]   { border-color: var(--st-status-pending-fg); }
+  &[data-status="cancelled"] { border-color: var(--st-status-cancelled-fg); }
+  &[data-status="suggested"] { border-color: var(--st-warn-accent); border-style: dashed; }
 }
 
 .suggested-banner {

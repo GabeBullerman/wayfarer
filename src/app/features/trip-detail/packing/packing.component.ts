@@ -12,6 +12,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { from, forkJoin } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { PackingService } from '../../../core/services/packing.service';
@@ -61,6 +62,32 @@ export class PackingComponent implements OnInit {
   private aiService = inject(AiAdvisorService);
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
+  private snackBar = inject(MatSnackBar);
+
+  readonly templateNames = ['Beach', 'Ski/Snow', 'City/Business', 'Camping', 'Essentials'] as const;
+
+  readonly TEMPLATES: Record<string, string[]> = {
+    'Beach': [
+      'Swimsuit', 'Sunscreen', 'Sunglasses', 'Beach towel', 'Flip-flops',
+      'Sun hat', 'Aloe vera', 'Beach bag', 'Reusable water bottle', 'Cover-up',
+    ],
+    'Ski/Snow': [
+      'Ski jacket', 'Snow pants', 'Thermal base layers', 'Gloves', 'Beanie',
+      'Goggles', 'Wool socks', 'Hand warmers', 'Lip balm', 'Helmet',
+    ],
+    'City/Business': [
+      'Dress shirt', 'Blazer', 'Dress shoes', 'Belt', 'Laptop + charger',
+      'Travel adapter', 'Umbrella', 'Portable battery', 'Dress trousers', 'Tie/accessories',
+    ],
+    'Camping': [
+      'Tent', 'Sleeping bag', 'Headlamp', 'Bug spray', 'First-aid kit',
+      'Hiking boots', 'Rain jacket', 'Multi-tool', 'Water filter', 'Trail snacks',
+    ],
+    'Essentials': [
+      'Passport/ID', 'Phone charger', 'Toothbrush', 'Toothpaste', 'Deodorant',
+      'Medications', 'Underwear', 'Socks', 'Travel documents', 'Reusable water bottle',
+    ],
+  };
 
   items = signal<PackingItem[]>([]);
   participants = signal<TripParticipant[]>([]);
@@ -190,6 +217,50 @@ export class PackingComponent implements OnInit {
       this.addForm.reset({ name: '', category: 'other', quantity: 1, assignedTo: null, personal: false });
       this.showAddForm.set(false);
     });
+  }
+
+  applyTemplate(name: string) {
+    const names = this.TEMPLATES[name];
+    if (!names) return;
+
+    const existing = new Set(this.items().map(i => i.name.trim().toLowerCase()));
+    const toAdd = names.filter(n => !existing.has(n.trim().toLowerCase()));
+
+    if (toAdd.length === 0) {
+      this.snackBar.open(`All ${name} template items are already in your list`, undefined, { duration: 2500 });
+      return;
+    }
+
+    // Optimistic update so items appear immediately
+    const optimistic: PackingItem[] = toAdd.map((n, i) => ({
+      id: `__temp_${Date.now()}_${i}`,
+      tripId: this.tripId,
+      name: n,
+      category: 'other' as PackingCategory,
+      quantity: 1,
+      assignedTo: null,
+      packedBy: [],
+      visibility: 'everyone' as const,
+      createdBy: this.currentUserId,
+      createdAt: Timestamp.now(),
+    }));
+    this.items.update(list => [...list, ...optimistic]);
+
+    // Persist; real-time listener replaces temp IDs with real ones
+    toAdd.forEach(n =>
+      from(this.packingService.createItem({
+        tripId: this.tripId,
+        name: n,
+        category: 'other',
+        quantity: 1,
+        assignedTo: null,
+        packedBy: [],
+        visibility: 'everyone',
+        createdBy: this.currentUserId,
+      })).subscribe()
+    );
+
+    this.snackBar.open(`Added ${toAdd.length} items from the ${name} template`, undefined, { duration: 2500 });
   }
 
   cancelAdd() {

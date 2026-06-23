@@ -3,6 +3,34 @@
   margin: 0 auto;
 }
 
+.templates-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 16px;
+
+  .templates-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--st-on-surface-muted);
+  }
+
+  .templates-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .template-chip {
+    line-height: 32px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 16px;
+    font-size: 0.82rem;
+  }
+}
+
 .ai-panel {
   background: var(--st-surface-2);
   border: 1px solid var(--st-border);
