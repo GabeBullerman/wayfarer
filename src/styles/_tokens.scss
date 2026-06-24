@@ -28,10 +28,19 @@
   --st-primary-strong:    #151c63;
   --st-primary-contrast:  #ffffff;
   --st-accent:            #1565c0;   // secondary blue
-  // Brand fill for the sidenav/toolbar — always dark with white text/logo.
-  // Kept identical in dark mode so the logo + toolbar text stay readable.
+  // Brand fill for the sidenav/toolbar. Dark by default with white text/logo.
+  // A palette may make this a LIGHT surface (e.g. pastel pink); when it does it
+  // must also flip the brand-fg tokens below to dark so text/icons/logo stay
+  // readable. The shell reads these tokens instead of hardcoding white.
   --st-brand:             #1a237e;
   --st-brand-contrast:    #ffffff;
+  --st-brand-fg:          #ffffff;                 // primary text/icons on the brand bar
+  --st-brand-fg-muted:    rgba(255, 255, 255, 0.85);
+  --st-brand-fg-faint:    rgba(255, 255, 255, 0.7);
+  --st-brand-hover:       rgba(255, 255, 255, 0.1);
+  --st-brand-active-bg:   rgba(130, 177, 255, 0.2);
+  --st-brand-active-fg:   #82b1ff;
+  --st-brand-divider:     rgba(255, 255, 255, 0.12);
 
   // Elevation
   --st-shadow:            rgba(0, 0, 0, 0.15);
@@ -136,18 +145,35 @@ html.dark {
 // ============================================================================
 
 // ── Pastel Pink ─────────────────────────────────────────────────────────────
+// Light: the brand bar is genuinely pastel (#FFBDE8), so its foreground flips to
+// a dark rose for contrast. Headings/buttons use a deeper readable pink on white.
 html[data-theme="pink"] {
-  --st-primary: #c2185b;  --st-primary-strong: #ad1457;  --st-primary-contrast: #ffffff;
+  --st-primary: #ad1457;  --st-primary-strong: #880e4f;  --st-primary-contrast: #ffffff;
   --st-accent: #d81b60;
-  --st-brand: #d81b60;    --st-brand-contrast: #ffffff;
+  --st-brand: #ffbde8;    --st-brand-contrast: #6d1140;
+  --st-brand-fg:          #6d1140;
+  --st-brand-fg-muted:    rgba(109, 17, 64, 0.82);
+  --st-brand-fg-faint:    rgba(109, 17, 64, 0.62);
+  --st-brand-hover:       rgba(109, 17, 64, 0.08);
+  --st-brand-active-bg:   rgba(109, 17, 64, 0.14);
+  --st-brand-active-fg:   #880e4f;
+  --st-brand-divider:     rgba(109, 17, 64, 0.16);
   --st-primary-soft: #c2185b;
-  --st-primary-tint-bg: #fce4ec;  --st-primary-tint-fg: #880e4f;
+  --st-primary-tint-bg: #ffe4f3;  --st-primary-tint-fg: #6d1140;
   --mat-sys-primary: #c2185b;  --mat-sys-on-primary: #ffffff;
 }
 html[data-theme="pink"].dark {
   --st-primary: #f48fb1;  --st-primary-strong: #f06292;  --st-primary-contrast: #2a0a17;
   --st-accent: #f06292;
+  // Dark mode keeps a deep-pink bar with white foreground (override the light values above).
   --st-brand: #ad1457;    --st-brand-contrast: #ffffff;
+  --st-brand-fg:          #ffffff;
+  --st-brand-fg-muted:    rgba(255, 255, 255, 0.85);
+  --st-brand-fg-faint:    rgba(255, 255, 255, 0.7);
+  --st-brand-hover:       rgba(255, 255, 255, 0.1);
+  --st-brand-active-bg:   rgba(255, 255, 255, 0.16);
+  --st-brand-active-fg:   #ffffff;
+  --st-brand-divider:     rgba(255, 255, 255, 0.12);
   --st-primary-soft: #f8bbd0;
   --st-primary-tint-bg: rgba(244, 143, 177, 0.16);  --st-primary-tint-fg: #f8bbd0;
   --mat-sys-primary: #f48fb1;  --mat-sys-on-primary: #3a0a1d;

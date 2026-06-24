@@ -2,11 +2,20 @@
   height: 100vh;
 }
 
+// Logo variants: white logo by default (dark brand bar), dark logo hidden.
+.brand-logo--dark { display: none; }
+
+// Pastel-pink light mode has a LIGHT brand bar → swap to the dark logo.
+:host-context(html[data-theme="pink"]:not(.dark)) {
+  .brand-logo--light { display: none; }
+  .brand-logo--dark  { display: block; }
+}
+
 .shell-sidenav {
   width: 240px;
   background: var(--st-brand);
   border-radius: 0 !important;
-  color: white;
+  color: var(--st-brand-fg);
   display: flex;
   flex-direction: column;
 
@@ -15,7 +24,7 @@
     align-items: center;
     gap: 12px;
     padding: 20px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid var(--st-brand-divider);
 
     .brand-logo {
       height: 40px;
@@ -29,40 +38,40 @@
     padding-top: 8px;
 
     a[mat-list-item] {
-      color: white;
+      color: var(--st-brand-fg);
       border-radius: 0 24px 24px 0;
       margin-right: 12px;
       margin-bottom: 2px;
 
-      mat-icon { color: rgba(255, 255, 255, 0.85); }
+      mat-icon { color: var(--st-brand-fg-muted); }
 
-      // Material renders title inside a shadow-piercing span — force white
+      // Material renders title inside a shadow-piercing span — force brand fg
       ::ng-deep .mdc-list-item__primary-text,
-      ::ng-deep .mat-mdc-list-item-title { color: white !important; }
+      ::ng-deep .mat-mdc-list-item-title { color: var(--st-brand-fg) !important; }
 
       &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        mat-icon { color: white; }
+        background: var(--st-brand-hover);
+        mat-icon { color: var(--st-brand-fg); }
       }
 
       &.active-link {
-        background: rgba(130, 177, 255, 0.2);
-        mat-icon { color: #82b1ff; }
+        background: var(--st-brand-active-bg);
+        mat-icon { color: var(--st-brand-active-fg); }
         ::ng-deep .mdc-list-item__primary-text,
-        ::ng-deep .mat-mdc-list-item-title { color: #82b1ff !important; }
+        ::ng-deep .mat-mdc-list-item-title { color: var(--st-brand-active-fg) !important; }
       }
     }
   }
 
   .sidenav-footer {
     padding: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-top: 1px solid var(--st-brand-divider);
 
     .user-chip {
       display: flex;
       align-items: center;
       gap: 8px;
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--st-brand-fg-faint);
       font-size: 0.85rem;
       overflow: hidden;
 
@@ -77,12 +86,13 @@
   top: 0;
   z-index: 10;
   background: var(--st-brand) !important;
+  color: var(--st-brand-fg);
 
   .toolbar-spacer { flex: 1; }
 
   button[mat-icon-button] {
-    color: white;
-    mat-icon { color: white; }
+    color: var(--st-brand-fg);
+    mat-icon { color: var(--st-brand-fg); }
   }
 }
 
