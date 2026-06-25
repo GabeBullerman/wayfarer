@@ -12,7 +12,12 @@ module.exports = async (req, res) => {
   // Temporary, non-secret diagnostic: reports only the SHAPE of the env value.
   if (String(req.query.token ?? '') === '__diag__') {
     const v = process.env.FIREBASE_SERVICE_ACCOUNT || '';
-    const out = { present: !!v, length: v.length, lines: v.split('\n').length, startsWithBrace: v.trimStart().startsWith('{') };
+    const out = {
+      present: !!v, length: v.length, lines: v.split('\n').length,
+      startsWithBrace: v.trimStart().startsWith('{'),
+      // Boundary chars only (private_key is in the middle, never shown):
+      first40: v.slice(0, 40), last20: v.slice(-20),
+    };
     try { const p = JSON.parse(v); out.jsonParse = 'OK'; out.hasPrivateKey = !!p.private_key; out.projectId = p.project_id ?? null; }
     catch (e) {
       out.jsonParse = 'FAIL';
