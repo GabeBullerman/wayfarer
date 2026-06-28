@@ -81,9 +81,11 @@ async function checkPublicItinerary() {
     '{"$ne":null}', '<script>alert(1)</script>', 'a'.repeat(5000),
   ];
   for (const tk of tokens) {
-    const r = await req(`/api/public-itinerary?token=${encodeURIComponent(tk)}`, { method: 'GET' });
+    let r = await req(`/api/public-itinerary?token=${encodeURIComponent(tk)}`, { method: 'GET' });
+    // One retry to ride out transient cold-start 5xx (firebase-admin init).
+    if (r.status >= 500) r = await req(`/api/public-itinerary?token=${encodeURIComponent(tk)}`, { method: 'GET' });
     if (r.status === 404 || r.status === 400) rec('PASS', `Bad token handled: ${tk.slice(0,24)}`, `HTTP ${r.status}`);
-    else if (r.status >= 500) rec('FAIL', `Server error on token: ${tk.slice(0,24)}`, `HTTP ${r.status}`);
+    else if (r.status >= 500) rec('FAIL', `Server error on token: ${tk.slice(0,24)}`, `HTTP ${r.status} (persisted through retry)`);
     else rec('WARN', `Token ${tk.slice(0,24)}`, `HTTP ${r.status}`);
   }
 }

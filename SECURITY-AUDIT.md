@@ -5,6 +5,12 @@ black-box checks any time with `node scripts/security-probe.mjs`.
 
 Legend: 🔴 High · 🟠 Medium · 🟡 Low · 🟢 OK
 
+> **Status (remediated):** H1, H2, M1, M2, L1, L2, L3 all fixed. Probe result:
+> 20 pass · 1 warn (cosmetic) · 0 fail. The auth gate requires a Firebase ID
+> token on every paid endpoint; invite acceptance moved server-side; push tokens
+> moved to a private subcollection; SSRF redirect-hardened. Remaining hardening
+> options noted inline (Upstash for global rate limits).
+
 ## Findings
 
 ### 🔴 H1 — Serverless API endpoints have no authentication

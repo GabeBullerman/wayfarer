@@ -1,4 +1,5 @@
 const { getAdmin, toIso } = require('./_firebaseAdmin');
+const { setSecurityHeaders } = require('./_auth');
 
 /**
  * Read-only public itinerary for a share token. Returns a SANITIZED view of a
@@ -7,6 +8,7 @@ const { getAdmin, toIso } = require('./_firebaseAdmin');
  */
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  setSecurityHeaders(res);
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const admin = getAdmin();
