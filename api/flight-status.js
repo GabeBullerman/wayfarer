@@ -11,6 +11,7 @@
 // If neither key is configured the endpoint responds 200 with
 // { configured: false } so the UI can show a friendly "not set up" message
 // instead of erroring.
+const { guard } = require('./_auth');
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -132,6 +133,9 @@ async function fetchAeroDataBox(key, iata, date) {
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const user = await guard(req, res);
+  if (!user) return;
 
   const { flightNumber, date } = req.body ?? {};
   const { iata } = parseFlightNumber(flightNumber);

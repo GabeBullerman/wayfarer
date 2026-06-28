@@ -4,7 +4,8 @@ import {
   addDoc, updateDoc, deleteDoc, query, where, orderBy,
   serverTimestamp, getDocs, arrayUnion, arrayRemove,
 } from '@angular/fire/firestore';
-import { Observable, combineLatest, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { Trip } from '../models/trip.model';
 import { TripParticipant } from '../models/trip-participant.model';
@@ -17,6 +18,7 @@ export class TripService {
   private auth = inject(AuthService);
   private participantService = inject(ParticipantService);
   private injector = inject(Injector);
+  private http = inject(HttpClient);
 
   private run<T>(fn: () => T): T {
     return runInInjectionContext(this.injector, fn);
@@ -282,28 +284,22 @@ export class TripService {
     );
   }
 
-  /** Accept an invite: token is {tripId}.{random}. Uses getDoc — no query needed. */
+  /**
+   * Accept an invite (slug = {tripId}.{random}). Handled server-side by the
+   * Admin SDK so the client never needs to read another user's trip — the
+   * api-auth interceptor attaches the caller's ID token, which the endpoint
+   * verifies before adding them as a collaborator.
+   */
   async acceptInvite(slug: string): Promise<{ tripId: string; tripName: string; alreadyMember: boolean } | null> {
-    const uid = this.auth.currentUser?.uid;
-    if (!uid) return null;
-    const dot = slug.indexOf('.');
-    if (dot === -1) return null;
-    const tripId = slug.slice(0, dot);
-    const random = slug.slice(dot + 1);
-    const tripRef = doc(this.firestore, 'trips', tripId);
-    const tripSnap = await this.run(() => getDoc(tripRef));
-    if (!tripSnap.exists()) return null;
-    const trip = tripSnap.data() as Trip;
-    if (trip.inviteToken !== random) return null;
-    const alreadyMember = trip.userId === uid || (trip.collaboratorIds ?? []).includes(uid);
-    if (!alreadyMember) {
-      await this.run(() =>
-        updateDoc(tripRef, {
-          collaboratorIds: arrayUnion(uid),
-          updatedAt: serverTimestamp(),
-        })
+    if (!this.auth.currentUser?.uid) return null;
+    try {
+      return await firstValueFrom(
+        this.http.post<{ tripId: string; tripName: string; alreadyMember: boolean }>(
+          '/api/accept-invite', { slug },
+        )
       );
+    } catch {
+      return null;
     }
-    return { tripId, tripName: trip.name, alreadyMember };
   }
 }

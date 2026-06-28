@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Firestore, doc, updateDoc } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 import { Messaging, getToken, onMessage } from '@angular/fire/messaging';
 import { Auth } from '@angular/fire/auth';
 import { environment } from '../../../environments/environment';
@@ -39,7 +39,9 @@ export class PushNotificationService {
       });
       const uid = this.auth.currentUser?.uid;
       if (uid && token) {
-        await updateDoc(doc(this.firestore, 'users', uid), { fcmToken: token });
+        // Stored in a private subcollection (owner-only readable) rather than the
+        // world-readable profile doc, so push tokens aren't exposed to other users.
+        await setDoc(doc(this.firestore, 'users', uid, 'private', 'push'), { fcmToken: token }, { merge: true });
       }
     } catch (e) {
       console.warn('FCM token error:', e);

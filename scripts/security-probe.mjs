@@ -67,7 +67,9 @@ async function checkSSRF() {
   ];
   for (const url of targets) {
     const r = await req('/api/place-photo', { body: { url } });
-    if (r.status === 400) rec('PASS', `SSRF blocked: ${url.slice(0, 40)}`, `HTTP 400`);
+    // 401 = auth gate rejects before the fetch even runs; 400 = host allowlist
+    // rejects it. Either means the SSRF target is not reachable.
+    if (r.status === 400 || r.status === 401) rec('PASS', `SSRF blocked: ${url.slice(0, 40)}`, `HTTP ${r.status}`);
     else rec('FAIL', `SSRF NOT blocked: ${url}`, `HTTP ${r.status}: ${(r.text||'').slice(0,120)}`);
   }
 }
@@ -118,18 +120,18 @@ async function checkErrorLeak() {
   else rec('PASS', 'No stack/path leak', `HTTP ${r.status}`);
 }
 
-// ── 7. Rate-limit demonstration (tiny, cheap, early-return path) ────────────
-// 20 rapid anonymous requests to a 400-returning path (no paid call). If none
-// are throttled (429), there is no rate limiting in front of the API.
+// ── 7. Anonymous flood is rejected before reaching paid services ────────────
+// With the auth gate in place, 20 rapid anonymous requests should all be 401'd
+// (rejected before any Groq/Tavily call). Per-uid rate limiting then applies
+// only to authenticated callers, so it can't be exercised anonymously here.
 async function checkRateLimit() {
   const N = 20;
   const rs = await Promise.all(
     Array.from({ length: N }, () => req('/api/ai-advisor', { body: {} }))
   );
-  const throttled = rs.filter(r => r.status === 429).length;
-  const ok = rs.filter(r => r.status === 400).length;
-  if (throttled > 0) rec('PASS', 'Rate limiting present', `${throttled}/${N} got 429`);
-  else rec('FAIL', 'No rate limiting', `${ok}/${N} anonymous requests all processed (0 × 429). A flood would pass straight through to paid services.`);
+  const blocked = rs.filter(r => r.status === 401 || r.status === 429).length;
+  if (blocked === N) rec('PASS', 'Anonymous flood blocked', `${blocked}/${N} rejected (401/429) before any paid call`);
+  else rec('FAIL', 'Anonymous requests reach paid logic', `only ${blocked}/${N} were rejected`);
 }
 
 const C = { PASS: '\x1b[32m', WARN: '\x1b[33m', FAIL: '\x1b[31m', off: '\x1b[0m' };

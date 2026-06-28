@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
       const tokens = [];
       for (const uid of memberUids) {
         if (!tokenCache.has(uid)) {
-          const u = await db.collection('users').doc(uid).get();
+          const u = await db.collection('users').doc(uid).collection('private').doc('push').get();
           tokenCache.set(uid, u.exists ? (u.data().fcmToken ?? null) : null);
         }
         const t = tokenCache.get(uid);

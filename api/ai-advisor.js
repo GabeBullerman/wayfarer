@@ -1,12 +1,15 @@
 const { groqChat } = require('./_groq');
+const { guard } = require('./_auth');
 
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const user = await guard(req, res);
+  if (!user) return;
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {

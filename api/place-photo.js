@@ -8,6 +8,8 @@
 //
 // SSRF guard: only Google-owned image hosts are allowed.
 
+const { guard } = require('./_auth');
+
 const ALLOWED_HOSTS = [
   'maps.googleapis.com',
   'maps.gstatic.com',
@@ -19,9 +21,30 @@ const ALLOWED_HOSTS = [
   'places.googleapis.com',
 ];
 
+// Follow redirects manually, re-validating the host of every hop against the
+// allowlist so an allowlisted host can't redirect us to an internal target.
+async function fetchAllowlisted(startUrl, maxHops = 4) {
+  let url = startUrl;
+  for (let i = 0; i < maxHops; i++) {
+    if (!ALLOWED_HOSTS.includes(new URL(url).host)) {
+      throw new Error(`Host not allowed: ${new URL(url).host}`);
+    }
+    const r = await fetch(url, { redirect: 'manual' });
+    if (r.status >= 300 && r.status < 400 && r.headers.get('location')) {
+      url = new URL(r.headers.get('location'), url).toString();
+      continue;
+    }
+    return r;
+  }
+  throw new Error('Too many redirects');
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const user = await guard(req, res);
+  if (!user) return;
 
   const { url } = req.body ?? {};
   if (!url || typeof url !== 'string') {
@@ -39,7 +62,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const upstream = await fetch(url, { redirect: 'follow' });
+    const upstream = await fetchAllowlisted(url);
     if (!upstream.ok) {
       return res.status(502).json({ error: `Upstream returned ${upstream.status}` });
     }

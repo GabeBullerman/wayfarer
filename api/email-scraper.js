@@ -1,4 +1,5 @@
 const { groqChat } = require('./_groq');
+const { guard } = require('./_auth');
 
 const BOOKING_SENDERS = [
   'airbnb.com', 'booking.com', 'hotels.com', 'marriott.com', 'hilton.com',
@@ -104,6 +105,9 @@ module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const user = await guard(req, res);
+  if (!user) return;
 
   const { accessToken, tripDestination } = req.body ?? {};
   if (!accessToken) return res.status(400).json({ error: 'Missing accessToken' });

@@ -1,4 +1,5 @@
 const { groqChat } = require('./_groq');
+const { guard } = require('./_auth');
 
 const DB_API   = 'https://v6.db.transport.rest';
 const OVERPASS = 'https://overpass-api.de/api/interpreter';
@@ -122,6 +123,9 @@ function summariseLocalOptions(elements) {
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const user = await guard(req, res);
+  if (!user) return;
 
   const { action, origin, destination, departure, lat, lon } = req.body ?? {};
 

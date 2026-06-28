@@ -4,7 +4,8 @@ import { provideRouter, withComponentInputBinding, TitleStrategy } from '@angula
 import { SortrekTitleStrategy } from './core/sortrek-title.strategy';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNativeDateAdapter } from '@angular/material/core';
-import { provideHttpClient, withJsonpSupport } from '@angular/common/http';
+import { provideHttpClient, withJsonpSupport, withInterceptors } from '@angular/common/http';
+import { apiAuthInterceptor } from './core/interceptors/api-auth.interceptor';
 import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, provideFirestore } from '@angular/fire/firestore';
 import { initializeAuth, browserLocalPersistence, browserPopupRedirectResolver, provideAuth } from '@angular/fire/auth';
@@ -20,7 +21,7 @@ export const appConfig: ApplicationConfig = {
     { provide: TitleStrategy, useClass: SortrekTitleStrategy },
     provideAnimationsAsync(),
     provideNativeDateAdapter(),
-    provideHttpClient(withJsonpSupport()),
+    provideHttpClient(withJsonpSupport(), withInterceptors([apiAuthInterceptor])),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => initializeFirestore(getApp(), {
       localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),

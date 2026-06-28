@@ -1,4 +1,5 @@
 const { groqChat } = require('./_groq');
+const { guard } = require('./_auth');
 
 /**
  * Searches Tavily for live web results about activities/events in a destination.
@@ -123,6 +124,9 @@ function isValidForDate(s, ty, tmonth, targetKey) {
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const user = await guard(req, res);
+  if (!user) return;
 
   const groqKey   = process.env.GROQ_API_KEY;
   const tavilyKey = process.env.TAVILY_API_KEY;
