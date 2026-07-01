@@ -258,7 +258,6 @@ export class ScheduleComponent implements OnInit {
    *  departure + arrival; hotel check-in + check-out). */
   private buildBookingEntries(bookings: Booking[]): { day: string; entry: ScheduleBookingEntry }[] {
     const out: { day: string; entry: ScheduleBookingEntry }[] = [];
-    const fmt = (ts: Timestamp) => ts.toDate().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
     // When no explicit time is set, fall back to a sensible default time-of-day
     // per kind so a typical day flows: land → rent car → check in … then
@@ -277,21 +276,24 @@ export class ScheduleComponent implements OnInit {
       ts: Timestamp | undefined,
       kind: keyof typeof KIND,
       entry: Pick<ScheduleBookingEntry, 'booking' | 'icon' | 'title' | 'subtitle'>,
-      zoneLabel?: string,
+      airport?: string | null,
     ) => {
       if (!ts) return;
-      const d = ts.toDate();
-      const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+      const instant = ts.toDate();
+      // Read the time in the AIRPORT's zone for flights (airport set); otherwise
+      // (hotels/cars, no airport) fall back to the device-local wall time.
+      const wall = this.tz.zoneWallParts(instant, airport);
+      const [hh, mm] = wall.time.split(':').map(Number);
+      const hasTime = !(hh === 0 && mm === 0);
       const k = KIND[kind];
       out.push({
-        // Bookings are real timed events → placed on their local calendar day,
-        // matching the grid's calendar key.
-        day: localDayKey(d),
+        // Placed on the airport-local (or device-local) calendar day.
+        day: localDayKey(wall.date),
         entry: {
           ...entry,
-          timeLabel: hasTime ? fmt(ts) : undefined,
-          zoneLabel: hasTime ? zoneLabel : undefined,
-          sortMinutes: hasTime ? d.getHours() * 60 + d.getMinutes() : k.default,
+          timeLabel: hasTime ? (this.tz.formatTime(instant, airport) ?? undefined) : undefined,
+          zoneLabel: hasTime ? (this.tz.zoneLabel(airport, instant) ?? undefined) : undefined,
+          sortMinutes: hasTime ? hh * 60 + mm : k.default,
           kindOrder: k.order,
         },
       });
@@ -301,16 +303,10 @@ export class ScheduleComponent implements OnInit {
       if (b.status === 'cancelled') continue;
       if (b.type === 'flight') {
         const route = [b.departureAirport, ...(b.layovers ?? []), b.arrivalAirport].filter(Boolean).join(' → ');
-        // Annotate each flight time with its airport's zone, but only when the
-        // flight actually crosses time zones (mirrors the Bookings tab).
-        const crosses = this.tz.crossesZones(
-          b.departureAirport, b.arrivalAirport,
-          b.checkIn?.toDate(), b.checkOut?.toDate(),
-        );
-        const depZone = crosses ? (this.tz.zoneLabel(b.departureAirport, b.checkIn?.toDate()) ?? undefined) : undefined;
-        const arrZone = crosses ? (this.tz.zoneLabel(b.arrivalAirport, b.checkOut?.toDate()) ?? undefined) : undefined;
-        push(b.checkIn,  'flight-depart', { booking: b, icon: 'flight_takeoff', title: `Depart — ${b.title}`, subtitle: route || undefined }, depZone);
-        push(b.checkOut, 'flight-arrive', { booking: b, icon: 'flight_land',    title: `Arrive — ${b.title}`, subtitle: route || undefined }, arrZone);
+        // Departure time/day in the departure airport's zone; arrival in the
+        // arrival airport's zone.
+        push(b.checkIn,  'flight-depart', { booking: b, icon: 'flight_takeoff', title: `Depart — ${b.title}`, subtitle: route || undefined }, b.departureAirport);
+        push(b.checkOut, 'flight-arrive', { booking: b, icon: 'flight_land',    title: `Arrive — ${b.title}`, subtitle: route || undefined }, b.arrivalAirport);
       } else if (b.type === 'hotel' || b.type === 'airbnb') {
         push(b.checkIn,  'checkin',  { booking: b, icon: 'login',  title: `Check-in — ${b.title}`,  subtitle: b.provider });
         push(b.checkOut, 'checkout', { booking: b, icon: 'logout', title: `Check-out — ${b.title}`, subtitle: b.provider });

@@ -225,27 +225,37 @@ export class BookingsComponent implements OnInit {
     return [];
   }
 
-  /** True when a flight's departure & arrival airports are in different time
-   *  zones, so we should annotate each time with its airport's zone. */
-  flightCrossesZones(b: Booking): boolean {
-    return b.type === 'flight'
-      && this.tz.crossesZones(
-        b.departureAirport, b.arrivalAirport,
-        b.checkIn?.toDate(), b.checkOut?.toDate(),
-      );
+  /** Departure date+time shown in the DEPARTURE airport's local zone (flights);
+   *  viewer-local for non-flights / unknown airports. */
+  depDateTime(b: Booking): string | null {
+    if (!b.checkIn) return null;
+    return this.formatZoned(b.checkIn.toDate(), b.type === 'flight' ? b.departureAirport : null, this.hasTime(b.checkIn));
   }
 
-  /** Short zone label (e.g. "MST") for the departure airport — null unless the
-   *  flight crosses zones. */
+  /** Arrival date+time shown in the ARRIVAL airport's local zone. */
+  arrDateTime(b: Booking): string | null {
+    if (!b.checkOut) return null;
+    return this.formatZoned(b.checkOut.toDate(), b.type === 'flight' ? b.arrivalAirport : null, this.hasTime(b.checkOut));
+  }
+
+  private formatZoned(instant: Date, airport: string | null | undefined, withTime: boolean): string {
+    const timeZone = this.tz.ianaFor(airport) ?? undefined;
+    const opts: Intl.DateTimeFormatOptions = withTime
+      ? { timeZone, month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }
+      : { timeZone, month: 'short', day: 'numeric', year: 'numeric' };
+    try { return new Intl.DateTimeFormat('en-US', opts).format(instant); }
+    catch { return instant.toLocaleString('en-US', { ...opts, timeZone: undefined }); }
+  }
+
+  /** Short zone label (e.g. "MDT") for the departure airport of a flight. */
   depZoneLabel(b: Booking): string | null {
-    return this.flightCrossesZones(b)
+    return b.type === 'flight' && this.hasTime(b.checkIn)
       ? this.tz.zoneLabel(b.departureAirport, b.checkIn?.toDate()) : null;
   }
 
-  /** Short zone label (e.g. "CEST") for the arrival airport — null unless the
-   *  flight crosses zones. */
+  /** Short zone label (e.g. "CEST") for the arrival airport of a flight. */
   arrZoneLabel(b: Booking): string | null {
-    return this.flightCrossesZones(b)
+    return b.type === 'flight' && this.hasTime(b.checkOut)
       ? this.tz.zoneLabel(b.arrivalAirport, b.checkOut?.toDate()) : null;
   }
 

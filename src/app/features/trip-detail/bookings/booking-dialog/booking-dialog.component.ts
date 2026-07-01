@@ -15,6 +15,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BookingService } from '../../../../core/services/booking.service';
 import { FlightService, FlightStatusResult } from '../../../../core/services/flight.service';
+import { TimezoneService } from '../../../../core/services/timezone.service';
 import { Booking, BookingType, BookingStatus, FlightStatus, BookingAttachment } from '../../../../core/models/booking.model';
 import { ParticipantService } from '../../../../core/services/participant.service';
 import { TripParticipant } from '../../../../core/models/trip-participant.model';
@@ -53,7 +54,23 @@ export class BookingDialogComponent implements OnInit {
   private participantService = inject(ParticipantService);
   private dialogRef = inject(MatDialogRef<BookingDialogComponent>);
   private snackBar = inject(MatSnackBar);
+  private tz = inject(TimezoneService);
+
+  private wallPrefill(instant: Date | undefined, type: string | undefined, airport: string | null | undefined):
+      { date: Date | null; time: string } {
+    if (!instant) return { date: null, time: '' };
+    if (type === 'flight' && airport) {
+      const w = this.tz.zoneWallParts(instant, airport);
+      return { date: w.date, time: w.time };
+    }
+    return { date: instant, time: toTimeStr(instant) };
+  }
   data = inject<BookingDialogData>(MAT_DIALOG_DATA);
+
+  // Prefill flight times in the AIRPORT's local zone (departure/arrival), so
+  // editing shows the same wall-clock the traveler sees, not the device zone.
+  private inPre = this.wallPrefill(this.data.booking?.checkIn?.toDate(), this.data.booking?.type, this.data.booking?.departureAirport);
+  private outPre = this.wallPrefill(this.data.booking?.checkOut?.toDate(), this.data.booking?.type, this.data.booking?.arrivalAirport);
 
   loading = signal(false);
   isEdit = !!this.data.booking;
@@ -113,10 +130,10 @@ export class BookingDialogComponent implements OnInit {
     confirmationNumber: [this.data.booking?.confirmationNumber ?? ''],
     address: [this.data.booking?.address ?? ''],
     bookingUrl: [this.data.booking?.bookingUrl ?? ''],
-    checkIn: [this.data.booking?.checkIn?.toDate() ?? null],
-    checkInTime: [toTimeStr(this.data.booking?.checkIn?.toDate())],
-    checkOut: [this.data.booking?.checkOut?.toDate() ?? null],
-    checkOutTime: [toTimeStr(this.data.booking?.checkOut?.toDate())],
+    checkIn: [this.inPre.date],
+    checkInTime: [this.inPre.time],
+    checkOut: [this.outPre.date],
+    checkOutTime: [this.outPre.time],
     flightNumber: [this.data.booking?.flightNumber ?? ''],
     departureAirport: [this.data.booking?.departureAirport ?? ''],
     arrivalAirport: [this.data.booking?.arrivalAirport ?? ''],
@@ -268,8 +285,15 @@ export class BookingDialogComponent implements OnInit {
     const v = this.form.value;
     const isFlight = v.type === 'flight';
 
-    const checkIn = combine(v.checkIn ?? null, v.checkInTime ?? null);
-    const checkOut = combine(v.checkOut ?? null, v.checkOutTime ?? null);
+    // Flights: interpret the entered times in the DEPARTURE/ARRIVAL airport's
+    // local zone so they're anchored to the airport (shown correctly to anyone).
+    // Non-flights keep the device-local combine.
+    const checkIn = isFlight
+      ? (v.checkIn ? this.tz.wallToUtc(v.checkIn, v.checkInTime ?? null, v.departureAirport) : null)
+      : combine(v.checkIn ?? null, v.checkInTime ?? null);
+    const checkOut = isFlight
+      ? (v.checkOut ? this.tz.wallToUtc(v.checkOut, v.checkOutTime ?? null, v.arrivalAirport) : null)
+      : combine(v.checkOut ?? null, v.checkOutTime ?? null);
 
     const payload: Omit<Booking, 'id' | 'createdAt'> = {
       tripId: this.data.tripId,

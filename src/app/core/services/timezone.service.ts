@@ -46,6 +46,59 @@ export class TimezoneService {
     }
   }
 
+  /**
+   * Interpret a wall-clock (a picked date + "HH:MM") as local time AT THE
+   * AIRPORT, and return the matching absolute UTC instant. Falls back to the
+   * device's local zone when the airport zone is unknown. Store the result so
+   * the time is anchored to the airport, independent of who views it.
+   */
+  wallToUtc(date: Date, timeStr?: string | null, airport?: string | null): Date {
+    const d = new Date(date);
+    let hh = d.getHours(), mm = d.getMinutes();
+    if (timeStr && /^\d{1,2}:\d{2}/.test(timeStr)) {
+      const [h, m] = timeStr.split(':').map(Number);
+      hh = h; mm = m;
+    }
+    const iana = this.ianaFor(airport);
+    if (!iana) { d.setHours(hh, mm, 0, 0); return d; } // fallback: device local
+    // The picked date's LOCAL parts are the calendar day; combine with the wall
+    // time, treat as if UTC, then subtract the airport zone's offset.
+    const guess = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm);
+    const off = this.offsetMinutes(iana, new Date(guess)) ?? 0;
+    return new Date(guess - off * 60000);
+  }
+
+  /** Format an instant's time in the airport's local zone (device zone if
+   *  unknown), e.g. "2:35 PM". */
+  formatTime(instant?: Date | null, airport?: string | null): string | null {
+    if (!instant) return null;
+    const iana = this.ianaFor(airport) ?? undefined;
+    try {
+      return new Intl.DateTimeFormat('en-US', { timeZone: iana, hour: 'numeric', minute: '2-digit' }).format(instant);
+    } catch {
+      return instant.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+  }
+
+  /** The airport-zone wall-clock parts of an instant, for prefilling an edit
+   *  form so the user sees/edits the airport-local date & time. */
+  zoneWallParts(instant: Date, airport?: string | null): { date: Date; time: string } {
+    const iana = this.ianaFor(airport);
+    const hm = (h: number, m: number) => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    if (!iana) {
+      const d = new Date(instant);
+      return { date: new Date(d.getFullYear(), d.getMonth(), d.getDate()), time: hm(d.getHours(), d.getMinutes()) };
+    }
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone: iana, hour12: false,
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    });
+    const p = dtf.formatToParts(instant);
+    const get = (t: string) => Number(p.find(x => x.type === t)?.value);
+    let hh = get('hour'); if (hh === 24) hh = 0;
+    return { date: new Date(get('year'), get('month') - 1, get('day')), time: hm(hh, get('minute')) };
+  }
+
   /** UTC offset in minutes for an IANA zone at a given instant. */
   private offsetMinutes(iana: string, date: Date): number | null {
     try {
