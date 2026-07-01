@@ -205,3 +205,31 @@ html.dark .auth-logo--dark { display: block; }
     }
   }
 }
+
+/* ── Trip dialog: flexible height, mobile-friendly ──────────────────────────
+   Fills the available height (capped by the dialog's maxHeight) and scrolls
+   only its content when it genuinely overflows — so the modal never pushes off
+   the viewport. Full-width, edge-to-edge on phones. */
+.trip-dialog .mat-mdc-dialog-surface {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+}
+.trip-dialog .mat-mdc-dialog-content {
+  max-height: unset;      /* use the panel's maxHeight, not the default 65vh */
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+@media (max-width: 599px) {
+  .trip-dialog {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    max-height: 100dvh !important;
+    height: 100dvh;
+  }
+  .trip-dialog .mat-mdc-dialog-surface { border-radius: 0; }
+  /* Tighter rhythm so more fits before any scroll is needed. */
+  .trip-dialog .mt-24 { margin-top: 14px !important; }
+  .trip-dialog .mt-16 { margin-top: 10px !important; }
+  .trip-dialog .form-actions { position: sticky; bottom: 0; background: var(--st-surface); padding-bottom: 8px; }
+}

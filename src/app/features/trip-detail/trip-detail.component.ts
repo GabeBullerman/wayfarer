@@ -151,7 +151,9 @@ export class TripDetailComponent implements OnInit {
   get tripId() { return this.id; }
 
   editTrip(trip: Trip) {
-    this.dialog.open(TripFormDialogComponent, { data: { trip }, width: '560px' });
+    this.dialog.open(TripFormDialogComponent, {
+      data: { trip }, width: '560px', maxWidth: '96vw', maxHeight: '92vh', panelClass: 'trip-dialog',
+    });
   }
 
   deleteTrip(trip: Trip) {

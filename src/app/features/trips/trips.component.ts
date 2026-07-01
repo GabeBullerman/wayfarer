@@ -91,13 +91,17 @@ export class TripsComponent implements OnInit {
     return trip.userId === this.currentUserId;
   }
 
+  private readonly tripDialogConfig = {
+    width: '560px', maxWidth: '96vw', maxHeight: '92vh', panelClass: 'trip-dialog',
+  };
+
   openNewTrip() {
-    this.dialog.open(TripFormDialogComponent, { data: {}, width: '560px' });
+    this.dialog.open(TripFormDialogComponent, { data: {}, ...this.tripDialogConfig });
   }
 
   openEditTrip(trip: Trip, event: Event) {
     event.stopPropagation();
-    this.dialog.open(TripFormDialogComponent, { data: { trip }, width: '560px' });
+    this.dialog.open(TripFormDialogComponent, { data: { trip }, ...this.tripDialogConfig });
   }
 
   deleteTrip(trip: Trip, event: Event) {
