@@ -215,6 +215,7 @@ html.dark .auth-logo--dark { display: block; }
   display: flex;
   flex-direction: column;
   border-radius: 16px;
+  position: relative;   /* anchor the floating close button */
 }
 .trip-dialog .mat-mdc-dialog-content {
   max-height: unset;      /* use the panel's maxHeight, not the default 65vh */
@@ -233,6 +234,8 @@ html.dark .auth-logo--dark { display: block; }
     height: 100dvh;
   }
   .trip-dialog .mat-mdc-dialog-surface { border-radius: 0; }
+  /* No fixed min-width on phones — avoids horizontal overflow on narrow screens. */
+  .trip-dialog .mat-mdc-dialog-content { min-width: 0 !important; }
   /* Tighter rhythm so more fits before any scroll is needed. */
   .trip-dialog .mt-24 { margin-top: 14px !important; }
   .trip-dialog .mt-16 { margin-top: 10px !important; }

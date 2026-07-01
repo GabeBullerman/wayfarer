@@ -1,15 +1,14 @@
-<div mat-dialog-title class="dialog-title-row">
-  <span class="dialog-title-text">
-    @if (isEdit) { Edit Trip }
-    @else if (step() === 1) { What kind of trip? }
-    @else { New {{ selectedTypeMeta?.label }} }
-  </span>
-  <button mat-icon-button mat-dialog-close aria-label="Close" class="dialog-close" type="button">
-    <mat-icon>close</mat-icon>
-  </button>
-</div>
+<button mat-icon-button mat-dialog-close aria-label="Close" class="dialog-close-float" type="button">
+  <mat-icon>close</mat-icon>
+</button>
 
-<mat-dialog-content>
+<h2 mat-dialog-title class="dialog-title-text">
+  @if (isEdit) { Edit Trip }
+  @else if (step() === 1) { What kind of trip? }
+  @else { New {{ selectedTypeMeta?.label }} }
+</h2>
+
+<mat-dialog-content #dialogBody>
   <!-- ── Step 1: choose a trip type ─────────────────────────────────────── -->
   @if (step() === 1) {
     <p class="type-intro">Pick a style — it tailors your packing list, cost tracking, reminders, and how flight times are shown.</p>

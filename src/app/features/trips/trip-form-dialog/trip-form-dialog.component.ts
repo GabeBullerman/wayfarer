@@ -1,4 +1,4 @@
-import { Component, inject, signal, NgZone, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, NgZone, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -131,15 +131,25 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
     return this.tripTypes.find(t => t.value === this.form.get('tripType')?.value);
   }
 
+  @ViewChild('dialogBody', { read: ElementRef }) private dialogBody?: ElementRef<HTMLElement>;
+
+  /** Reset the modal's scroll to the top after a step swaps, so the new step
+   *  never starts mid-scroll (which looked like "broken" scrolling). */
+  private resetScroll() {
+    setTimeout(() => { if (this.dialogBody) this.dialogBody.nativeElement.scrollTop = 0; });
+  }
+
   /** Pick a type card → advance to the form. */
   chooseType(value: TripType) {
     this.form.patchValue({ tripType: value });
     this.step.set(2);
+    this.resetScroll();
   }
 
   /** Go back to the type picker (new trips only). */
   backToTypes() {
     this.step.set(1);
+    this.resetScroll();
   }
 
   get startDateValue(): Date | null {

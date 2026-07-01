@@ -234,16 +234,15 @@ mat-dialog-content {
   .type-icon, .type-icon mat-icon, .chosen-type-icon, .chosen-type-icon mat-icon { animation: none !important; }
 }
 
-/* Dialog title with a close (X) — always reachable, esp. on mobile step 1 */
-.dialog-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+/* Floating close (X) — always visible, top-right of the dialog, over content */
+.dialog-close-float {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 20;
+  color: var(--st-on-surface);
+  background: var(--st-surface);
+  box-shadow: 0 1px 4px var(--st-shadow-soft);
 }
-.dialog-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.dialog-close {
-  flex-shrink: 0;
-  margin: -8px -8px -8px 0;
-  color: var(--st-on-surface-muted);
-}
+/* Keep the title clear of the floating X */
+.dialog-title-text { margin-right: 40px; }
