@@ -201,6 +201,7 @@ html.dark .auth-logo--dark { display: block; }
     .mat-mdc-dialog-content {
       max-height: calc(100vh - 140px);
       overflow-y: auto;
+      overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
     }
   }
@@ -219,6 +220,10 @@ html.dark .auth-logo--dark { display: block; }
   max-height: unset;      /* use the panel's maxHeight, not the default 65vh */
   flex: 1 1 auto;
   overflow-y: auto;
+  /* Keep scroll (and its momentum/overscroll) inside the modal — don't chain
+     to the page behind, which caused the background to move on mobile. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 @media (max-width: 599px) {
   .trip-dialog {

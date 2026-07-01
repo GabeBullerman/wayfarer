@@ -1,8 +1,13 @@
-<h2 mat-dialog-title>
-  @if (isEdit) { Edit Trip }
-  @else if (step() === 1) { What kind of trip? }
-  @else { New {{ selectedTypeMeta?.label }} }
-</h2>
+<div mat-dialog-title class="dialog-title-row">
+  <span class="dialog-title-text">
+    @if (isEdit) { Edit Trip }
+    @else if (step() === 1) { What kind of trip? }
+    @else { New {{ selectedTypeMeta?.label }} }
+  </span>
+  <button mat-icon-button mat-dialog-close aria-label="Close" class="dialog-close" type="button">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
 <mat-dialog-content>
   <!-- ── Step 1: choose a trip type ─────────────────────────────────────── -->

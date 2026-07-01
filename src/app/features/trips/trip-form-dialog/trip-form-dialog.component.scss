@@ -233,3 +233,17 @@ mat-dialog-content {
 @media (prefers-reduced-motion: reduce) {
   .type-icon, .type-icon mat-icon, .chosen-type-icon, .chosen-type-icon mat-icon { animation: none !important; }
 }
+
+/* Dialog title with a close (X) — always reachable, esp. on mobile step 1 */
+.dialog-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dialog-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dialog-close {
+  flex-shrink: 0;
+  margin: -8px -8px -8px 0;
+  color: var(--st-on-surface-muted);
+}
