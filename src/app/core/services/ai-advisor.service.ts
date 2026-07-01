@@ -27,6 +27,14 @@ export class AiAdvisorService {
       destination: trip.destination,
       startDate: trip.startDate.toDate().toISOString(),
       endDate: trip.endDate.toDate().toISOString(),
+      tripType: trip.tripType ?? 'other',
+      // Road-trip context so packing/suggestions can tailor (driving, no
+      // baggage limits, own vs rental vehicle, route endpoints).
+      ...(trip.tripType === 'road-trip' ? {
+        startLocation: trip.startLocation ?? null,
+        endLocation: trip.endLocation ?? null,
+        vehicle: trip.vehicle ?? 'own',
+      } : {}),
     };
   }
 

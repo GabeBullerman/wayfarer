@@ -101,3 +101,17 @@ mat-dialog-content {
     flex-shrink: 0;
   }
 }
+
+/* Road-trip fields */
+.road-trip-block { margin-top: 4px; }
+.vehicle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.vehicle-label {
+  font-size: 0.85rem;
+  color: var(--st-on-surface-muted);
+  font-weight: 600;
+}

@@ -616,3 +616,35 @@
   font-weight: 500;
   mat-icon { font-size: 15px; width: 15px; height: 15px; }
 }
+
+/* Road-trip route card */
+.roadtrip-card {
+  border-radius: 14px !important;
+  border-left: 4px solid var(--st-primary);
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px !important;
+  }
+  .rt-route {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--st-on-surface);
+    flex-wrap: wrap;
+    mat-icon { color: var(--st-primary-soft); font-size: 20px; width: 20px; height: 20px; }
+    .rt-arrow { color: var(--st-on-surface-faint); }
+  }
+  .rt-vehicle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--st-on-surface-muted);
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  }
+}

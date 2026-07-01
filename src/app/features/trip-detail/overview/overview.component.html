@@ -2,6 +2,25 @@
   @if (bookings$ | async; as bookings) {
     @if (items$ | async; as items) {
 
+      <!-- Road-trip route -->
+      @if (trip.tripType === 'road-trip' && (trip.startLocation || trip.endLocation)) {
+        <mat-card class="roadtrip-card">
+          <mat-card-content>
+            <div class="rt-route">
+              <mat-icon>trip_origin</mat-icon>
+              <span>{{ trip.startLocation || '—' }}</span>
+              <mat-icon class="rt-arrow">arrow_forward</mat-icon>
+              <mat-icon>place</mat-icon>
+              <span>{{ trip.endLocation || '—' }}</span>
+            </div>
+            <span class="rt-vehicle">
+              <mat-icon>{{ trip.vehicle === 'rented' ? 'car_rental' : 'directions_car' }}</mat-icon>
+              {{ trip.vehicle === 'rented' ? 'Rental vehicle' : 'My vehicle' }}
+            </span>
+          </mat-card-content>
+        </mat-card>
+      }
+
       <!-- Today Card -->
       @if (isOnTripNow()) {
         <mat-card class="today-card">

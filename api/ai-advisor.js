@@ -25,6 +25,17 @@ module.exports = async (req, res) => {
   const endDate   = new Date(trip.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const durationDays = Math.ceil((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24)) + 1;
 
+  // Tailor recommendations to how the trip is taken.
+  const TYPE_HINTS = {
+    'road-trip': `This is a ROAD TRIP${trip.startLocation || trip.endLocation ? ` from ${trip.startLocation || '?'} to ${trip.endLocation || '?'}` : ''}, in ${trip.vehicle === 'rented' ? 'a rental vehicle' : 'their own vehicle'}. No airline baggage limits — favor driving essentials (snacks, chargers, road games, emergency kit, ${trip.vehicle === 'rented' ? 'rental paperwork' : 'vehicle docs/registration'}). Skip flight-only items.`,
+    'flight-domestic': `This is a DOMESTIC trip WITH A FLIGHT. Respect carry-on/liquid limits; include boarding pass / ID, not a passport.`,
+    'flight-international': `This is an INTERNATIONAL trip WITH A FLIGHT. Include passport, visas, travel adapters, currency, and respect airline baggage/liquid limits.`,
+    'train': `This trip is primarily by TRAIN/RAIL. Favor rail-friendly packing and tickets/passes.`,
+    'cruise': `This is a CRUISE. Favor cruise essentials (formal night attire, motion-sickness remedies, documents, limited luggage).`,
+    'other': '',
+  };
+  const typeHint = TYPE_HINTS[trip.tripType] || '';
+
   try {
     if (type === 'packing') {
       const content = await groqChat(apiKey, [
@@ -34,7 +45,7 @@ module.exports = async (req, res) => {
         },
         {
           role: 'user',
-          content: `Trip: ${trip.name} to ${trip.destination}\nDuration: ${durationDays} days (${startDate} – ${endDate})\nAlready packing: ${existingItems?.length ? existingItems.join(', ') : 'nothing yet'}\n\nSuggest 20 essential items I haven't already listed. Focus on practical must-haves for this destination and trip length.`,
+          content: `Trip: ${trip.name} to ${trip.destination}\nDuration: ${durationDays} days (${startDate} – ${endDate})\n${typeHint ? 'Trip style: ' + typeHint + '\n' : ''}Already packing: ${existingItems?.length ? existingItems.join(', ') : 'nothing yet'}\n\nSuggest 20 essential items I haven't already listed. Focus on practical must-haves for this destination, trip length, and trip style.`,
         },
       ], { maxTokens: 1024 });
 
@@ -55,7 +66,7 @@ module.exports = async (req, res) => {
     if (type === 'chat') {
       const systemPrompt = `You are a travel assistant built into the SorTrek trip-planning app. You only answer questions related to travel — destinations, packing, itineraries, transport, accommodation, local customs, food, safety, visas, currency, and similar topics. If the user asks about anything unrelated to travel, politely decline and redirect them to their trip.
 
-The user is planning "${trip.name}" — a trip to ${trip.destination} from ${startDate} to ${endDate} (${durationDays} days).
+The user is planning "${trip.name}" — a trip to ${trip.destination} from ${startDate} to ${endDate} (${durationDays} days).${typeHint ? '\n' + typeHint : ''}
 
 Important: your knowledge has a training cutoff and you do not have access to live data. Always remind users to verify current prices, opening hours, visa requirements, and availability directly with official sources before relying on any specific figures you provide. Give concise, practical advice. Use short paragraphs or bullet points. Avoid generic filler.`;
 

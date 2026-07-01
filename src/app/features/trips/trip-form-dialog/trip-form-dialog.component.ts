@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -14,7 +15,7 @@ import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/ma
 import { TripService } from '../../../core/services/trip.service';
 import { CoverPhotoService } from '../../../core/services/cover-photo.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
-import { Trip } from '../../../core/models/trip.model';
+import { Trip, TripType, VehicleKind } from '../../../core/models/trip.model';
 import { Timestamp } from '@angular/fire/firestore';
 import { calendarDate, toCalendarTimestamp } from '../../../core/util/trip-date.util';
 import { from, Observable, Subject } from 'rxjs';
@@ -26,13 +27,23 @@ export interface TripFormDialogData {
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'MXN', 'BRL', 'INR', 'CHF'];
 
+export const TRIP_TYPES: { value: TripType; label: string; icon: string }[] = [
+  { value: 'road-trip',            label: 'Road Trip',                 icon: 'directions_car' },
+  { value: 'flight-domestic',      label: 'Domestic (with flight)',    icon: 'flight' },
+  { value: 'flight-international',  label: 'International (with flight)', icon: 'public' },
+  { value: 'train',                label: 'Train / Rail',              icon: 'train' },
+  { value: 'cruise',               label: 'Cruise',                    icon: 'directions_boat' },
+  { value: 'other',                label: 'Other',                     icon: 'luggage' },
+];
+
 @Component({
   selector: 'app-trip-form-dialog',
   standalone: true,
   imports: [
     ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatDatepickerModule, MatNativeDateModule, MatSelectModule,
-    MatIconModule, MatProgressSpinnerModule, MatSnackBarModule, MatAutocompleteModule,
+    MatButtonToggleModule, MatIconModule, MatProgressSpinnerModule, MatSnackBarModule,
+    MatAutocompleteModule,
   ],
   templateUrl: './trip-form-dialog.component.html',
   styleUrl: './trip-form-dialog.component.scss',
@@ -61,14 +72,26 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
   private destinationInput$ = new Subject<string>();
   private destroy$ = new Subject<void>();
 
+  readonly tripTypes = TRIP_TYPES;
+
   form = this.fb.group({
     name: [this.data?.trip?.name ?? '', [Validators.required, Validators.maxLength(60)]],
+    tripType: [this.data?.trip?.tripType ?? 'other' as TripType, [Validators.required]],
     destination: [this.data?.trip?.destination ?? '', [Validators.required]],
     description: [this.data?.trip?.description ?? ''],
     startDate: [this.data?.trip?.startDate ? calendarDate(this.data.trip.startDate) : null, Validators.required],
     endDate: [this.data?.trip?.endDate ? calendarDate(this.data.trip.endDate) : null, Validators.required],
     currency: [this.data?.trip?.currency ?? 'USD', Validators.required],
+    // Road-trip-only fields.
+    startLocation: [this.data?.trip?.startLocation ?? ''],
+    endLocation: [this.data?.trip?.endLocation ?? ''],
+    vehicle: [this.data?.trip?.vehicle ?? 'own' as VehicleKind],
   });
+
+  /** Reactive flag for showing road-trip-only fields. */
+  get isRoadTrip(): boolean {
+    return this.form.get('tripType')?.value === 'road-trip';
+  }
 
   get startDateValue(): Date | null {
     return this.form.get('startDate')?.value ?? null;
@@ -176,7 +199,8 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
     }
     this.loading.set(true);
     try {
-      const { name, destination, description, startDate, endDate, currency } = this.form.value;
+      const { name, tripType, destination, description, startDate, endDate, currency,
+              startLocation, endLocation, vehicle } = this.form.value;
 
       // Persist the cover to Storage so the (otherwise short-lived) Google photo
       // URL doesn't expire. Falls back to whatever we have if persistence fails.
@@ -189,14 +213,22 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
         }
       }
 
+      const isRoad = tripType === 'road-trip';
       const payload: Omit<Trip, 'id' | 'userId' | 'createdAt' | 'updatedAt'> = {
         name: name!,
+        tripType: (tripType ?? 'other') as TripType,
         destination: destination!,
         description: description ?? '',
         startDate: toCalendarTimestamp(startDate!),
         endDate: toCalendarTimestamp(endDate!),
         currency: currency!,
         coverPhotoUrl,
+        // Road-trip-only fields (kept off other trip types).
+        ...(isRoad ? {
+          startLocation: startLocation?.trim() || undefined,
+          endLocation: endLocation?.trim() || undefined,
+          vehicle: (vehicle ?? 'own') as VehicleKind,
+        } : {}),
       };
 
       const op: Observable<void> = this.isEdit

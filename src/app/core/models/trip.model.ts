@@ -1,5 +1,17 @@
 import { Timestamp } from '@angular/fire/firestore';
 
+/** How the trip is taken — drives tailored recommendations and which fields
+ *  are collected (e.g. a road trip needs a start/end and a vehicle). */
+export type TripType =
+  | 'road-trip'
+  | 'flight-domestic'
+  | 'flight-international'
+  | 'train'
+  | 'cruise'
+  | 'other';
+
+export type VehicleKind = 'own' | 'rented';
+
 export interface Trip {
   id?: string;
   userId: string;
@@ -8,6 +20,12 @@ export interface Trip {
   description?: string;
   startDate: Timestamp;
   endDate: Timestamp;
+  /** Trip style (defaults to 'other' for pre-existing trips). */
+  tripType?: TripType;
+  /** Road trips: where the drive begins and ends, and whose vehicle. */
+  startLocation?: string;
+  endLocation?: string;
+  vehicle?: VehicleKind;
   coverPhotoUrl?: string;
   totalCost?: number;
   currency: string;
