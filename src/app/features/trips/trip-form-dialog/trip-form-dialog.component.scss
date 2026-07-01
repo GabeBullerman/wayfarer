@@ -115,3 +115,121 @@ mat-dialog-content {
   color: var(--st-on-surface-muted);
   font-weight: 600;
 }
+
+/* ── Step 1: trip-type picker ─────────────────────────────────────────────── */
+.type-intro {
+  margin: 0 0 16px;
+  color: var(--st-on-surface-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.type-card {
+  position: relative;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 16px 18px;
+  border-radius: 14px;
+  border: 1.5px solid var(--st-border);
+  background: var(--st-surface);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--st-primary-soft);
+    box-shadow: 0 8px 22px var(--st-shadow-soft);
+  }
+
+  .type-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--st-primary-tint-bg);
+    color: var(--st-primary-tint-fg);
+    mat-icon { font-size: 26px; width: 26px; height: 26px; }
+  }
+
+  .type-title { font-weight: 700; font-size: 1rem; color: var(--st-on-surface); }
+  .type-blurb { font-size: 0.8rem; color: var(--st-on-surface-muted); line-height: 1.45; }
+
+  .type-go {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    color: var(--st-on-surface-faint);
+    transition: transform 0.15s, color 0.15s;
+    font-size: 20px;
+  }
+  &:hover .type-go { color: var(--st-primary); transform: translateX(3px); }
+}
+
+/* ── Step 2: chosen-type header ───────────────────────────────────────────── */
+.chosen-type {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--st-surface-2);
+  border: 1px solid var(--st-border);
+
+  .chosen-type-icon {
+    width: 40px; height: 40px; flex-shrink: 0;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--st-primary-tint-bg);
+    color: var(--st-primary-tint-fg);
+    mat-icon { font-size: 22px; width: 22px; height: 22px; }
+  }
+  .chosen-type-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .chosen-type-label { font-weight: 700; color: var(--st-on-surface); font-size: 0.95rem; }
+  .chosen-type-blurb {
+    font-size: 0.75rem; color: var(--st-on-surface-muted); line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .change-type-btn { flex-shrink: 0; }
+}
+
+/* ── Icon animations ("idea of the trip") ─────────────────────────────────── */
+/* Idle for the single chosen-type icon; on hover for the picker cards. */
+.chosen-type-icon.anim-drive  { animation: tt-drive 1.4s ease-in-out infinite; }
+.chosen-type-icon.anim-fly    { animation: tt-fly   2.4s ease-in-out infinite; }
+.chosen-type-icon.anim-spin   { mat-icon { animation: tt-spin 6s linear infinite; } }
+.chosen-type-icon.anim-slide  { animation: tt-slide 1.6s ease-in-out infinite; }
+.chosen-type-icon.anim-rock   { animation: tt-rock  2.2s ease-in-out infinite; }
+.chosen-type-icon.anim-float  { animation: tt-float 2.4s ease-in-out infinite; }
+
+.type-card:hover .type-icon.anim-drive { animation: tt-drive 0.7s ease-in-out infinite; }
+.type-card:hover .type-icon.anim-fly   { animation: tt-fly   1.2s ease-in-out infinite; }
+.type-card:hover .type-icon.anim-spin mat-icon { animation: tt-spin 3s linear infinite; }
+.type-card:hover .type-icon.anim-slide { animation: tt-slide 0.8s ease-in-out infinite; }
+.type-card:hover .type-icon.anim-rock  { animation: tt-rock  1.1s ease-in-out infinite; }
+.type-card:hover .type-icon.anim-float { animation: tt-float 1.2s ease-in-out infinite; }
+
+@keyframes tt-drive { 0%,100% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }
+@keyframes tt-fly   { 0%,100% { transform: translate(0,0) rotate(0); } 50% { transform: translate(3px,-4px) rotate(-10deg); } }
+@keyframes tt-spin  { to { transform: rotate(360deg); } }
+@keyframes tt-slide { 0%,100% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
+@keyframes tt-rock  { 0%,100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+@keyframes tt-float { 0%,100% { transform: translateY(-3px); } 50% { transform: translateY(3px); } }
+
+@media (max-width: 520px) {
+  .type-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .type-icon, .type-icon mat-icon, .chosen-type-icon, .chosen-type-icon mat-icon { animation: none !important; }
+}

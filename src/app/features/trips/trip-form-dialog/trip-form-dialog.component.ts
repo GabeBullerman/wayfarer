@@ -1,4 +1,5 @@
 import { Component, inject, signal, NgZone, OnInit, OnDestroy } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -27,20 +28,48 @@ export interface TripFormDialogData {
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'MXN', 'BRL', 'INR', 'CHF'];
 
-export const TRIP_TYPES: { value: TripType; label: string; icon: string }[] = [
-  { value: 'road-trip',            label: 'Road Trip',                 icon: 'directions_car' },
-  { value: 'flight-domestic',      label: 'Domestic (with flight)',    icon: 'flight' },
-  { value: 'flight-international',  label: 'International (with flight)', icon: 'public' },
-  { value: 'train',                label: 'Train / Rail',              icon: 'train' },
-  { value: 'cruise',               label: 'Cruise',                    icon: 'directions_boat' },
-  { value: 'other',                label: 'Other',                     icon: 'luggage' },
+export interface TripTypeMeta {
+  value: TripType;
+  label: string;
+  icon: string;
+  /** One-line why-it-matters shown on the selection card. */
+  blurb: string;
+  /** CSS class driving the little icon animation. */
+  anim: string;
+}
+
+export const TRIP_TYPES: TripTypeMeta[] = [
+  {
+    value: 'road-trip', label: 'Road Trip', icon: 'directions_car', anim: 'anim-drive',
+    blurb: 'Track your route start → end and whether it\'s your car or a rental. We\'ll suggest driving essentials, fuel/mileage costs, and skip flight-only items.',
+  },
+  {
+    value: 'flight-domestic', label: 'Domestic Flight', icon: 'flight_takeoff', anim: 'anim-fly',
+    blurb: 'Carry-on & liquid limits, boarding-pass/ID reminders. Flight times show in each airport\'s local zone.',
+  },
+  {
+    value: 'flight-international', label: 'International Flight', icon: 'public', anim: 'anim-spin',
+    blurb: 'Passport, visas, adapters & currency reminders, checked-bag rules, and airport-local departure/arrival times across zones.',
+  },
+  {
+    value: 'train', label: 'Train / Rail', icon: 'train', anim: 'anim-slide',
+    blurb: 'Rail-friendly packing and ticket/pass tracking — no baggage limits, station-to-station timing.',
+  },
+  {
+    value: 'cruise', label: 'Cruise', icon: 'directions_boat', anim: 'anim-rock',
+    blurb: 'Cabin details, formal-night attire, motion-sickness prep, and shore-excursion port days.',
+  },
+  {
+    value: 'other', label: 'Something Else', icon: 'luggage', anim: 'anim-float',
+    blurb: 'A flexible trip — we\'ll keep the essentials simple and let you add what you need.',
+  },
 ];
 
 @Component({
   selector: 'app-trip-form-dialog',
   standalone: true,
   imports: [
-    ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
+    ReactiveFormsModule, NgClass, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatDatepickerModule, MatNativeDateModule, MatSelectModule,
     MatButtonToggleModule, MatIconModule, MatProgressSpinnerModule, MatSnackBarModule,
     MatAutocompleteModule,
@@ -61,6 +90,10 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
   loading = signal(false);
   currencies = CURRENCIES;
   isEdit = !!this.data?.trip;
+
+  /** Two-step flow: new trips pick a type first (step 1) then fill the form
+   *  (step 2); edits jump straight to the form. */
+  step = signal<1 | 2>(this.isEdit ? 2 : 1);
 
   placeSuggestions = signal<google.maps.places.AutocompletePrediction[]>([]);
   selectedPhotoUrl = signal<string | null>(this.data?.trip?.coverPhotoUrl ?? null);
@@ -91,6 +124,22 @@ export class TripFormDialogComponent implements OnInit, OnDestroy {
   /** Reactive flag for showing road-trip-only fields. */
   get isRoadTrip(): boolean {
     return this.form.get('tripType')?.value === 'road-trip';
+  }
+
+  /** Metadata for the currently-selected type (title, icon, blurb). */
+  get selectedTypeMeta(): TripTypeMeta | undefined {
+    return this.tripTypes.find(t => t.value === this.form.get('tripType')?.value);
+  }
+
+  /** Pick a type card → advance to the form. */
+  chooseType(value: TripType) {
+    this.form.patchValue({ tripType: value });
+    this.step.set(2);
+  }
+
+  /** Go back to the type picker (new trips only). */
+  backToTypes() {
+    this.step.set(1);
   }
 
   get startDateValue(): Date | null {

@@ -1,169 +1,203 @@
-<h2 mat-dialog-title>{{ isEdit ? 'Edit Trip' : 'New Trip' }}</h2>
+<h2 mat-dialog-title>
+  @if (isEdit) { Edit Trip }
+  @else if (step() === 1) { What kind of trip? }
+  @else { New {{ selectedTypeMeta?.label }} }
+</h2>
 
 <mat-dialog-content>
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Trip Name</mat-label>
-      <input matInput formControlName="name" placeholder="e.g. Summer in Italy" />
-      <mat-icon matPrefix>edit</mat-icon>
-      @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
-        <mat-error>Trip name is required</mat-error>
+  <!-- ── Step 1: choose a trip type ─────────────────────────────────────── -->
+  @if (step() === 1) {
+    <p class="type-intro">Pick a style — it tailors your packing list, cost tracking, reminders, and how flight times are shown.</p>
+    <div class="type-grid">
+      @for (t of tripTypes; track t.value) {
+        <button type="button" class="type-card" (click)="chooseType(t.value)">
+          <div class="type-icon" [ngClass]="t.anim">
+            <mat-icon>{{ t.icon }}</mat-icon>
+          </div>
+          <div class="type-title">{{ t.label }}</div>
+          <div class="type-blurb">{{ t.blurb }}</div>
+          <mat-icon class="type-go">arrow_forward</mat-icon>
+        </button>
       }
-    </mat-form-field>
+    </div>
+  }
 
-    <mat-form-field appearance="outline" class="full-width mt-16">
-      <mat-label>Trip Type</mat-label>
-      <mat-select formControlName="tripType">
-        @for (t of tripTypes; track t.value) {
-          <mat-option [value]="t.value">
-            <mat-icon>{{ t.icon }}</mat-icon> {{ t.label }}
-          </mat-option>
-        }
-      </mat-select>
-      <mat-icon matPrefix>map</mat-icon>
-    </mat-form-field>
-
-    <!-- Road-trip-only: start/end of the drive + whose vehicle -->
-    @if (isRoadTrip) {
-      <div class="road-trip-block">
-        <div class="date-row mt-16">
-          <mat-form-field appearance="outline">
-            <mat-label>Starting from</mat-label>
-            <input matInput formControlName="startLocation" placeholder="e.g. Denver, CO" />
-            <mat-icon matPrefix>trip_origin</mat-icon>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Ending at</mat-label>
-            <input matInput formControlName="endLocation" placeholder="e.g. Moab, UT" />
-            <mat-icon matPrefix>place</mat-icon>
-          </mat-form-field>
+  <!-- ── Step 2: the form (tailored to the chosen type) ─────────────────── -->
+  @if (step() === 2) {
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Selected type header -->
+      <div class="chosen-type">
+        <div class="chosen-type-icon" [ngClass]="selectedTypeMeta?.anim ?? ''">
+          <mat-icon>{{ selectedTypeMeta?.icon ?? 'luggage' }}</mat-icon>
         </div>
-        <div class="vehicle-row mt-12">
-          <span class="vehicle-label">Vehicle</span>
-          <mat-button-toggle-group formControlName="vehicle" aria-label="Vehicle">
-            <mat-button-toggle value="own"><mat-icon>directions_car</mat-icon> My vehicle</mat-button-toggle>
-            <mat-button-toggle value="rented"><mat-icon>car_rental</mat-icon> Rental</mat-button-toggle>
-          </mat-button-toggle-group>
+        <div class="chosen-type-text">
+          <span class="chosen-type-label">{{ selectedTypeMeta?.label }}</span>
+          <span class="chosen-type-blurb">{{ selectedTypeMeta?.blurb }}</span>
         </div>
-      </div>
-    }
-
-    <mat-form-field appearance="outline" class="full-width mt-16">
-      <mat-label>Destination</mat-label>
-      <input matInput
-             formControlName="destination"
-             placeholder="e.g. Barcelona, Spain"
-             [matAutocomplete]="destinationAuto"
-             (input)="onDestinationInput($event)" />
-      <mat-icon matPrefix>location_on</mat-icon>
-      @if (fetchingPhoto()) {
-        <mat-spinner matSuffix diameter="16"></mat-spinner>
-      } @else if (selectedPhotoUrl()) {
-        <mat-icon matSuffix class="photo-ready-icon">image</mat-icon>
-      }
-      <mat-autocomplete #destinationAuto (optionSelected)="onPlaceSelected($event)">
-        @for (s of placeSuggestions(); track s.place_id) {
-          <mat-option [value]="s.description">
-            <div class="suggestion-row">
-              <mat-icon class="suggestion-icon">location_on</mat-icon>
-              <span>{{ s.description }}</span>
-            </div>
-          </mat-option>
-        }
-      </mat-autocomplete>
-      @if (form.get('destination')?.hasError('required') && form.get('destination')?.touched) {
-        <mat-error>Destination is required</mat-error>
-      }
-    </mat-form-field>
-
-    @if (photoOptions().length > 0) {
-      <div class="photo-strip">
-        @for (url of photoOptions(); track url; let i = $index) {
-          <button type="button" class="photo-option"
-                  [class.selected]="url === selectedPhotoUrl()"
-                  (click)="selectedPhotoUrl.set(url)"
-                  [attr.aria-label]="'Cover photo option ' + (i + 1)">
-            <img [src]="url" [alt]="'Location photo ' + (i + 1)" />
-            @if (url === selectedPhotoUrl()) {
-              <div class="photo-check"><mat-icon>check_circle</mat-icon></div>
-            }
+        @if (!isEdit) {
+          <button type="button" mat-button class="change-type-btn" (click)="backToTypes()">
+            <mat-icon>swap_horiz</mat-icon> Change
           </button>
         }
       </div>
-    } @else if (selectedPhotoUrl()) {
-      <div class="photo-strip">
-        <button type="button" class="photo-option selected">
-          <img [src]="selectedPhotoUrl()!" alt="Cover photo" />
-          <div class="photo-check"><mat-icon>check_circle</mat-icon></div>
+
+      <mat-form-field appearance="outline" class="full-width mt-16">
+        <mat-label>Trip Name</mat-label>
+        <input matInput formControlName="name" placeholder="e.g. Summer in Italy" />
+        <mat-icon matPrefix>edit</mat-icon>
+        @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+          <mat-error>Trip name is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Road-trip-only: start/end of the drive + whose vehicle -->
+      @if (isRoadTrip) {
+        <div class="road-trip-block">
+          <div class="date-row mt-16">
+            <mat-form-field appearance="outline">
+              <mat-label>Starting from</mat-label>
+              <input matInput formControlName="startLocation" placeholder="e.g. Denver, CO" />
+              <mat-icon matPrefix>trip_origin</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Ending at</mat-label>
+              <input matInput formControlName="endLocation" placeholder="e.g. Moab, UT" />
+              <mat-icon matPrefix>place</mat-icon>
+            </mat-form-field>
+          </div>
+          <div class="vehicle-row mt-12">
+            <span class="vehicle-label">Vehicle</span>
+            <mat-button-toggle-group formControlName="vehicle" aria-label="Vehicle">
+              <mat-button-toggle value="own"><mat-icon>directions_car</mat-icon> My vehicle</mat-button-toggle>
+              <mat-button-toggle value="rented"><mat-icon>car_rental</mat-icon> Rental</mat-button-toggle>
+            </mat-button-toggle-group>
+          </div>
+        </div>
+      }
+
+      <mat-form-field appearance="outline" class="full-width mt-16">
+        <mat-label>{{ isRoadTrip ? 'Main destination / region' : 'Destination' }}</mat-label>
+        <input matInput
+               formControlName="destination"
+               placeholder="e.g. Barcelona, Spain"
+               [matAutocomplete]="destinationAuto"
+               (input)="onDestinationInput($event)" />
+        <mat-icon matPrefix>location_on</mat-icon>
+        @if (fetchingPhoto()) {
+          <mat-spinner matSuffix diameter="16"></mat-spinner>
+        } @else if (selectedPhotoUrl()) {
+          <mat-icon matSuffix class="photo-ready-icon">image</mat-icon>
+        }
+        <mat-autocomplete #destinationAuto (optionSelected)="onPlaceSelected($event)">
+          @for (s of placeSuggestions(); track s.place_id) {
+            <mat-option [value]="s.description">
+              <div class="suggestion-row">
+                <mat-icon class="suggestion-icon">location_on</mat-icon>
+                <span>{{ s.description }}</span>
+              </div>
+            </mat-option>
+          }
+        </mat-autocomplete>
+        @if (form.get('destination')?.hasError('required') && form.get('destination')?.touched) {
+          <mat-error>Destination is required</mat-error>
+        }
+      </mat-form-field>
+
+      @if (photoOptions().length > 0) {
+        <div class="photo-strip">
+          @for (url of photoOptions(); track url; let i = $index) {
+            <button type="button" class="photo-option"
+                    [class.selected]="url === selectedPhotoUrl()"
+                    (click)="selectedPhotoUrl.set(url)"
+                    [attr.aria-label]="'Cover photo option ' + (i + 1)">
+              <img [src]="url" [alt]="'Location photo ' + (i + 1)" />
+              @if (url === selectedPhotoUrl()) {
+                <div class="photo-check"><mat-icon>check_circle</mat-icon></div>
+              }
+            </button>
+          }
+        </div>
+      } @else if (selectedPhotoUrl()) {
+        <div class="photo-strip">
+          <button type="button" class="photo-option selected">
+            <img [src]="selectedPhotoUrl()!" alt="Cover photo" />
+            <div class="photo-check"><mat-icon>check_circle</mat-icon></div>
+          </button>
+        </div>
+      }
+
+      @if (mapsReady() && form.get('destination')?.value) {
+        <button type="button" mat-stroked-button class="change-photo-btn mt-12"
+                (click)="changePhoto()" [disabled]="fetchingPhoto()">
+          @if (fetchingPhoto()) {
+            <mat-spinner diameter="16"></mat-spinner> &nbsp;Finding photos…
+          } @else {
+            <mat-icon>image_search</mat-icon>
+            {{ (photoOptions().length || selectedPhotoUrl()) ? 'Change cover photo' : 'Find cover photo' }}
+          }
+        </button>
+        <p class="photo-hint">
+          @if (photoOptions().length || selectedPhotoUrl()) {
+            Change the cover photo anytime — it appears on this trip's card.
+          } @else {
+            Tip: pick a cover photo to brighten up this trip's card.
+          }
+        </p>
+      } @else if (form.get('destination')?.value) {
+        <p class="photo-hint">Loading photo options…</p>
+      }
+
+      <mat-form-field appearance="outline" class="full-width mt-16">
+        <mat-label>Description (optional)</mat-label>
+        <textarea matInput formControlName="description" rows="3"
+                  placeholder="A quick note about this trip..."></textarea>
+      </mat-form-field>
+
+      <div class="date-row mt-16">
+        <mat-form-field appearance="outline">
+          <mat-label>Start Date</mat-label>
+          <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+          @if (form.get('startDate')?.hasError('required') && form.get('startDate')?.touched) {
+            <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>End Date</mat-label>
+          <input matInput [matDatepicker]="endPicker" formControlName="endDate"
+                 [min]="startDateValue" />
+          <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker [startAt]="startDateValue"></mat-datepicker>
+          @if (form.get('endDate')?.hasError('required') && form.get('endDate')?.touched) {
+            <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width mt-16">
+        <mat-label>Currency</mat-label>
+        <mat-select formControlName="currency">
+          @for (c of currencies; track c) {
+            <mat-option [value]="c">{{ c }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="form-actions mt-24">
+        @if (!isEdit) {
+          <button mat-button type="button" (click)="backToTypes()">
+            <mat-icon>arrow_back</mat-icon> Back
+          </button>
+        } @else {
+          <button mat-button type="button" mat-dialog-close>Cancel</button>
+        }
+        <button mat-flat-button color="primary" type="submit" [disabled]="loading()">
+          @if (loading()) { <mat-spinner diameter="18"></mat-spinner> }
+          @else { {{ isEdit ? 'Save Changes' : 'Create Trip' }} }
         </button>
       </div>
-    }
-
-    @if (mapsReady() && form.get('destination')?.value) {
-      <button type="button" mat-stroked-button class="change-photo-btn mt-12"
-              (click)="changePhoto()" [disabled]="fetchingPhoto()">
-        @if (fetchingPhoto()) {
-          <mat-spinner diameter="16"></mat-spinner> &nbsp;Finding photos…
-        } @else {
-          <mat-icon>image_search</mat-icon>
-          {{ (photoOptions().length || selectedPhotoUrl()) ? 'Change cover photo' : 'Find cover photo' }}
-        }
-      </button>
-      <p class="photo-hint">
-        @if (photoOptions().length || selectedPhotoUrl()) {
-          Change the cover photo anytime — it appears on this trip's card.
-        } @else {
-          Tip: pick a cover photo to brighten up this trip's card.
-        }
-      </p>
-    } @else if (form.get('destination')?.value) {
-      <p class="photo-hint">Loading photo options…</p>
-    }
-
-    <mat-form-field appearance="outline" class="full-width mt-16">
-      <mat-label>Description (optional)</mat-label>
-      <textarea matInput formControlName="description" rows="3"
-                placeholder="A quick note about this trip..."></textarea>
-    </mat-form-field>
-
-    <div class="date-row mt-16">
-      <mat-form-field appearance="outline">
-        <mat-label>Start Date</mat-label>
-        <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
-        <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
-        <mat-datepicker #startPicker></mat-datepicker>
-        @if (form.get('startDate')?.hasError('required') && form.get('startDate')?.touched) {
-          <mat-error>Required</mat-error>
-        }
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>End Date</mat-label>
-        <input matInput [matDatepicker]="endPicker" formControlName="endDate"
-               [min]="startDateValue" />
-        <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
-        <mat-datepicker #endPicker [startAt]="startDateValue"></mat-datepicker>
-        @if (form.get('endDate')?.hasError('required') && form.get('endDate')?.touched) {
-          <mat-error>Required</mat-error>
-        }
-      </mat-form-field>
-    </div>
-
-    <mat-form-field appearance="outline" class="full-width mt-16">
-      <mat-label>Currency</mat-label>
-      <mat-select formControlName="currency">
-        @for (c of currencies; track c) {
-          <mat-option [value]="c">{{ c }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <div class="form-actions mt-24">
-      <button mat-button type="button" mat-dialog-close>Cancel</button>
-      <button mat-flat-button color="primary" type="submit" [disabled]="loading()">
-        @if (loading()) { <mat-spinner diameter="18"></mat-spinner> }
-        @else { {{ isEdit ? 'Save Changes' : 'Create Trip' }} }
-      </button>
-    </div>
-  </form>
+    </form>
+  }
 </mat-dialog-content>
